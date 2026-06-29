@@ -204,6 +204,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <div class="wait-card"><div class="spinner"></div><div class="wait-sub">Loading...</div></div>
       </div>
     </div>
+    <div id="not-you-link" style="display:none;text-align:center;margin-top:-8px">
+      <span onclick="resetNameList()" style="font-size:13px;color:var(--accent);cursor:pointer;text-decoration:underline">Not you? Choose again</span>
+    </div>
     <button class="btn btn-primary" id="btn-confirm-name" onclick="confirmName()" disabled>Confirm My Presence →</button>
   </div>
 </div>
@@ -418,12 +421,25 @@ async function loadNames(){
       <div><div class="ni-name">${p.name}</div><div class="ni-team">${t?.name||''}${p.is_captain?' 👑':''}</div></div>
       <div class="ni-check">✓</div>`;
     card.onclick=()=>{
-      document.querySelectorAll('.name-card').forEach(c=>c.classList.remove('sel'));
-      card.classList.add('sel');P.participant=p;P.team=t;
+      // Hide all other names — only show selected
+      document.querySelectorAll('.name-card').forEach(c=>{c.style.display='none';});
+      card.style.display='flex';
+      card.classList.add('sel');
+      P.participant=p;P.team=t;
       document.getElementById('btn-confirm-name').disabled=false;
+      // Show "not you?" link
+      const notYou=document.getElementById('not-you-link');
+      if(notYou)notYou.style.display='block';
     };
     list.appendChild(card);
   });
+}
+
+function resetNameList(){
+  document.querySelectorAll('.name-card').forEach(c=>{c.style.display='flex';c.classList.remove('sel');});
+  document.getElementById('not-you-link').style.display='none';
+  document.getElementById('btn-confirm-name').disabled=true;
+  P.participant=null;P.team=null;
 }
 
 async function confirmName(){
@@ -522,37 +538,37 @@ function showBoDone(ans){
 function startTimer(r){
   if(P.timerT)clearInterval(P.timerT);
   const totalSecs = r.timer_seconds || 300;
+  const el = document.getElementById('timer-val');
 
-  // Calculate remaining time from server timestamp
+  // Try to calculate elapsed from server time
   let remSecs = totalSecs;
   if(r.timer_started_at){
-    const startStr = r.timer_started_at.endsWith('Z') ? r.timer_started_at : r.timer_started_at+'+00:00';
-    const startMs = new Date(startStr).getTime();
-    const elapsedSecs = Math.floor((Date.now() - startMs) / 1000);
-    remSecs = Math.max(0, totalSecs - elapsedSecs);
-    console.log('Timer: totalSecs='+totalSecs+' elapsed='+elapsedSecs+' remaining='+remSecs);
+    try{
+      // Force UTC by replacing space with T and adding Z
+      let ts = r.timer_started_at.trim().replace(' ','T');
+      if(!ts.endsWith('Z') && !ts.includes('+')) ts = ts.split('.')[0]+'Z';
+      const startMs = Date.parse(ts);
+      if(!isNaN(startMs)){
+        const elapsed = Math.floor((Date.now()-startMs)/1000);
+        remSecs = Math.max(0, totalSecs-elapsed);
+        console.log('Timer start:',ts,'elapsed:',elapsed,'rem:',remSecs);
+      }
+    }catch(e){console.error('Timer parse error:',e);}
   }
 
-  // If already expired
-  if(remSecs <= 0){
-    document.getElementById('timer-val').textContent='00:00';
-    document.getElementById('timer-val').className='timer-val urgent';
-    return;
-  }
+  // Store end time for accuracy
+  const endMs = Date.now() + (remSecs*1000);
 
-  // Count down from remaining seconds
-  let rem = remSecs;
   function tick(){
+    const rem = Math.max(0,Math.floor((endMs-Date.now())/1000));
     const m = Math.floor(rem/60).toString().padStart(2,'0');
     const s = (rem%60).toString().padStart(2,'0');
-    const el = document.getElementById('timer-val');
     el.textContent = m+':'+s;
     el.className = 'timer-val'+(rem<=30?' urgent':'');
-    if(rem <= 0){ clearInterval(P.timerT); return; }
-    rem--;
+    if(rem<=0){clearInterval(P.timerT);}
   }
   tick();
-  P.timerT = setInterval(tick, 1000);
+  P.timerT = setInterval(tick,1000);
 }
 
 // SCORES SCREEN
