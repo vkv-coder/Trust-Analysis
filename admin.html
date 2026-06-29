@@ -209,7 +209,7 @@ tr:last-child td{border-bottom:none;}
         </div>
         <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px">Total Rounds</label>
         <input id="e-rounds" type="number" value="10" style="max-width:100px"/>
-        <button class="btn btn-acc" style="max-width:200px;margin-top:4px" onclick="createEvent()">+ Create Event</button>
+        <button class="btn btn-acc" style="max-width:200px;margin-top:4px" onclick="makeEvent()">+ Create Event</button>
         <div id="e-msg" style="font-size:13px;margin-top:8px;min-height:18px"></div>
       </div>
       <div class="sc">
@@ -423,7 +423,7 @@ async function loadEventList(){
   if(evs&&evs.length>0&&!EV){loadEvent(evs[0].id);sel.value=evs[0].id;}
 }
 
-async function createEvent(){
+async function makeEvent(){
   const name = document.getElementById('e-name').value.trim();
   const pin  = document.getElementById('e-pin').value.trim();
   const rnds = parseInt(document.getElementById('e-rounds').value)||10;
