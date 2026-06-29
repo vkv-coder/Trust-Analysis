@@ -3,400 +3,310 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Trust Analysis — Admin</title>
+<title>Trust Analysis Admin v4</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
-  :root {
-    --bg:#0F172A; --surface:#1E293B; --surface2:#273548; --border:#334155;
-    --accent:#F59E0B; --accent2:#3B82F6; --high:#EF4444; --low:#22C55E;
-    --text:#F1F5F9; --muted:#94A3B8; --radius:12px;
-  }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+:root{--bg:#0F172A;--sur:#1E293B;--sur2:#273548;--bdr:#334155;--acc:#F59E0B;--hi:#EF4444;--lo:#22C55E;--txt:#F1F5F9;--mut:#94A3B8;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;}
+.wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.card{background:var(--sur);border:1px solid var(--bdr);border-radius:16px;padding:36px;width:100%;max-width:420px;}
+.card h1{font-family:'Space Grotesk',sans-serif;font-size:24px;color:var(--acc);text-align:center;margin-bottom:6px;}
+.card p{text-align:center;color:var(--mut);font-size:13px;margin-bottom:24px;}
+input,select,textarea{width:100%;background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);padding:10px 12px;font-size:14px;font-family:'Inter',sans-serif;outline:none;margin-bottom:12px;}
+input:focus,select:focus{border-color:var(--acc);}
+textarea{resize:vertical;min-height:70px;}
+.btn{width:100%;padding:12px;border-radius:8px;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px;}
+.btn-acc{background:var(--acc);color:#000;}
+.btn-out{background:transparent;color:var(--txt);border:1px solid var(--bdr);}
+.btn-dan{background:var(--hi);color:#fff;}
+.btn-suc{background:var(--lo);color:#000;}
+.btn-sm{padding:6px 12px;font-size:12px;width:auto;margin:0;}
+#err{color:var(--hi);font-size:13px;text-align:center;min-height:18px;}
 
-  /* LOGIN */
-  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
-  .login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:400px;text-align:center;}
-  .login-card h1{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:var(--accent);margin-bottom:6px;}
-  .login-card p{font-size:14px;color:var(--muted);margin-bottom:28px;}
+/* LAYOUT */
+.layout{display:flex;min-height:100vh;}
+.side{width:210px;background:var(--sur);border-right:1px solid var(--bdr);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;}
+.logo{padding:18px 16px;border-bottom:1px solid var(--bdr);}
+.logo-t{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--acc);}
+.logo-s{font-size:11px;color:var(--mut);margin-top:2px;}
+.nav a{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--mut);border-left:3px solid transparent;text-decoration:none;}
+.nav a:hover{color:var(--txt);background:var(--sur2);}
+.nav a.on{color:var(--acc);border-left-color:var(--acc);background:rgba(245,158,11,0.06);}
+.ev-sel{margin-top:auto;padding:14px;border-top:1px solid var(--bdr);}
+.ev-sel label{font-size:11px;color:var(--mut);display:block;margin-bottom:5px;text-transform:uppercase;}
+.main{margin-left:210px;padding:24px;flex:1;}
+.pg{display:none;} .pg.on{display:block;}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.ph h2{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;}
 
-  /* LAYOUT */
-  .admin-layout{display:flex;min-height:100vh;}
-  .sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:20;}
-  .sidebar-logo{padding:20px;border-bottom:1px solid var(--border);}
-  .sidebar-logo .logo{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:var(--accent);}
-  .sidebar-logo .sub{font-size:11px;color:var(--muted);margin-top:2px;}
-  .nav-item{display:flex;align-items:center;gap:10px;padding:13px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--muted);transition:all 0.15s;border-left:3px solid transparent;}
-  .nav-item:hover{color:var(--text);background:var(--surface2);}
-  .nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(245,158,11,0.06);}
-  .nav-icon{font-size:16px;width:20px;text-align:center;}
+/* SECTION CARD */
+.sc{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:18px;margin-bottom:14px;}
+.sc-t{font-size:11px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.stat{background:var(--sur);border:1px solid var(--bdr);border-radius:10px;padding:14px;}
+.stat-l{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
+.stat-v{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:var(--acc);}
 
-  /* EVENT SELECTOR */
-  .event-selector{margin-top:auto;padding:16px;border-top:1px solid var(--border);}
-  .event-selector label{font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;}
-  .event-selector select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 10px;font-size:12px;font-family:'Inter',sans-serif;}
+/* CONTROL BUTTONS */
+.ctrl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ctrl-btn{padding:14px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.ctrl-btn .ci{font-size:22px;}
+.c-reg{background:rgba(59,130,246,0.15);color:#3B82F6;border:1px solid rgba(59,130,246,0.3);}
+.c-brk{background:rgba(245,158,11,0.15);color:var(--acc);border:1px solid rgba(245,158,11,0.3);}
+.c-rev{background:rgba(34,197,94,0.15);color:var(--lo);border:1px solid rgba(34,197,94,0.3);}
+.c-end{background:rgba(239,68,68,0.15);color:var(--hi);border:1px solid rgba(239,68,68,0.3);}
 
-  .main-content{margin-left:220px;flex:1;padding:28px;max-width:calc(100vw - 220px);}
-  .page{display:none;} .page.active{display:block;}
-  .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
-  .page-header h2{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;}
+/* STATUS */
+.sbadge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;}
+.s-setup{background:rgba(148,163,184,0.15);color:var(--mut);}
+.s-registration{background:rgba(59,130,246,0.15);color:#3B82F6;}
+.s-breakout{background:rgba(245,158,11,0.15);color:var(--acc);}
+.s-scoring{background:rgba(34,197,94,0.15);color:var(--lo);}
+.s-complete{background:rgba(139,92,246,0.15);color:#8B5CF6;}
 
-  /* CARDS */
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
-  .card-title{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px;}
+/* TABLE */
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;padding:8px 10px;font-size:11px;font-weight:600;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--bdr);}
+td{padding:10px;border-bottom:1px solid var(--bdr);font-size:13px;}
+tr:last-child td{border-bottom:none;}
 
-  /* GRID */
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
-  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:6px;}
+.chip{background:var(--sur2);border:1px solid var(--bdr);border-radius:20px;padding:3px 10px;font-size:12px;display:flex;align-items:center;gap:5px;}
+.xbtn{color:var(--hi);cursor:pointer;font-size:14px;}
 
-  /* STAT */
-  .stat-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
-  .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
-  .stat-value{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:var(--accent);}
+/* COLORS */
+.clrs{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px;}
+.clr{width:24px;height:24px;border-radius:50%;cursor:pointer;border:3px solid transparent;}
+.clr.on{border-color:#fff;transform:scale(1.15);}
 
-  /* FORM */
-  .form-group{margin-bottom:14px;}
-  .form-group label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:5px;}
-  .form-control{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 12px;font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.15s;}
-  .form-control:focus{border-color:var(--accent);}
-  textarea.form-control{resize:vertical;min-height:70px;}
+/* ROUND ROW */
+.rrow{background:var(--sur2);border:2px solid transparent;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;gap:12px;}
+.rrow.cur{border-color:var(--acc);}
+.rnum{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--acc);width:24px;flex-shrink:0;}
+.rbody{flex:1;}
 
-  /* BUTTONS */
-  .btn{padding:9px 18px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;}
-  .btn:active{transform:scale(0.98);}
-  .btn-primary{background:var(--accent);color:#000;}
-  .btn-success{background:var(--low);color:#000;}
-  .btn-danger{background:var(--high);color:#fff;}
-  .btn-outline{background:transparent;color:var(--text);border:1px solid var(--border);}
-  .btn-sm{padding:5px 12px;font-size:12px;}
-  .btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
-  .btn-full{width:100%;justify-content:center;padding:12px;}
+/* SCORE ROW */
+.srow{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--sur2);border-radius:8px;margin-bottom:6px;}
+.sdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.sname{flex:1;font-weight:600;font-size:13px;}
+.spts{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;}
 
-  /* STATUS */
-  .status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;}
-  .status-setup{background:rgba(148,163,184,0.15);color:var(--muted);}
-  .status-waiting{background:rgba(59,130,246,0.15);color:var(--accent2);}
-  .status-registration{background:rgba(245,158,11,0.15);color:var(--accent);}
-  .status-breakout{background:rgba(239,68,68,0.15);color:var(--high);}
-  .status-scoring{background:rgba(34,197,94,0.15);color:var(--low);}
-  .status-complete{background:rgba(139,92,246,0.15);color:#8B5CF6;}
+/* PRESENCE */
+.pchips{display:flex;flex-wrap:wrap;gap:6px;}
+.pchip{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid var(--bdr);background:var(--sur2);}
+.pchip.yes{border-color:var(--lo);background:rgba(34,197,94,0.1);color:var(--lo);}
+.pchip.no{color:var(--mut);}
 
-  /* TEAM CARD */
-  .team-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;}
-  .team-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-  .team-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
-  .team-name-text{font-weight:600;font-size:14px;flex:1;}
-  .chips{display:flex;flex-wrap:wrap;gap:6px;}
-  .chip{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:12px;display:flex;align-items:center;gap:5px;}
-  .chip-remove{color:var(--high);cursor:pointer;font-size:14px;line-height:1;}
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--sur);border:1px solid var(--bdr);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:500;z-index:999;transform:translateY(60px);opacity:0;transition:all 0.3s;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.ok{border-color:var(--lo);color:var(--lo);}
+.toast.er{border-color:var(--hi);color:var(--hi);}
+.toast.in{border-color:var(--acc);color:var(--acc);}
 
-  /* TABLE */
-  table{width:100%;border-collapse:collapse;}
-  th{text-align:left;padding:9px 12px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border);}
-  td{padding:11px 12px;border-bottom:1px solid var(--border);font-size:13px;}
-  tr:last-child td{border-bottom:none;}
-  tr:hover td{background:var(--surface2);}
-
-  /* ROUND ROW */
-  .round-row{background:var(--surface2);border:2px solid transparent;border-radius:10px;padding:14px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;}
-  .round-row.current{border-color:var(--accent);}
-  .round-num{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--accent);width:28px;flex-shrink:0;margin-top:2px;}
-  .round-body{flex:1;}
-
-  /* SCOREBOARD */
-  .score-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface2);border-radius:10px;margin-bottom:8px;}
-  .score-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
-  .score-name{flex:1;font-weight:600;font-size:14px;}
-  .score-pts{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;}
-
-  /* COLORS */
-  .color-opts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
-  .color-opt{width:26px;height:26px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all 0.1s;}
-  .color-opt.selected{border-color:#fff;transform:scale(1.15);}
-
-  /* CONTROL BUTTONS */
-  .control-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
-  .control-btn{padding:16px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:4px;}
-  .control-btn .cb-icon{font-size:24px;}
-  .control-btn:active{transform:scale(0.97);}
-  .cb-registration{background:rgba(59,130,246,0.15);color:var(--accent2);border:1px solid rgba(59,130,246,0.3);}
-  .cb-breakout{background:rgba(245,158,11,0.15);color:var(--accent);border:1px solid rgba(245,158,11,0.3);}
-  .cb-reveal{background:rgba(34,197,94,0.15);color:var(--low);border:1px solid rgba(34,197,94,0.3);}
-  .cb-end{background:rgba(239,68,68,0.15);color:var(--high);border:1px solid rgba(239,68,68,0.3);}
-
-  /* PRESENCE */
-  .presence-grid{display:flex;flex-wrap:wrap;gap:8px;}
-  .presence-chip{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;border:1px solid var(--border);background:var(--surface2);}
-  .presence-chip.present{border-color:var(--low);background:rgba(34,197,94,0.1);color:var(--low);}
-  .presence-chip.absent{color:var(--muted);}
-
-  /* TOAST */
-  .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 18px;font-size:13px;font-weight:500;z-index:100;transform:translateY(80px);opacity:0;transition:all 0.3s;}
-  .toast.show{transform:translateY(0);opacity:1;}
-  .toast.success{border-color:var(--low);color:var(--low);}
-  .toast.error{border-color:var(--high);color:var(--high);}
-  .toast.info{border-color:var(--accent);color:var(--accent);}
-
-  .divider{height:1px;background:var(--border);margin:16px 0;}
-  .no-event{text-align:center;padding:40px;color:var(--muted);font-size:14px;}
-
-  @media(max-width:768px){
-    .sidebar{display:none;}
-    .main-content{margin-left:0;max-width:100vw;padding:16px;}
-    .grid2,.grid3,.grid4{grid-template-columns:1fr;}
-    .control-grid{grid-template-columns:1fr 1fr;}
-  }
+.no-ev{text-align:center;padding:40px;color:var(--mut);font-size:14px;}
+.inline{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;}
+.inline .fg{flex:1;min-width:140px;margin-bottom:0;}
+.fg{margin-bottom:0;}
+.fg label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px;}
 </style>
 </head>
 <body>
 
 <!-- LOGIN -->
-<div id="login-wrap" class="login-wrap">
-  <div class="login-card">
-    <div style="font-size:48px;margin-bottom:16px">🎯</div>
+<div id="login" class="wrap">
+  <div class="card">
+    <div style="text-align:center;font-size:44px;margin-bottom:12px">🎯</div>
     <h1>Trust Analysis</h1>
-    <p>Admin Panel — Enter your password</p>
-    <div class="form-group">
-      <input type="password" class="form-control" id="admin-password" placeholder="Admin password" onkeydown="if(event.key==='Enter')adminLogin()"/>
-    </div>
-    <button class="btn btn-primary btn-full" onclick="adminLogin()">Login →</button>
-    <div id="login-error" style="color:#EF4444;font-size:13px;margin-top:10px;min-height:18px"></div>
+    <p>Admin Panel</p>
+    <input type="password" id="pw" placeholder="Admin password" onkeydown="if(event.key==='Enter')login()"/>
+    <button class="btn btn-acc" onclick="login()">Login →</button>
+    <div id="err"></div>
   </div>
 </div>
 
-<!-- ADMIN LAYOUT -->
-<div id="admin-layout" class="admin-layout" style="display:none">
-  <div class="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo">Trust Analysis</div>
-      <div class="sub">Admin Panel</div>
+<!-- MAIN LAYOUT -->
+<div id="app" class="layout" style="display:none">
+  <div class="side">
+    <div class="logo">
+      <div class="logo-t">Trust Analysis</div>
+      <div class="logo-s">Admin Panel</div>
     </div>
-    <div style="padding:6px 0">
-      <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard"><span class="nav-icon">📊</span>Dashboard</div>
-      <div class="nav-item" onclick="showPage('events')" id="nav-events"><span class="nav-icon">🏢</span>Events</div>
-      <div class="nav-item" onclick="showPage('participants')" id="nav-participants"><span class="nav-icon">👤</span>Participants</div>
-      <div class="nav-item" onclick="showPage('teams')" id="nav-teams"><span class="nav-icon">👥</span>Teams</div>
-      <div class="nav-item" onclick="showPage('rounds')" id="nav-rounds"><span class="nav-icon">🎮</span>Rounds</div>
-      <div class="nav-item" onclick="showPage('scores')" id="nav-scores"><span class="nav-icon">🏆</span>Scoreboard</div>
-      <div class="nav-item" onclick="showPage('responses')" id="nav-responses"><span class="nav-icon">📋</span>Responses</div>
+    <div class="nav">
+      <a onclick="go('dash')" id="n-dash" class="on"><span>📊</span>Dashboard</a>
+      <a onclick="go('events')" id="n-events"><span>🏢</span>Events</a>
+      <a onclick="go('parts')" id="n-parts"><span>👤</span>Participants</a>
+      <a onclick="go('teams')" id="n-teams"><span>👥</span>Teams</a>
+      <a onclick="go('rounds')" id="n-rounds"><span>🎮</span>Rounds</a>
+      <a onclick="go('scores')" id="n-scores"><span>🏆</span>Scores</a>
+      <a onclick="go('resps')" id="n-resps"><span>📋</span>Responses</a>
     </div>
-    <div class="event-selector">
+    <div class="ev-sel">
       <label>Active Event</label>
-      <select id="event-select" onchange="switchEvent(this.value)">
-        <option value="">— Select Event —</option>
-      </select>
+      <select id="ev-sel" onchange="loadEvent(this.value)" style="margin-bottom:0"></select>
     </div>
   </div>
 
-  <div class="main-content">
+  <div class="main">
 
-    <!-- ═══ DASHBOARD ═══ -->
-    <div class="page active" id="page-dashboard">
-      <div class="page-header">
-        <h2>Dashboard</h2>
-        <span class="status-badge status-setup" id="dash-status">Setup</span>
-      </div>
-      <div id="no-event-dash" class="no-event">← Select or create an Event to begin</div>
-      <div id="dash-content" style="display:none">
-        <div class="grid4" style="margin-bottom:16px">
-          <div class="stat-tile"><div class="stat-label">Teams</div><div class="stat-value" id="stat-teams">0</div></div>
-          <div class="stat-tile"><div class="stat-label">Participants</div><div class="stat-value" id="stat-participants">0</div></div>
-          <div class="stat-tile"><div class="stat-label">Present</div><div class="stat-value" id="stat-present" style="color:var(--low)">0</div></div>
-          <div class="stat-tile"><div class="stat-label">Round</div><div class="stat-value" id="stat-round">—</div></div>
+    <!-- DASHBOARD -->
+    <div class="pg on" id="pg-dash">
+      <div class="ph"><h2>Dashboard</h2><span class="sbadge s-setup" id="d-status">setup</span></div>
+      <div id="d-noev" class="no-ev">← Create or select an Event to begin</div>
+      <div id="d-body" style="display:none">
+        <div class="grid4" style="margin-bottom:14px">
+          <div class="stat"><div class="stat-l">Teams</div><div class="stat-v" id="d-teams">0</div></div>
+          <div class="stat"><div class="stat-l">Participants</div><div class="stat-v" id="d-parts">0</div></div>
+          <div class="stat"><div class="stat-l">Present</div><div class="stat-v" id="d-present" style="color:var(--lo)">0</div></div>
+          <div class="stat"><div class="stat-l">Round</div><div class="stat-v" id="d-round">—</div></div>
         </div>
-
-        <div class="card">
-          <div class="card-title">Event Info</div>
-          <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:13px">
-            <div><span style="color:var(--muted)">Event: </span><strong id="dash-event-name">—</strong></div>
-            <div><span style="color:var(--muted)">PIN: </span><strong style="font-size:18px;color:var(--accent);font-family:'Space Grotesk',sans-serif" id="dash-pin">—</strong></div>
-            <div><span style="color:var(--muted)">Link: </span><span style="color:var(--accent2);font-size:12px" id="dash-link"></span>
-              <button class="btn btn-sm btn-outline" style="margin-left:8px" onclick="copyLink()">📋 Copy</button>
-            </div>
+        <div class="sc">
+          <div class="sc-t">Event Info</div>
+          <div style="font-size:13px;display:flex;gap:16px;flex-wrap:wrap">
+            <span><span style="color:var(--mut)">Event: </span><strong id="d-evname">—</strong></span>
+            <span><span style="color:var(--mut)">PIN: </span><strong style="font-size:18px;color:var(--acc);font-family:'Space Grotesk',sans-serif" id="d-pin">—</strong></span>
+            <span style="display:flex;align-items:center;gap:6px">
+              <span style="color:var(--mut)">Link: </span>
+              <span style="color:#3B82F6;font-size:12px" id="d-link"></span>
+              <button class="btn btn-out btn-sm" onclick="copyLink()">📋</button>
+            </span>
           </div>
         </div>
-
-        <div class="card">
-          <div class="card-title">Game Control</div>
-          <div class="control-grid">
-            <button class="control-btn cb-registration" onclick="openRegistration()">
-              <span class="cb-icon">▶️</span>Open Main Room
-            </button>
-            <button class="control-btn cb-breakout" onclick="openBreakout()">
-              <span class="cb-icon">🔀</span>Start Breakout
-            </button>
-            <button class="control-btn cb-reveal" onclick="revealScores()">
-              <span class="cb-icon">📊</span>Reveal Scores
-            </button>
-            <button class="control-btn cb-end" onclick="endSession()">
-              <span class="cb-icon">⏹️</span>End Session
-            </button>
+        <div class="sc">
+          <div class="sc-t">Game Control</div>
+          <div class="ctrl-grid">
+            <button class="ctrl-btn c-reg" onclick="openMain()"><span class="ci">▶️</span>Open Main Room</button>
+            <button class="ctrl-btn c-brk" onclick="openBreakout()"><span class="ci">🔀</span>Start Breakout</button>
+            <button class="ctrl-btn c-rev" onclick="revealScores()"><span class="ci">📊</span>Reveal Scores</button>
+            <button class="ctrl-btn c-end" onclick="endSession()"><span class="ci">⏹️</span>End Session</button>
           </div>
         </div>
-
-        <div class="card">
-          <div class="card-title">Participant Presence</div>
-          <div class="presence-grid" id="presence-grid">
-            <span style="color:var(--muted);font-size:13px">Waiting for participants to join...</span>
-          </div>
+        <div class="sc">
+          <div class="sc-t">Participant Presence</div>
+          <div class="pchips" id="d-presence"><span style="color:var(--mut);font-size:13px">Waiting...</span></div>
         </div>
-
-        <div class="card">
-          <div class="card-title">Individual Opinions — Current Round</div>
-          <table>
-            <thead><tr><th>Participant</th><th>Team</th><th>Opinion</th></tr></thead>
-            <tbody id="dash-opinions"></tbody>
-          </table>
+        <div class="sc">
+          <div class="sc-t">Individual Opinions — Current Round</div>
+          <table><thead><tr><th>Participant</th><th>Team</th><th>Opinion</th></tr></thead>
+          <tbody id="d-opinions"></tbody></table>
         </div>
       </div>
     </div>
 
-    <!-- ═══ EVENTS ═══ -->
-    <div class="page" id="page-events">
-      <div class="page-header"><h2>Events</h2></div>
-
-      <div class="card">
-        <div class="card-title">Create New Event</div>
+    <!-- EVENTS -->
+    <div class="pg" id="pg-events">
+      <div class="ph"><h2>Events</h2></div>
+      <div class="sc">
+        <div class="sc-t">Create New Event</div>
         <div class="grid2">
-          <div class="form-group">
-            <label>Company / Event Name</label>
-            <input class="form-control" id="ev-name" placeholder="e.g. Tata Motors Batch 1"/>
-          </div>
-          <div class="form-group">
-            <label>4-Digit PIN (for participants)</label>
-            <input class="form-control" id="ev-pin" placeholder="e.g. 5678" maxlength="4" type="number"/>
-          </div>
+          <div><label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px">Company / Event Name</label>
+            <input id="e-name" placeholder="e.g. Tata Motors Batch 1"/></div>
+          <div><label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px">4-Digit PIN</label>
+            <input id="e-pin" placeholder="e.g. 5678" maxlength="4" type="tel"/></div>
         </div>
-        <div class="form-group">
-          <label>Total Rounds</label>
-          <input class="form-control" id="ev-rounds" type="number" value="10" style="max-width:100px"/>
-        </div>
-        <button class="btn btn-primary" onclick="createEvent()">+ Create Event</button>
+        <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px">Total Rounds</label>
+        <input id="e-rounds" type="number" value="10" style="max-width:100px"/>
+        <button class="btn btn-acc" style="max-width:200px;margin-top:4px" onclick="createEvent()">+ Create Event</button>
+        <div id="e-msg" style="font-size:13px;margin-top:8px;min-height:18px"></div>
       </div>
-
-      <div class="card">
-        <div class="card-title">All Events</div>
-        <table>
-          <thead><tr><th>Event Name</th><th>PIN</th><th>Rounds</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody id="events-table"></tbody>
-        </table>
+      <div class="sc">
+        <div class="sc-t">All Events</div>
+        <table><thead><tr><th>Name</th><th>PIN</th><th>Rounds</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="ev-table"></tbody></table>
       </div>
     </div>
 
-    <!-- ═══ PARTICIPANTS ═══ -->
-    <div class="page" id="page-participants">
-      <div class="page-header"><h2>Participants</h2></div>
-      <div id="no-event-part" class="no-event">← Select an Event first</div>
-      <div id="part-content" style="display:none">
-        <div class="card">
-          <div class="card-title">Add Participant</div>
-          <div style="display:flex;gap:10px;align-items:flex-end">
-            <div class="form-group" style="flex:1;margin-bottom:0">
-              <label>Participant Name</label>
-              <input class="form-control" id="new-part-name" placeholder="Full name" onkeydown="if(event.key==='Enter')addParticipant()"/>
-            </div>
-            <button class="btn btn-primary" onclick="addParticipant()">+ Add</button>
+    <!-- PARTICIPANTS -->
+    <div class="pg" id="pg-parts">
+      <div class="ph"><h2>Participants</h2></div>
+      <div id="p-noev" class="no-ev">← Select an Event first</div>
+      <div id="p-body" style="display:none">
+        <div class="sc">
+          <div class="sc-t">Add Participant</div>
+          <div style="display:flex;gap:10px">
+            <input id="p-name" placeholder="Full name" style="margin-bottom:0" onkeydown="if(event.key==='Enter')addPart()"/>
+            <button class="btn btn-acc btn-sm" onclick="addPart()" style="white-space:nowrap">+ Add</button>
           </div>
-          <div style="font-size:12px;color:var(--muted);margin-top:8px">Add all participant names first, then assign to teams</div>
+          <div style="font-size:12px;color:var(--mut);margin-top:6px">Add all names first, then assign to teams</div>
         </div>
-        <div class="card">
-          <div class="card-title">Participant List (<span id="part-count">0</span>)</div>
-          <div id="part-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+        <div class="sc">
+          <div class="sc-t">All Participants (<span id="p-count">0</span>)</div>
+          <div class="chips" id="p-list"></div>
         </div>
       </div>
     </div>
 
-    <!-- ═══ TEAMS ═══ -->
-    <div class="page" id="page-teams">
-      <div class="page-header"><h2>Teams</h2></div>
-      <div id="no-event-teams" class="no-event">← Select an Event first</div>
-      <div id="teams-content" style="display:none">
-        <div class="card">
-          <div class="card-title">Create Team</div>
+    <!-- TEAMS -->
+    <div class="pg" id="pg-teams">
+      <div class="ph"><h2>Teams</h2></div>
+      <div id="t-noev" class="no-ev">← Select an Event first</div>
+      <div id="t-body" style="display:none">
+        <div class="sc">
+          <div class="sc-t">Create Team</div>
           <div class="grid2">
-            <div class="form-group">
-              <label>Team Name</label>
-              <input class="form-control" id="new-team-name" placeholder="e.g. Red, Alpha, Falcon..."/>
-            </div>
-            <div class="form-group">
-              <label>Team Colour</label>
-              <div class="color-opts" id="color-picker">
-                <div class="color-opt selected" style="background:#EF4444" data-color="#EF4444" onclick="pickColor(this)"></div>
-                <div class="color-opt" style="background:#3B82F6" data-color="#3B82F6" onclick="pickColor(this)"></div>
-                <div class="color-opt" style="background:#EAB308" data-color="#EAB308" onclick="pickColor(this)"></div>
-                <div class="color-opt" style="background:#22C55E" data-color="#22C55E" onclick="pickColor(this)"></div>
-                <div class="color-opt" style="background:#8B5CF6" data-color="#8B5CF6" onclick="pickColor(this)"></div>
-                <div class="color-opt" style="background:#F97316" data-color="#F97316" onclick="pickColor(this)"></div>
-                <div class="color-opt" style="background:#06B6D4" data-color="#06B6D4" onclick="pickColor(this)"></div>
-                <div class="color-opt" style="background:#EC4899" data-color="#EC4899" onclick="pickColor(this)"></div>
+            <div><label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px">Team Name</label>
+              <input id="t-name" placeholder="e.g. Red, Alpha..."/></div>
+            <div><label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px">Colour</label>
+              <div class="clrs" id="clrs">
+                <div class="clr on" style="background:#EF4444" data-c="#EF4444" onclick="pickClr(this)"></div>
+                <div class="clr" style="background:#3B82F6" data-c="#3B82F6" onclick="pickClr(this)"></div>
+                <div class="clr" style="background:#EAB308" data-c="#EAB308" onclick="pickClr(this)"></div>
+                <div class="clr" style="background:#22C55E" data-c="#22C55E" onclick="pickClr(this)"></div>
+                <div class="clr" style="background:#8B5CF6" data-c="#8B5CF6" onclick="pickClr(this)"></div>
+                <div class="clr" style="background:#F97316" data-c="#F97316" onclick="pickClr(this)"></div>
+                <div class="clr" style="background:#06B6D4" data-c="#06B6D4" onclick="pickClr(this)"></div>
+                <div class="clr" style="background:#EC4899" data-c="#EC4899" onclick="pickClr(this)"></div>
               </div>
             </div>
           </div>
-          <button class="btn btn-primary" onclick="addTeam()">+ Add Team</button>
+          <button class="btn btn-acc" style="max-width:180px" onclick="addTeam()">+ Add Team</button>
         </div>
-
-        <div class="card">
-          <div class="card-title">Assign Participant to Team</div>
-          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
-            <div class="form-group" style="flex:1;min-width:160px;margin-bottom:0">
-              <label>Participant</label>
-              <select class="form-control" id="assign-participant">
-                <option value="">Select participant</option>
-              </select>
+        <div class="sc">
+          <div class="sc-t">Assign Participant to Team</div>
+          <div class="inline">
+            <div class="inline fg"><label>Participant</label><select id="a-part" style="margin-bottom:0"></select></div>
+            <div class="inline fg"><label>Team</label><select id="a-team" style="margin-bottom:0"></select></div>
+            <div><label style="display:block;margin-bottom:4px;font-size:12px;color:var(--mut)">&nbsp;</label>
+              <label style="font-size:13px;display:flex;align-items:center;gap:6px"><input type="checkbox" id="a-cap"/> 👑 Captain</label>
             </div>
-            <div class="form-group" style="flex:1;min-width:140px;margin-bottom:0">
-              <label>Team</label>
-              <select class="form-control" id="assign-team">
-                <option value="">Select team</option>
-              </select>
+            <div><label style="display:block;margin-bottom:4px;font-size:12px">&nbsp;</label>
+              <button class="btn btn-acc btn-sm" onclick="assignPart()">Assign</button>
             </div>
-            <div class="form-group" style="margin-bottom:0">
-              <label>&nbsp;</label>
-              <label style="display:flex;align-items:center;gap:6px;padding:10px 0;font-size:13px;color:var(--text)">
-                <input type="checkbox" id="assign-captain"/> 👑 Captain
-              </label>
-            </div>
-            <button class="btn btn-primary" onclick="assignParticipant()">Assign</button>
           </div>
         </div>
-
-        <div id="teams-list"></div>
+        <div id="t-list"></div>
       </div>
     </div>
 
-    <!-- ═══ ROUNDS ═══ -->
-    <div class="page" id="page-rounds">
-      <div class="page-header"><h2>Rounds</h2><button class="btn btn-outline btn-sm" onclick="loadRounds()">↺ Refresh</button></div>
-      <div id="no-event-rounds" class="no-event">← Select an Event first</div>
-      <div id="rounds-list"></div>
+    <!-- ROUNDS -->
+    <div class="pg" id="pg-rounds">
+      <div class="ph"><h2>Rounds</h2><button class="btn btn-out btn-sm" onclick="loadRounds()">↺ Refresh</button></div>
+      <div id="r-noev" class="no-ev">← Select an Event first</div>
+      <div id="r-list"></div>
     </div>
 
-    <!-- ═══ SCOREBOARD ═══ -->
-    <div class="page" id="page-scores">
-      <div class="page-header"><h2>Scoreboard</h2><button class="btn btn-outline btn-sm" onclick="loadScores()">↺ Refresh</button></div>
-      <div id="no-event-scores" class="no-event">← Select an Event first</div>
-      <div id="scores-container"></div>
+    <!-- SCORES -->
+    <div class="pg" id="pg-scores">
+      <div class="ph"><h2>Scoreboard</h2><button class="btn btn-out btn-sm" onclick="loadScores()">↺ Refresh</button></div>
+      <div id="sc-noev" class="no-ev">← Select an Event first</div>
+      <div id="sc-body"></div>
     </div>
 
-    <!-- ═══ RESPONSES ═══ -->
-    <div class="page" id="page-responses">
-      <div class="page-header"><h2>All Responses</h2><button class="btn btn-outline btn-sm" onclick="loadResponses()">↺ Refresh</button></div>
-      <div id="no-event-resp" class="no-event">← Select an Event first</div>
-      <div id="responses-content" style="display:none">
-        <div class="card">
-          <div class="card-title">Individual Opinions (Phase 1)</div>
-          <table>
-            <thead><tr><th>Round</th><th>Participant</th><th>Team</th><th>Opinion</th><th>Time</th></tr></thead>
-            <tbody id="indiv-resp-table"></tbody>
-          </table>
+    <!-- RESPONSES -->
+    <div class="pg" id="pg-resps">
+      <div class="ph"><h2>Responses</h2><button class="btn btn-out btn-sm" onclick="loadResps()">↺ Refresh</button></div>
+      <div id="rs-noev" class="no-ev">← Select an Event first</div>
+      <div id="rs-body" style="display:none">
+        <div class="sc"><div class="sc-t">Individual Opinions (Phase 1)</div>
+          <table><thead><tr><th>Round</th><th>Participant</th><th>Team</th><th>Opinion</th><th>Time</th></tr></thead>
+          <tbody id="rs-indiv"></tbody></table>
         </div>
-        <div class="card">
-          <div class="card-title">Team Answers (Phase 2 — Captain)</div>
-          <table>
-            <thead><tr><th>Round</th><th>Team</th><th>Answer</th><th>Captain</th><th>Time</th></tr></thead>
-            <tbody id="team-resp-table"></tbody>
-          </table>
+        <div class="sc"><div class="sc-t">Team Answers (Phase 2)</div>
+          <table><thead><tr><th>Round</th><th>Team</th><th>Answer</th><th>Captain</th><th>Time</th></tr></thead>
+          <tbody id="rs-team"></tbody></table>
         </div>
       </div>
     </div>
@@ -407,555 +317,486 @@
 <div class="toast" id="toast"></div>
 
 <script>
-console.log("Admin v3.0 loaded");
-const SUPA_URL = 'https://wrzpgultvahxbrgooibn.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndyenBndWx0dmFoeGJyZ29vaWJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzc2MTcsImV4cCI6MjA5MzExMzYxN30.sZM4GQiwom34d7TjeK_Jc_n8KYoC8VhI48jfq71dwb8';
-const ADMIN_PASS = 'admin1';
-const APP_URL = 'https://vkv-coder.github.io/Trust-Analysis/';
+// VERSION CHECK
+console.log('Trust Analysis Admin v4.0 loaded OK');
 
-const api = (path, method='GET', body=null, prefer='return=representation') => {
-  const opts = {
-    method,
-    headers:{
-      'apikey': SUPA_KEY,
-      'Authorization': `Bearer ${SUPA_KEY}`,
-      'Content-Type': 'application/json',
-      'Prefer': prefer
-    }
-  };
-  if(body) opts.body = JSON.stringify(body);
-  return fetch(`${SUPA_URL}/rest/v1/${path}`, opts);
-};
-const db = {
-  get:   (t,q='')  => api(`${t}?${q}`,'GET').then(r=>r.json()),
-  post:  (t,b)     => api(t,'POST',b,'return=representation').then(r=>r.json()),
-  patch: (t,q,b)   => api(`${t}?${q}`,'PATCH',b,'return=representation').then(r=>r.json()),
-  del:   (t,q)     => api(`${t}?${q}`,'DELETE'),
-  upsert:(t,b)     => api(t,'POST',b,'resolution=merge-duplicates,return=representation').then(r=>r.json())
-};
+const URL_ = 'https://wrzpgultvahxbrgooibn.supabase.co';
+const KEY_ = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndyenBndWx0dmFoeGJyZ29vaWJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzc2MTcsImV4cCI6MjA5MzExMzYxN30.sZM4GQiwom34d7TjeK_Jc_n8KYoC8VhI48jfq71dwb8';
+const PASS = 'admin1';
+const APP  = 'https://vkv-coder.github.io/Trust-Analysis/';
 
-let S = { event:null, teams:[], participants:[], rounds:[], selectedColor:'#EF4444', poll:null };
-
-// ── LOGIN ──
-function adminLogin(){
-  if(document.getElementById('admin-password').value !== ADMIN_PASS){
-    document.getElementById('login-error').textContent='Incorrect password.'; return;
-  }
-  document.getElementById('login-wrap').style.display='none';
-  document.getElementById('admin-layout').style.display='flex';
-  loadEventList();
-  startPoll();
+// DB helpers
+async function dbGet(table, query){
+  const r = await fetch(`${URL_}/rest/v1/${table}?${query||''}`, {
+    headers:{'apikey':KEY_,'Authorization':'Bearer '+KEY_}
+  });
+  return r.json();
+}
+async function dbPost(table, body){
+  const r = await fetch(`${URL_}/rest/v1/${table}`, {
+    method:'POST',
+    headers:{'apikey':KEY_,'Authorization':'Bearer '+KEY_,'Content-Type':'application/json','Prefer':'return=representation'},
+    body: JSON.stringify(body)
+  });
+  const data = await r.json();
+  console.log('dbPost',table,'status:',r.status,'data:',JSON.stringify(data));
+  return {ok:r.ok, status:r.status, data};
+}
+async function dbPatch(table, query, body){
+  const r = await fetch(`${URL_}/rest/v1/${table}?${query}`, {
+    method:'PATCH',
+    headers:{'apikey':KEY_,'Authorization':'Bearer '+KEY_,'Content-Type':'application/json','Prefer':'return=representation'},
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+async function dbDel(table, query){
+  await fetch(`${URL_}/rest/v1/${table}?${query}`, {
+    method:'DELETE',
+    headers:{'apikey':KEY_,'Authorization':'Bearer '+KEY_}
+  });
+}
+async function dbUpsert(table, body){
+  const r = await fetch(`${URL_}/rest/v1/${table}`, {
+    method:'POST',
+    headers:{'apikey':KEY_,'Authorization':'Bearer '+KEY_,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=representation'},
+    body: JSON.stringify(body)
+  });
+  return r.json();
 }
 
-// ── NAVIGATION ──
-function showPage(name){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  document.getElementById('nav-'+name).classList.add('active');
-  if(name==='dashboard') refreshDashboard();
-  if(name==='participants') renderParticipants();
+// STATE
+let EV=null, TEAMS=[], PARTS=[], ROUNDS=[], CLR='#EF4444', POLL=null;
+
+// LOGIN
+function login(){
+  if(document.getElementById('pw').value!==PASS){document.getElementById('err').textContent='Wrong password';return;}
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='flex';
+  loadEventList();
+  POLL=setInterval(pollEvent,5000);
+}
+
+// NAVIGATION
+function go(name){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nav a').forEach(a=>a.classList.remove('on'));
+  document.getElementById('pg-'+name).classList.add('on');
+  document.getElementById('n-'+name).classList.add('on');
+  if(name==='dash') refreshDash();
+  if(name==='parts') renderParts();
   if(name==='teams') renderTeams();
   if(name==='rounds') loadRounds();
   if(name==='scores') loadScores();
-  if(name==='responses') loadResponses();
+  if(name==='resps') loadResps();
   if(name==='events') loadEventList();
 }
 
-// ── TOAST ──
-function toast(msg,type='info'){
+// TOAST
+function toast(msg,type){
   const t=document.getElementById('toast');
-  t.className=`toast ${type}`;t.textContent=msg;t.classList.add('show');
+  t.className='toast '+(type==='ok'?'ok':type==='er'?'er':'in');
+  t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),3000);
 }
 
 // ── EVENTS ──
 async function loadEventList(){
-  const events = await db.get('ta_sessions','order=created_at.desc&select=*');
-  const sel = document.getElementById('event-select');
-  const tbody = document.getElementById('events-table');
+  const evs = await dbGet('ta_sessions','order=created_at.desc&select=*');
+  const sel = document.getElementById('ev-sel');
+  const tb  = document.getElementById('ev-table');
   sel.innerHTML='<option value="">— Select Event —</option>';
-  if(tbody) tbody.innerHTML='';
-  (events||[]).forEach(e=>{
-    sel.innerHTML+=`<option value="${e.id}">${e.name}</option>`;
-    if(tbody) tbody.innerHTML+=`<tr>
+  if(tb) tb.innerHTML='';
+  (evs||[]).forEach(e=>{
+    sel.innerHTML+=`<option value="${e.id}">${e.name} [${e.pin}]</option>`;
+    if(tb) tb.innerHTML+=`<tr>
       <td><strong>${e.name}</strong></td>
-      <td><span style="font-size:17px;color:var(--accent);font-family:'Space Grotesk',sans-serif;font-weight:700">${e.pin}</span></td>
+      <td><strong style="color:var(--acc)">${e.pin}</strong></td>
       <td>${e.total_rounds}</td>
-      <td><span class="status-badge status-${e.status}">${e.status}</span></td>
-      <td><button class="btn btn-sm btn-outline" onclick="switchEvent('${e.id}')">Load</button>
-      <button class="btn btn-sm btn-danger" onclick="deleteEvent('${e.id}')">Delete</button></td>
+      <td><span class="sbadge s-${e.status}">${e.status}</span></td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-out btn-sm" onclick="loadEvent('${e.id}')">Load</button>
+        <button class="btn btn-sm btn-dan" onclick="delEvent('${e.id}')">Del</button>
+      </td>
     </tr>`;
   });
-  if(events && events.length>0 && !S.event){
-    switchEvent(events[0].id);
-    sel.value=events[0].id;
-  }
+  if(evs&&evs.length>0&&!EV){loadEvent(evs[0].id);sel.value=evs[0].id;}
 }
 
 async function createEvent(){
+  const name = document.getElementById('e-name').value.trim();
+  const pin  = document.getElementById('e-pin').value.trim();
+  const rnds = parseInt(document.getElementById('e-rounds').value)||10;
+  const msg  = document.getElementById('e-msg');
+
+  msg.style.color='var(--acc)'; msg.textContent='Checking...';
+  if(!name){msg.style.color='var(--hi)';msg.textContent='Event name is required';return;}
+  if(!pin||pin.length!==4){msg.style.color='var(--hi)';msg.textContent='PIN must be exactly 4 digits';return;}
+
+  msg.textContent='Creating event...';
+  console.log('Creating event:',name,pin,rnds);
+
   try {
-    const name=document.getElementById('ev-name').value.trim();
-    const pin=document.getElementById('ev-pin').value.trim();
-    const rounds=parseInt(document.getElementById('ev-rounds').value)||10;
-    if(!name){toast('Event name required','error');return;}
-    if(!pin||pin.length!==4){toast('4-digit PIN required','error');return;}
-    toast('Creating...','info');
-    const res = await db.post('ta_sessions',{name,pin,total_rounds:rounds,status:'setup',current_round:0});
+    const res = await dbPost('ta_sessions',{name,pin,total_rounds:rnds,status:'setup',current_round:0});
     console.log('createEvent result:',JSON.stringify(res));
-    if(!res){toast('No server response','error');return;}
-    if(res.code||res.error){toast('DB Error: '+(res.message||res.error),'error');return;}
-    const session=Array.isArray(res)?res[0]:res;
-    if(!session||!session.id){toast('Session not created — check console','error');return;}
-    for(let i=1;i<=rounds;i++){
-      await db.post('ta_rounds',{session_id:session.id,round_number:i,multiplier:1,status:'pending',timer_seconds:300});
+
+    if(!res.ok){
+      msg.style.color='var(--hi)';
+      msg.textContent='Error '+res.status+': '+(res.data?.message||JSON.stringify(res.data));
+      return;
     }
-    document.getElementById('ev-name').value='';
-    document.getElementById('ev-pin').value='';
-    toast('Event created!','success');
+
+    const session = Array.isArray(res.data)?res.data[0]:res.data;
+    if(!session||!session.id){
+      msg.style.color='var(--hi)';
+      msg.textContent='No session ID returned — check console';
+      return;
+    }
+
+    msg.textContent='Creating rounds...';
+    for(let i=1;i<=rnds;i++){
+      await dbPost('ta_rounds',{session_id:session.id,round_number:i,multiplier:1,status:'pending',timer_seconds:300});
+    }
+
+    document.getElementById('e-name').value='';
+    document.getElementById('e-pin').value='';
+    msg.style.color='var(--lo)';
+    msg.textContent='Event created successfully!';
+    toast('Event created!','ok');
+
     await loadEventList();
-    await switchEvent(session.id);
-    document.getElementById('event-select').value=session.id;
-    showPage('participants');
-  } catch(e){
-    console.error('createEvent error:',e);
-    toast('Error: '+e.message,'error');
+    await loadEvent(session.id);
+    document.getElementById('ev-sel').value=session.id;
+    setTimeout(()=>go('parts'),800);
+
+  } catch(err){
+    console.error('createEvent exception:',err);
+    msg.style.color='var(--hi)';
+    msg.textContent='Exception: '+err.message;
   }
 }
 
-async function deleteEvent(id){
-  if(!confirm('Delete this event and all its data?'))return;
-  await db.del('ta_scores',`session_id=eq.${id}`);
-  await db.del('ta_team_answers',`session_id=eq.${id}`);
-  await db.del('ta_individual_answers',`session_id=eq.${id}`);
-  await db.del('ta_rounds',`session_id=eq.${id}`);
-  await db.del('ta_participants',`session_id=eq.${id}`);
-  await db.del('ta_teams',`session_id=eq.${id}`);
-  await db.del('ta_sessions',`id=eq.${id}`);
-  S.event=null;
-  toast('Event deleted','info');
-  await loadEventList();
+async function delEvent(id){
+  if(!confirm('Delete this event and all data?'))return;
+  await dbDel('ta_scores','session_id=eq.'+id);
+  await dbDel('ta_team_answers','session_id=eq.'+id);
+  await dbDel('ta_individual_answers','session_id=eq.'+id);
+  await dbDel('ta_rounds','session_id=eq.'+id);
+  await dbDel('ta_participants','session_id=eq.'+id);
+  await dbDel('ta_teams','session_id=eq.'+id);
+  await dbDel('ta_sessions','id=eq.'+id);
+  EV=null; toast('Deleted','in');
+  loadEventList();
 }
 
-async function switchEvent(id){
+async function loadEvent(id){
   if(!id)return;
-  const sessions=await db.get('ta_sessions',`id=eq.${id}&select=*`);
-  if(!sessions||sessions.length===0)return;
-  S.event=sessions[0];
-  document.getElementById('event-select').value=id;
-  await loadTeams();
-  await loadParticipants();
-  await loadRounds();
-  refreshDashboard();
-  toast(`Event loaded: ${S.event.name}`,'info');
+  const s=await dbGet('ta_sessions','id=eq.'+id+'&select=*');
+  if(!s||!s[0])return;
+  EV=s[0];
+  document.getElementById('ev-sel').value=id;
+  TEAMS=await dbGet('ta_teams','session_id=eq.'+id+'&order=created_at')||[];
+  PARTS=await dbGet('ta_participants','session_id=eq.'+id+'&select=*,ta_teams(name,color)&order=name')||[];
+  ROUNDS=await dbGet('ta_rounds','session_id=eq.'+id+'&order=round_number')||[];
+  refreshDash();
+  toast('Loaded: '+EV.name,'in');
+}
+
+// ── DASHBOARD ──
+async function refreshDash(){
+  if(!EV){document.getElementById('d-noev').style.display='block';document.getElementById('d-body').style.display='none';return;}
+  document.getElementById('d-noev').style.display='none';
+  document.getElementById('d-body').style.display='block';
+  document.getElementById('d-teams').textContent=TEAMS.length;
+  document.getElementById('d-parts').textContent=PARTS.length;
+  document.getElementById('d-round').textContent=EV.current_round>0?EV.current_round+'/'+EV.total_rounds:'—';
+  document.getElementById('d-evname').textContent=EV.name;
+  document.getElementById('d-pin').textContent=EV.pin;
+  document.getElementById('d-link').textContent=APP;
+  const b=document.getElementById('d-status');
+  b.className='sbadge s-'+EV.status; b.textContent=EV.status;
+
+  if(EV.current_round>0){
+    const rnd=await getCurRound();
+    if(rnd){
+      const ops=await dbGet('ta_individual_answers','round_id=eq.'+rnd.id+'&select=participant_id')||[];
+      const pids=new Set(ops.map(o=>o.participant_id));
+      document.getElementById('d-present').textContent=pids.size;
+      const pg=document.getElementById('d-presence');
+      pg.innerHTML='';
+      PARTS.forEach(p=>{
+        const on=pids.has(p.id);
+        pg.innerHTML+=`<div class="pchip ${on?'yes':'no'}">${on?'✅':'⏳'} ${p.name}</div>`;
+      });
+      const full=await dbGet('ta_individual_answers','round_id=eq.'+rnd.id+'&select=*,ta_participants(name,ta_teams(name,color))')||[];
+      const tb=document.getElementById('d-opinions');tb.innerHTML='';
+      full.forEach(r=>{
+        const p=r.ta_participants;const t=p?.ta_teams;
+        tb.innerHTML+=`<tr><td>${p?.name||'—'}</td><td style="color:${t?.color||'#3B82F6'}">${t?.name||'—'}</td><td><strong style="color:${r.answer==='H'?'var(--hi)':'var(--lo)'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td></tr>`;
+      });
+    }
+  }
+}
+
+async function pollEvent(){
+  if(!EV)return;
+  const s=await dbGet('ta_sessions','id=eq.'+EV.id+'&select=*');
+  if(s&&s[0]){EV=s[0];refreshDash();}
+}
+
+function copyLink(){navigator.clipboard.writeText(APP).then(()=>toast('Copied!','ok'));}
+
+// ── GAME CONTROL ──
+async function getCurRound(){
+  if(!EV||!EV.current_round)return null;
+  const r=await dbGet('ta_rounds','session_id=eq.'+EV.id+'&round_number=eq.'+EV.current_round+'&select=*');
+  return(r&&r[0])?r[0]:null;
+}
+
+async function openMain(){
+  if(!EV){toast('No event','er');return;}
+  const next=(EV.current_round||0)+1;
+  if(next>EV.total_rounds){toast('All rounds done!','in');return;}
+  const r=await dbGet('ta_rounds','session_id=eq.'+EV.id+'&round_number=eq.'+next+'&select=*');
+  if(r&&r[0]) await dbPatch('ta_rounds','id=eq.'+r[0].id,{status:'registration_open'});
+  await dbPatch('ta_sessions','id=eq.'+EV.id,{status:'registration',current_round:next});
+  EV.current_round=next; EV.status='registration';
+  toast('Round '+next+' — Main Room open!','ok');
+  refreshDash();
+}
+
+async function openBreakout(){
+  if(!EV)return;
+  const r=await getCurRound();if(!r){toast('No active round','er');return;}
+  await dbPatch('ta_rounds','id=eq.'+r.id,{status:'breakout_open',timer_started_at:new Date().toISOString()});
+  await dbPatch('ta_sessions','id=eq.'+EV.id,{status:'breakout'});
+  EV.status='breakout'; toast('Breakout started!','ok'); refreshDash();
+}
+
+async function revealScores(){
+  if(!EV)return;
+  const r=await getCurRound();if(!r)return;
+  await calcScores(r);
+  await dbPatch('ta_rounds','id=eq.'+r.id,{status:'revealed'});
+  await dbPatch('ta_sessions','id=eq.'+EV.id,{status:'scoring'});
+  EV.status='scoring'; toast('Scores revealed!','ok'); refreshDash(); loadScores();
+}
+
+async function endSession(){
+  if(!EV)return;if(!confirm('End session?'))return;
+  await dbPatch('ta_sessions','id=eq.'+EV.id,{status:'complete'});
+  EV.status='complete'; toast('Session ended','in'); refreshDash();
+}
+
+async function calcScores(round){
+  const tas=await dbGet('ta_team_answers','round_id=eq.'+round.id+'&select=*')||[];
+  if(!tas.length){toast('No team answers yet','er');return;}
+  const h=tas.filter(a=>a.answer==='H').length;
+  const l=tas.filter(a=>a.answer==='L').length;
+  let hp=0,lp=0;
+  if(h===4){hp=-100;}
+  else if(h===3){hp=100;lp=-300;}
+  else if(h===2){hp=-100;lp=-200;}
+  else if(h===1){hp=300;lp=-100;}
+  else{lp=100;}
+  const mult=round.multiplier||1;
+  for(const team of TEAMS){
+    const ta=tas.find(a=>a.team_id===team.id);if(!ta)continue;
+    const rpts=(ta.answer==='H'?hp:lp)*mult;
+    const prev=await dbGet('ta_scores','session_id=eq.'+EV.id+'&team_id=eq.'+team.id+'&order=calculated_at.desc&limit=1');
+    const cum=(prev&&prev[0])?(prev[0].cumulative_points||0):0;
+    await dbUpsert('ta_scores',{session_id:EV.id,round_id:round.id,team_id:team.id,round_points:rpts,cumulative_points:cum+rpts,calculated_at:new Date().toISOString()});
+  }
 }
 
 // ── PARTICIPANTS ──
-async function loadParticipants(){
-  if(!S.event)return;
-  S.participants=await db.get('ta_participants',`session_id=eq.${S.event.id}&select=*,ta_teams(name,color)&order=name`)||[];
+async function addPart(){
+  if(!EV){toast('Select event first','er');return;}
+  const name=document.getElementById('p-name').value.trim();
+  if(!name){toast('Name required','er');return;}
+  const res=await dbPost('ta_participants',{session_id:EV.id,name,is_captain:false});
+  if(!res.ok){toast('Error adding participant','er');return;}
+  document.getElementById('p-name').value='';
+  PARTS=await dbGet('ta_participants','session_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
+  renderParts(); fillDropdowns(); toast(name+' added','ok');
 }
 
-async function addParticipant(){
-  if(!S.event){toast('Select an event first','error');return;}
-  const name=document.getElementById('new-part-name').value.trim();
-  if(!name){toast('Name required','error');return;}
-  await db.post('ta_participants',{session_id:S.event.id,name,is_captain:false});
-  document.getElementById('new-part-name').value='';
-  await loadParticipants();
-  renderParticipants();
-  populateAssignDropdowns();
-  toast(`${name} added`,'success');
+async function remPart(id,name){
+  if(!confirm('Remove '+name+'?'))return;
+  await dbDel('ta_participants','id=eq.'+id);
+  PARTS=await dbGet('ta_participants','session_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
+  renderParts(); renderTeams(); fillDropdowns(); toast(name+' removed','in');
 }
 
-function renderParticipants(){
-  if(!S.event){
-    document.getElementById('no-event-part').style.display='block';
-    document.getElementById('part-content').style.display='none';
-    return;
-  }
-  document.getElementById('no-event-part').style.display='none';
-  document.getElementById('part-content').style.display='block';
-  document.getElementById('part-count').textContent=S.participants.length;
-  const list=document.getElementById('part-list');
-  list.innerHTML='';
-  S.participants.forEach(p=>{
-    const team=p.ta_teams;
-    list.innerHTML+=`<div class="chip" style="border-color:${team?.color||'var(--border)'}">
+function renderParts(){
+  if(!EV){document.getElementById('p-noev').style.display='block';document.getElementById('p-body').style.display='none';return;}
+  document.getElementById('p-noev').style.display='none';
+  document.getElementById('p-body').style.display='block';
+  document.getElementById('p-count').textContent=PARTS.length;
+  const l=document.getElementById('p-list');l.innerHTML='';
+  PARTS.forEach(p=>{
+    const t=p.ta_teams;
+    l.innerHTML+=`<div class="chip" style="border-color:${t?.color||'var(--bdr)'}">
       ${p.is_captain?'👑 ':''}${p.name}
-      ${team?`<span style="color:${team.color};font-size:11px">(${team.name})</span>`:'<span style="color:var(--muted);font-size:11px">(unassigned)</span>'}
-      <span class="chip-remove" onclick="removeParticipant('${p.id}','${p.name}')">×</span>
+      ${t?`<span style="color:${t.color};font-size:11px">(${t.name})</span>`:'<span style="color:var(--mut);font-size:11px">(no team)</span>'}
+      <span class="xbtn" onclick="remPart('${p.id}','${p.name}')">×</span>
     </div>`;
   });
-}
-
-async function removeParticipant(id,name){
-  if(!confirm(`Remove ${name}?`))return;
-  await db.del('ta_participants',`id=eq.${id}`);
-  await loadParticipants();
-  renderParticipants();
-  populateAssignDropdowns();
-  toast(`${name} removed`,'info');
 }
 
 // ── TEAMS ──
-function pickColor(el){
-  document.querySelectorAll('.color-opt').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected');
-  S.selectedColor=el.dataset.color;
-}
-
-async function loadTeams(){
-  if(!S.event)return;
-  S.teams=await db.get('ta_teams',`session_id=eq.${S.event.id}&order=created_at`)||[];
-}
+function pickClr(el){document.querySelectorAll('.clr').forEach(c=>c.classList.remove('on'));el.classList.add('on');CLR=el.dataset.c;}
 
 async function addTeam(){
-  if(!S.event){toast('Select an event first','error');return;}
-  const name=document.getElementById('new-team-name').value.trim();
-  if(!name){toast('Team name required','error');return;}
-  await db.post('ta_teams',{session_id:S.event.id,name,color:S.selectedColor});
-  document.getElementById('new-team-name').value='';
-  await loadTeams();
-  await loadParticipants();
-  renderTeams();
-  populateAssignDropdowns();
-  toast(`Team "${name}" created`,'success');
+  if(!EV){toast('Select event first','er');return;}
+  const name=document.getElementById('t-name').value.trim();
+  if(!name){toast('Team name required','er');return;}
+  const res=await dbPost('ta_teams',{session_id:EV.id,name,color:CLR});
+  if(!res.ok){toast('Error adding team','er');return;}
+  document.getElementById('t-name').value='';
+  TEAMS=await dbGet('ta_teams','session_id=eq.'+EV.id+'&order=created_at')||[];
+  renderTeams(); fillDropdowns(); toast('Team '+name+' added','ok');
 }
 
-async function assignParticipant(){
-  const pid=document.getElementById('assign-participant').value;
-  const tid=document.getElementById('assign-team').value;
-  const cap=document.getElementById('assign-captain').checked;
-  if(!pid||!tid){toast('Select participant and team','error');return;}
-  await db.patch('ta_participants',`id=eq.${pid}`,{team_id:tid,is_captain:cap});
-  document.getElementById('assign-captain').checked=false;
-  await loadParticipants();
-  renderTeams();
-  populateAssignDropdowns();
-  toast('Assigned!','success');
+async function assignPart(){
+  const pid=document.getElementById('a-part').value;
+  const tid=document.getElementById('a-team').value;
+  const cap=document.getElementById('a-cap').checked;
+  if(!pid||!tid){toast('Select participant and team','er');return;}
+  await dbPatch('ta_participants','id=eq.'+pid,{team_id:tid,is_captain:cap});
+  document.getElementById('a-cap').checked=false;
+  PARTS=await dbGet('ta_participants','session_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
+  renderTeams(); fillDropdowns(); toast('Assigned!','ok');
 }
 
-async function removeFromTeam(pid){
-  await db.patch('ta_participants',`id=eq.${pid}`,{team_id:null,is_captain:false});
-  await loadParticipants();
-  renderTeams();
-  populateAssignDropdowns();
-  toast('Removed from team','info');
+async function remFromTeam(pid){
+  await dbPatch('ta_participants','id=eq.'+pid,{team_id:null,is_captain:false});
+  PARTS=await dbGet('ta_participants','session_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
+  renderTeams(); fillDropdowns(); toast('Removed from team','in');
 }
 
-async function removeTeam(id,name){
-  if(!confirm(`Remove team "${name}"? Participants will be unassigned.`))return;
-  await db.patch('ta_participants',`team_id=eq.${id}`,{team_id:null,is_captain:false});
-  await db.del('ta_teams',`id=eq.${id}`);
-  await loadTeams();
-  await loadParticipants();
-  renderTeams();
-  populateAssignDropdowns();
-  toast('Team removed','info');
+async function remTeam(id,name){
+  if(!confirm('Remove team '+name+'?'))return;
+  await dbPatch('ta_participants','team_id=eq.'+id,{team_id:null,is_captain:false});
+  await dbDel('ta_teams','id=eq.'+id);
+  TEAMS=await dbGet('ta_teams','session_id=eq.'+EV.id+'&order=created_at')||[];
+  PARTS=await dbGet('ta_participants','session_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
+  renderTeams(); fillDropdowns(); toast(name+' removed','in');
 }
 
 function renderTeams(){
-  if(!S.event){
-    document.getElementById('no-event-teams').style.display='block';
-    document.getElementById('teams-content').style.display='none';
-    return;
-  }
-  document.getElementById('no-event-teams').style.display='none';
-  document.getElementById('teams-content').style.display='block';
-
-  const list=document.getElementById('teams-list');
-  list.innerHTML='';
-  S.teams.forEach(team=>{
-    const members=S.participants.filter(p=>p.team_id===team.id);
-    const chipsHtml=members.map(p=>`
-      <div class="chip">
-        ${p.is_captain?'👑 ':''}${p.name}
-        <span class="chip-remove" onclick="removeFromTeam('${p.id}')">×</span>
-      </div>`).join('');
-    list.innerHTML+=`<div class="card">
-      <div class="team-header">
-        <div class="team-dot" style="background:${team.color}"></div>
-        <div class="team-name-text">${team.name}</div>
-        <span style="font-size:12px;color:var(--muted)">${members.length} member${members.length!==1?'s':''}</span>
-        <button class="btn btn-sm btn-danger" onclick="removeTeam('${team.id}','${team.name}')">Remove</button>
+  if(!EV){document.getElementById('t-noev').style.display='block';document.getElementById('t-body').style.display='none';return;}
+  document.getElementById('t-noev').style.display='none';
+  document.getElementById('t-body').style.display='block';
+  const l=document.getElementById('t-list');l.innerHTML='';
+  TEAMS.forEach(team=>{
+    const members=PARTS.filter(p=>p.team_id===team.id);
+    l.innerHTML+=`<div class="sc">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="width:12px;height:12px;border-radius:50%;background:${team.color}"></div>
+        <strong>${team.name}</strong>
+        <span style="font-size:12px;color:var(--mut)">${members.length} member${members.length!==1?'s':''}</span>
+        <button class="btn btn-dan btn-sm" onclick="remTeam('${team.id}','${team.name}')">Remove</button>
       </div>
-      <div class="chips">${chipsHtml||'<span style="font-size:12px;color:var(--muted)">No members yet</span>'}</div>
+      <div class="chips">${members.map(p=>`<div class="chip">${p.is_captain?'👑 ':''}${p.name}<span class="xbtn" onclick="remFromTeam('${p.id}')">×</span></div>`).join('')||'<span style="font-size:12px;color:var(--mut)">No members</span>'}</div>
     </div>`;
   });
 }
 
-function populateAssignDropdowns(){
-  const pSel=document.getElementById('assign-participant');
-  const tSel=document.getElementById('assign-team');
-  if(!pSel||!tSel)return;
-  pSel.innerHTML='<option value="">Select participant</option>';
-  tSel.innerHTML='<option value="">Select team</option>';
-  S.participants.forEach(p=>{
-    pSel.innerHTML+=`<option value="${p.id}">${p.name}${p.ta_teams?' ('+p.ta_teams.name+')':' (unassigned)'}</option>`;
-  });
-  S.teams.forEach(t=>{
-    tSel.innerHTML+=`<option value="${t.id}">${t.name}</option>`;
-  });
+function fillDropdowns(){
+  const ps=document.getElementById('a-part');
+  const ts=document.getElementById('a-team');
+  if(!ps||!ts)return;
+  ps.innerHTML='<option value="">Select participant</option>';
+  ts.innerHTML='<option value="">Select team</option>';
+  PARTS.forEach(p=>{ps.innerHTML+=`<option value="${p.id}">${p.name}${p.ta_teams?' ('+p.ta_teams.name+')':' (no team)'}</option>`;});
+  TEAMS.forEach(t=>{ts.innerHTML+=`<option value="${t.id}">${t.name}</option>`;});
 }
 
 // ── ROUNDS ──
 async function loadRounds(){
-  if(!S.event){
-    document.getElementById('no-event-rounds').style.display='block';
-    document.getElementById('rounds-list').style.display='none';
-    return;
-  }
-  document.getElementById('no-event-rounds').style.display='none';
-  S.rounds=await db.get('ta_rounds',`session_id=eq.${S.event.id}&order=round_number`)||[];
-  const list=document.getElementById('rounds-list');
-  list.style.display='block';
-  list.innerHTML='';
-  S.rounds.forEach(r=>{
-    const isCurrent=S.event.current_round===r.round_number;
-    list.innerHTML+=`<div class="round-row ${isCurrent?'current':''}">
-      <div class="round-num">${r.round_number}</div>
-      <div class="round-body">
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
-          <span class="status-badge status-${r.status==='pending'?'setup':r.status}">${r.status}</span>
-          ${r.multiplier>1?`<span style="background:var(--accent);color:#000;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700">×${r.multiplier} BONUS</span>`:''}
-          ${isCurrent?'<span style="color:var(--accent);font-size:12px;font-weight:600">← CURRENT</span>':''}
+  if(!EV){document.getElementById('r-noev').style.display='block';document.getElementById('r-list').innerHTML='';return;}
+  document.getElementById('r-noev').style.display='none';
+  ROUNDS=await dbGet('ta_rounds','session_id=eq.'+EV.id+'&order=round_number')||[];
+  const l=document.getElementById('r-list');l.innerHTML='';
+  ROUNDS.forEach(r=>{
+    const cur=EV.current_round===r.round_number;
+    l.innerHTML+=`<div class="rrow ${cur?'cur':''}">
+      <div class="rnum">${r.round_number}</div>
+      <div class="rbody">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+          <span class="sbadge s-${r.status==='pending'?'setup':r.status}">${r.status}</span>
+          ${r.multiplier>1?`<span style="background:var(--acc);color:#000;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700">×${r.multiplier}</span>`:''}
+          ${cur?'<span style="color:var(--acc);font-size:12px;font-weight:600">CURRENT</span>':''}
         </div>
-        <div class="form-group">
-          <label>Case Study / Incident</label>
-          <textarea class="form-control" id="case-${r.id}" rows="2" placeholder="Type case study for this round...">${r.case_study||''}</textarea>
-        </div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
-          <div>
-            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Multiplier</label>
-            <select class="form-control" id="mult-${r.id}" style="width:80px">
+        <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px">Case Study</label>
+        <textarea id="cs-${r.id}" rows="2" placeholder="Type case study...">${r.case_study||''}</textarea>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div><label style="font-size:12px;color:var(--mut);display:block;margin-bottom:3px">Multiplier</label>
+            <select id="ml-${r.id}" style="width:80px;margin-bottom:0">
               <option value="1" ${r.multiplier==1?'selected':''}>×1</option>
               <option value="2" ${r.multiplier==2?'selected':''}>×2</option>
               <option value="3" ${r.multiplier==3?'selected':''}>×3</option>
               <option value="5" ${r.multiplier==5?'selected':''}>×5</option>
               <option value="10" ${r.multiplier==10?'selected':''}>×10</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Timer (sec)</label>
-            <input type="number" class="form-control" id="timer-${r.id}" value="${r.timer_seconds||300}" style="width:90px"/>
-          </div>
+            </select></div>
+          <div><label style="font-size:12px;color:var(--mut);display:block;margin-bottom:3px">Timer (sec)</label>
+            <input type="number" id="tm-${r.id}" value="${r.timer_seconds||300}" style="width:90px;margin-bottom:0"/></div>
         </div>
-        <button class="btn btn-sm btn-outline" onclick="saveRound('${r.id}',${r.round_number})">💾 Save Round ${r.round_number}</button>
+        <button class="btn btn-out btn-sm" style="margin-top:8px" onclick="saveRound('${r.id}',${r.round_number})">💾 Save</button>
       </div>
     </div>`;
   });
 }
 
 async function saveRound(id,num){
-  const caseText=document.getElementById(`case-${id}`).value.trim();
-  const mult=parseInt(document.getElementById(`mult-${id}`).value);
-  const timer=parseInt(document.getElementById(`timer-${id}`).value)||300;
-  await db.patch('ta_rounds',`id=eq.${id}`,{case_study:caseText,multiplier:mult,timer_seconds:timer});
-  toast(`Round ${num} saved`,'success');
-  await loadRounds();
-}
-
-// ── GAME CONTROL ──
-async function openRegistration(){
-  if(!S.event){toast('No event loaded','error');return;}
-  const next=(S.event.current_round||0)+1;
-  if(next>S.event.total_rounds){toast('All rounds completed!','info');return;}
-  const rounds=await db.get('ta_rounds',`session_id=eq.${S.event.id}&round_number=eq.${next}&select=*`);
-  if(rounds&&rounds.length>0) await db.patch('ta_rounds',`id=eq.${rounds[0].id}`,{status:'registration_open'});
-  await db.patch('ta_sessions',`id=eq.${S.event.id}`,{status:'registration',current_round:next});
-  toast(`Round ${next} — Main Room open!`,'success');
-  await refreshEvent();
-}
-
-async function openBreakout(){
-  if(!S.event)return;
-  const round=await getCurrentRound();
-  if(!round){toast('No active round','error');return;}
-  await db.patch('ta_rounds',`id=eq.${round.id}`,{status:'breakout_open',timer_started_at:new Date().toISOString()});
-  await db.patch('ta_sessions',`id=eq.${S.event.id}`,{status:'breakout'});
-  toast('Breakout started!','success');
-  await refreshEvent();
-}
-
-async function revealScores(){
-  if(!S.event)return;
-  const round=await getCurrentRound();
-  if(!round)return;
-  await calculateScores(round);
-  await db.patch('ta_rounds',`id=eq.${round.id}`,{status:'revealed'});
-  await db.patch('ta_sessions',`id=eq.${S.event.id}`,{status:'scoring'});
-  toast('Scores revealed!','success');
-  await refreshEvent();
-}
-
-async function endSession(){
-  if(!S.event)return;
-  if(!confirm('End this session?'))return;
-  await db.patch('ta_sessions',`id=eq.${S.event.id}`,{status:'complete'});
-  toast('Session ended','info');
-  await refreshEvent();
-}
-
-async function getCurrentRound(){
-  if(!S.event||!S.event.current_round)return null;
-  const r=await db.get('ta_rounds',`session_id=eq.${S.event.id}&round_number=eq.${S.event.current_round}&select=*`);
-  return(r&&r.length>0)?r[0]:null;
-}
-
-async function calculateScores(round){
-  const teamAnswers=await db.get('ta_team_answers',`round_id=eq.${round.id}&select=*`)||[];
-  const teams=await db.get('ta_teams',`session_id=eq.${S.event.id}&select=*`)||[];
-  if(teamAnswers.length===0){toast('No team answers yet','error');return;}
-  const highCount=teamAnswers.filter(a=>a.answer==='H').length;
-  const lowCount=teamAnswers.filter(a=>a.answer==='L').length;
-  let hp=0,lp=0;
-  if(highCount===4){hp=-100;lp=0;}
-  else if(highCount===3&&lowCount===1){hp=100;lp=-300;}
-  else if(highCount===2&&lowCount===2){hp=-100;lp=-200;}
-  else if(highCount===1&&lowCount===3){hp=300;lp=-100;}
-  else if(lowCount===4){hp=0;lp=100;}
-  const mult=round.multiplier||1;
-  for(const team of teams){
-    const ta=teamAnswers.find(a=>a.team_id===team.id);
-    if(!ta)continue;
-    const rpts=(ta.answer==='H'?hp:lp)*mult;
-    const prev=await db.get('ta_scores',`session_id=eq.${S.event.id}&team_id=eq.${team.id}&order=calculated_at.desc&limit=1`);
-    const prevCum=(prev&&prev.length>0)?(prev[0].cumulative_points||0):0;
-    await db.upsert('ta_scores',{session_id:S.event.id,round_id:round.id,team_id:team.id,round_points:rpts,cumulative_points:prevCum+rpts,calculated_at:new Date().toISOString()});
-  }
-}
-
-// ── DASHBOARD ──
-async function refreshDashboard(){
-  if(!S.event){
-    document.getElementById('no-event-dash').style.display='block';
-    document.getElementById('dash-content').style.display='none';
-    return;
-  }
-  document.getElementById('no-event-dash').style.display='none';
-  document.getElementById('dash-content').style.display='block';
-  document.getElementById('stat-teams').textContent=S.teams.length;
-  document.getElementById('stat-participants').textContent=S.participants.length;
-  document.getElementById('stat-round').textContent=S.event.current_round>0?`${S.event.current_round}/${S.event.total_rounds}`:'—';
-  document.getElementById('dash-event-name').textContent=S.event.name;
-  document.getElementById('dash-pin').textContent=S.event.pin;
-  document.getElementById('dash-link').textContent=APP_URL;
-  const badge=document.getElementById('dash-status');
-  badge.className=`status-badge status-${S.event.status}`;
-  badge.textContent=S.event.status;
-
-  // Presence
-  if(S.event.current_round>0){
-    const round=await getCurrentRound();
-    if(round){
-      const opinions=await db.get('ta_individual_answers',`round_id=eq.${round.id}&select=participant_id`)||[];
-      const presentIds=new Set(opinions.map(o=>o.participant_id));
-      document.getElementById('stat-present').textContent=presentIds.size;
-      const pg=document.getElementById('presence-grid');
-      pg.innerHTML='';
-      S.participants.forEach(p=>{
-        const present=presentIds.has(p.id);
-        pg.innerHTML+=`<div class="presence-chip ${present?'present':'absent'}">
-          ${present?'✅':'⏳'} ${p.name}
-        </div>`;
-      });
-      // Opinions table
-      const full=await db.get('ta_individual_answers',`round_id=eq.${round.id}&select=*,ta_participants(name,ta_teams(name,color))`)||[];
-      const tbody=document.getElementById('dash-opinions');
-      tbody.innerHTML='';
-      full.forEach(r=>{
-        const p=r.ta_participants;const t=p?.ta_teams;
-        tbody.innerHTML+=`<tr>
-          <td>${p?.name||'—'}</td>
-          <td style="color:${t?.color||'#3B82F6'}">${t?.name||'—'}</td>
-          <td><strong style="color:${r.answer==='H'?'var(--high)':'var(--low)'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td>
-        </tr>`;
-      });
-    }
-  }
-}
-
-async function refreshEvent(){
-  if(!S.event)return;
-  const s=await db.get('ta_sessions',`id=eq.${S.event.id}&select=*`);
-  if(s&&s.length>0) S.event=s[0];
-  refreshDashboard();
-}
-
-function startPoll(){
-  if(S.poll)clearInterval(S.poll);
-  S.poll=setInterval(async()=>{
-    await refreshEvent();
-  },5000);
-}
-
-function copyLink(){
-  navigator.clipboard.writeText(APP_URL).then(()=>toast('Link copied!','success'));
+  const cs=document.getElementById('cs-'+id).value.trim();
+  const ml=parseInt(document.getElementById('ml-'+id).value);
+  const tm=parseInt(document.getElementById('tm-'+id).value)||300;
+  await dbPatch('ta_rounds','id=eq.'+id,{case_study:cs,multiplier:ml,timer_seconds:tm});
+  toast('Round '+num+' saved','ok'); loadRounds();
 }
 
 // ── SCORES ──
 async function loadScores(){
-  if(!S.event){document.getElementById('no-event-scores').style.display='block';document.getElementById('scores-container').style.display='none';return;}
-  document.getElementById('no-event-scores').style.display='none';
-  const scores=await db.get('ta_scores',`session_id=eq.${S.event.id}&select=*,ta_teams(name,color),ta_rounds(round_number,multiplier)&order=ta_rounds(round_number)`)||[];
-  const container=document.getElementById('scores-container');
-  container.style.display='block';
-  if(scores.length===0){container.innerHTML='<div class="card" style="text-align:center;color:var(--muted);padding:40px">No scores yet.</div>';return;}
-  const teamMap={};
-  scores.forEach(s=>{
-    if(!teamMap[s.team_id]) teamMap[s.team_id]={team:s.ta_teams,rounds:[],cum:0};
-    teamMap[s.team_id].rounds.push(s);
-    teamMap[s.team_id].cum=s.cumulative_points;
-  });
-  const sorted=Object.values(teamMap).sort((a,b)=>b.cum-a.cum);
+  if(!EV){document.getElementById('sc-noev').style.display='block';document.getElementById('sc-body').innerHTML='';return;}
+  document.getElementById('sc-noev').style.display='none';
+  const sc=await dbGet('ta_scores','session_id=eq.'+EV.id+'&select=*,ta_teams(name,color),ta_rounds(round_number)&order=ta_rounds(round_number)')||[];
+  const c=document.getElementById('sc-body');
+  if(!sc.length){c.innerHTML='<div class="sc" style="text-align:center;color:var(--mut)">No scores yet.</div>';return;}
+  const tm={};
+  sc.forEach(s=>{if(!tm[s.team_id])tm[s.team_id]={team:s.ta_teams,rows:[],cum:0};tm[s.team_id].rows.push(s);tm[s.team_id].cum=s.cumulative_points;});
+  const sorted=Object.values(tm).sort((a,b)=>b.cum-a.cum);
   const ranks=['🥇','🥈','🥉'];
-  let html='<div class="card"><div class="card-title">Standings</div>';
-  sorted.forEach((t,i)=>{
-    html+=`<div class="score-row">
-      <div style="font-size:18px;width:24px">${ranks[i]||i+1}</div>
-      <div class="score-dot" style="background:${t.team?.color||'#3B82F6'}"></div>
-      <div class="score-name">${t.team?.name||'Team'}</div>
-      <div class="score-pts" style="color:${t.cum>=0?'var(--low)':'var(--high)'}">${t.cum>0?'+':''}${t.cum}</div>
-    </div>`;
-  });
+  let html='<div class="sc"><div class="sc-t">Standings</div>';
+  sorted.forEach((t,i)=>{html+=`<div class="srow"><div style="font-size:16px;width:22px">${ranks[i]||i+1}</div><div class="sdot" style="background:${t.team?.color}"></div><div class="sname">${t.team?.name}</div><div class="spts" style="color:${t.cum>=0?'var(--lo)':'var(--hi)'}">${t.cum>0?'+':''}${t.cum}</div></div>`;});
   html+='</div>';
-  const roundNos=[...new Set(scores.map(s=>s.ta_rounds?.round_number))].sort((a,b)=>a-b);
-  html+='<div class="card"><div class="card-title">Round by Round</div><div style="overflow-x:auto"><table><thead><tr><th>Team</th>';
-  roundNos.forEach(r=>{html+=`<th>R${r}</th>`;});
+  const rns=[...new Set(sc.map(s=>s.ta_rounds?.round_number))].sort((a,b)=>a-b);
+  html+='<div class="sc"><div class="sc-t">Round by Round</div><div style="overflow-x:auto"><table><thead><tr><th>Team</th>';
+  rns.forEach(r=>{html+=`<th>R${r}</th>`;});
   html+='<th>Total</th></tr></thead><tbody>';
   sorted.forEach(t=>{
     html+=`<tr><td><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:${t.team?.color};display:inline-block"></span>${t.team?.name}</span></td>`;
-    roundNos.forEach(r=>{
-      const rs=t.rounds.find(s=>s.ta_rounds?.round_number===r);
-      const pts=rs?rs.round_points:'—';
-      html+=`<td style="color:${typeof pts==='number'?(pts>=0?'var(--low)':'var(--high)'):'var(--muted)'}">${typeof pts==='number'?(pts>0?'+':'')+pts:pts}</td>`;
-    });
-    html+=`<td style="font-weight:700;color:${t.cum>=0?'var(--low)':'var(--high)'}">${t.cum>0?'+':''}${t.cum}</td></tr>`;
+    rns.forEach(r=>{const s=t.rows.find(x=>x.ta_rounds?.round_number===r);const p=s?s.round_points:'—';html+=`<td style="color:${typeof p==='number'?(p>=0?'var(--lo)':'var(--hi)'):'var(--mut)'}">${typeof p==='number'?(p>0?'+':'')+p:p}</td>`;});
+    html+=`<td style="font-weight:700;color:${t.cum>=0?'var(--lo)':'var(--hi)'}">${t.cum>0?'+':''}${t.cum}</td></tr>`;
   });
   html+='</tbody></table></div></div>';
-  container.innerHTML=html;
+  c.innerHTML=html;
 }
 
 // ── RESPONSES ──
-async function loadResponses(){
-  if(!S.event){document.getElementById('no-event-resp').style.display='block';document.getElementById('responses-content').style.display='none';return;}
-  document.getElementById('no-event-resp').style.display='none';
-  document.getElementById('responses-content').style.display='block';
-  const indiv=await db.get('ta_individual_answers',`session_id=eq.${S.event.id}&select=*,ta_participants(name,ta_teams(name,color)),ta_rounds(round_number)&order=ta_rounds(round_number),submitted_at`)||[];
-  const team=await db.get('ta_team_answers',`session_id=eq.${S.event.id}&select=*,ta_teams(name,color),ta_rounds(round_number),ta_participants(name)&order=ta_rounds(round_number),submitted_at`)||[];
-  const it=document.getElementById('indiv-resp-table');it.innerHTML='';
-  indiv.forEach(r=>{
-    const p=r.ta_participants;const t=p?.ta_teams;
-    const time=new Date(r.submitted_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-    it.innerHTML+=`<tr><td>R${r.ta_rounds?.round_number||'?'}</td><td>${p?.name||'—'}</td><td style="color:${t?.color||'#3B82F6'}">${t?.name||'—'}</td><td><strong style="color:${r.answer==='H'?'var(--high)':'var(--low)'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td><td style="color:var(--muted)">${time}</td></tr>`;
-  });
-  const tt=document.getElementById('team-resp-table');tt.innerHTML='';
-  team.forEach(r=>{
-    const t=r.ta_teams;const cap=r.ta_participants;
-    const time=new Date(r.submitted_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-    tt.innerHTML+=`<tr><td>R${r.ta_rounds?.round_number||'?'}</td><td style="color:${t?.color||'#3B82F6'}">${t?.name||'—'}</td><td><strong style="color:${r.answer==='H'?'var(--high)':'var(--low)'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td><td>${cap?.name||'—'}</td><td style="color:var(--muted)">${time}</td></tr>`;
-  });
+async function loadResps(){
+  if(!EV){document.getElementById('rs-noev').style.display='block';document.getElementById('rs-body').style.display='none';return;}
+  document.getElementById('rs-noev').style.display='none';
+  document.getElementById('rs-body').style.display='block';
+  const iv=await dbGet('ta_individual_answers','session_id=eq.'+EV.id+'&select=*,ta_participants(name,ta_teams(name,color)),ta_rounds(round_number)&order=ta_rounds(round_number),submitted_at')||[];
+  const tv=await dbGet('ta_team_answers','session_id=eq.'+EV.id+'&select=*,ta_teams(name,color),ta_rounds(round_number),ta_participants(name)&order=ta_rounds(round_number),submitted_at')||[];
+  const it=document.getElementById('rs-indiv');it.innerHTML='';
+  iv.forEach(r=>{const p=r.ta_participants;const t=p?.ta_teams;const tm=new Date(r.submitted_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    it.innerHTML+=`<tr><td>R${r.ta_rounds?.round_number||'?'}</td><td>${p?.name||'—'}</td><td style="color:${t?.color||'#3B82F6'}">${t?.name||'—'}</td><td><strong style="color:${r.answer==='H'?'var(--hi)':'var(--lo)'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td><td style="color:var(--mut)">${tm}</td></tr>`;});
+  const tt=document.getElementById('rs-team');tt.innerHTML='';
+  tv.forEach(r=>{const t=r.ta_teams;const cap=r.ta_participants;const tm=new Date(r.submitted_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    tt.innerHTML+=`<tr><td>R${r.ta_rounds?.round_number||'?'}</td><td style="color:${t?.color||'#3B82F6'}">${t?.name||'—'}</td><td><strong style="color:${r.answer==='H'?'var(--hi)':'var(--lo)'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td><td>${cap?.name||'—'}</td><td style="color:var(--mut)">${tm}</td></tr>`;});
 }
 </script>
 </body>
