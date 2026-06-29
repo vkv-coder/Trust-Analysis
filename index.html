@@ -50,6 +50,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .name-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .15s;}
 .name-card:active{transform:scale(.98);}
 .name-card.sel{border-color:var(--accent);background:rgba(245,158,11,.07);}
+.name-card.taken{opacity:0.45;cursor:not-allowed;}
+.name-card.taken:active{transform:none;}
 .nav{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;}
 .ni-name{font-size:15px;font-weight:600;}
 .ni-team{font-size:12px;color:var(--muted);margin-top:2px;}
@@ -415,28 +417,34 @@ async function loadNames(){
   list.innerHTML='';
   parts.forEach(p=>{
     const t=p.ta_teams;const c=t?.color||'#3B82F6';
+    const taken=p.is_present===true;
     const card=document.createElement('div');
-    card.className='name-card';
-    card.innerHTML=`<div class="nav" style="background:${c}22;color:${c}">${p.name.charAt(0)}</div>
-      <div><div class="ni-name">${p.name}</div><div class="ni-team">${t?.name||''}${p.is_captain?' 👑':''}</div></div>
-      <div class="ni-check">✓</div>`;
-    card.onclick=()=>{
-      // Hide all other names — only show selected
-      document.querySelectorAll('.name-card').forEach(c=>{c.style.display='none';});
-      card.style.display='flex';
-      card.classList.add('sel');
-      P.participant=p;P.team=t;
-      document.getElementById('btn-confirm-name').disabled=false;
-      // Show "not you?" link
-      const notYou=document.getElementById('not-you-link');
-      if(notYou)notYou.style.display='block';
-    };
+    card.className='name-card'+(taken?' taken':'');
+    card.innerHTML=`<div class="nav" style="background:${taken?'#33415522':c+'22'};color:${taken?'var(--muted)':c}">${p.name.charAt(0)}</div>
+      <div><div class="ni-name" style="${taken?'color:var(--muted)':''}">${p.name}</div>
+      <div class="ni-team">${t?.name||''}${p.is_captain?' 👑':''}</div></div>
+      <div style="margin-left:auto;font-size:12px;color:var(--muted)">${taken?'✅ Joined':''}</div>`;
+    if(!taken){
+      card.onclick=()=>{
+        document.querySelectorAll('.name-card').forEach(c=>{c.style.display='none';});
+        card.style.display='flex';
+        card.classList.add('sel');
+        P.participant=p;P.team=t;
+        document.getElementById('btn-confirm-name').disabled=false;
+        const notYou=document.getElementById('not-you-link');
+        if(notYou)notYou.style.display='block';
+      };
+    }
     list.appendChild(card);
   });
 }
 
 function resetNameList(){
-  document.querySelectorAll('.name-card').forEach(c=>{c.style.display='flex';c.classList.remove('sel');});
+  document.querySelectorAll('.name-card').forEach(c=>{
+    // Only show non-taken cards
+    if(!c.classList.contains('taken')) c.style.display='flex';
+    c.classList.remove('sel');
+  });
   document.getElementById('not-you-link').style.display='none';
   document.getElementById('btn-confirm-name').disabled=true;
   P.participant=null;P.team=null;
@@ -444,8 +452,12 @@ function resetNameList(){
 
 async function confirmName(){
   if(!P.participant)return;
-  // Mark present in DB
-  await fetch(`${SUPA_URL}/rest/v1/ta_participants?id=eq.${P.participant.id}`,{method:'PATCH',headers:hdr(),body:JSON.stringify({is_present:true})});
+  // Mark present in DB — blocks this name for others
+  await fetch(`${SUPA_URL}/rest/v1/ta_participants?id=eq.${P.participant.id}`,{
+    method:'PATCH',
+    headers:hdr(),
+    body:JSON.stringify({is_present:true})
+  });
   setupBars();
   show('wait');
   document.getElementById('wait-ev-name').textContent=P.session.name;
