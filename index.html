@@ -549,38 +549,78 @@ function showBoDone(ans){
 // TIMER
 function startTimer(r){
   if(P.timerT)clearInterval(P.timerT);
-  const totalSecs = r.timer_seconds || 300;
   const el = document.getElementById('timer-val');
+  const totalSecs = r.timer_seconds || 300;
 
-  // Try to calculate elapsed from server time
-  let remSecs = totalSecs;
-  if(r.timer_started_at){
-    try{
-      // Force UTC by replacing space with T and adding Z
-      let ts = r.timer_started_at.trim().replace(' ','T');
-      if(!ts.endsWith('Z') && !ts.includes('+')) ts = ts.split('.')[0]+'Z';
-      const startMs = Date.parse(ts);
-      if(!isNaN(startMs)){
-        const elapsed = Math.floor((Date.now()-startMs)/1000);
-        remSecs = Math.max(0, totalSecs-elapsed);
-        console.log('Timer start:',ts,'elapsed:',elapsed,'rem:',remSecs);
-      }
-    }catch(e){console.error('Timer parse error:',e);}
+  // Log everything for debug
+  console.log('=== TIMER DEBUG ===');
+  console.log('timer_started_at:', r.timer_started_at);
+  console.log('timer_seconds:', r.timer_seconds);
+  console.log('Date.now():', new Date().toISOString());
+
+  // If no start time — just count down from total
+  if(!r.timer_started_at){
+    console.log('No timer_started_at — counting from full duration');
+    let rem = totalSecs;
+    function tickFull(){
+      const m=Math.floor(rem/60).toString().padStart(2,'0');
+      const s=(rem%60).toString().padStart(2,'0');
+      el.textContent=m+':'+s;
+      el.className='timer-val'+(rem<=30?' urgent':'');
+      if(rem<=0){clearInterval(P.timerT);return;}
+      rem--;
+    }
+    tickFull();
+    P.timerT=setInterval(tickFull,1000);
+    return;
   }
 
-  // Store end time for accuracy
-  const endMs = Date.now() + (remSecs*1000);
+  // Parse timestamp — try multiple formats
+  let startMs = NaN;
+  const raw = r.timer_started_at;
+  // Try as-is first
+  startMs = Date.parse(raw);
+  console.log('Parse attempt 1 (raw):', startMs, new Date(startMs).toISOString());
+  if(isNaN(startMs)){
+    // Try adding Z
+    startMs = Date.parse(raw+'Z');
+    console.log('Parse attempt 2 (+Z):', startMs);
+  }
+  if(isNaN(startMs)){
+    // Try replacing space with T
+    startMs = Date.parse(raw.replace(' ','T')+'Z');
+    console.log('Parse attempt 3 (T+Z):', startMs);
+  }
 
+  if(isNaN(startMs)){
+    console.log('Could not parse timestamp — counting from full');
+    let rem=totalSecs;
+    P.timerT=setInterval(()=>{
+      const m=Math.floor(rem/60).toString().padStart(2,'0');
+      const s=(rem%60).toString().padStart(2,'0');
+      el.textContent=m+':'+s;
+      el.className='timer-val'+(rem<=30?' urgent':'');
+      if(rem<=0)clearInterval(P.timerT);
+      rem--;
+    },1000);
+    return;
+  }
+
+  const elapsed = Math.floor((Date.now()-startMs)/1000);
+  const remSecs = Math.max(0, totalSecs-elapsed);
+  console.log('elapsed secs:', elapsed, 'remaining:', remSecs);
+
+  const endMs = Date.now()+(remSecs*1000);
   function tick(){
-    const rem = Math.max(0,Math.floor((endMs-Date.now())/1000));
-    const m = Math.floor(rem/60).toString().padStart(2,'0');
-    const s = (rem%60).toString().padStart(2,'0');
-    el.textContent = m+':'+s;
-    el.className = 'timer-val'+(rem<=30?' urgent':'');
-    if(rem<=0){clearInterval(P.timerT);}
+    const rem=Math.max(0,Math.floor((endMs-Date.now())/1000));
+    const m=Math.floor(rem/60).toString().padStart(2,'0');
+    const s=(rem%60).toString().padStart(2,'0');
+    el.textContent=m+':'+s;
+    el.className='timer-val'+(rem<=30?' urgent':'');
+    if(rem<=0)clearInterval(P.timerT);
   }
   tick();
-  P.timerT = setInterval(tick,1000);
+  P.timerT=setInterval(tick,1000);
 }
 
 // SCORES SCREEN
