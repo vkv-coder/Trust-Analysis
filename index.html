@@ -141,6 +141,19 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .modal-body{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
 .modal-btns{display:flex;gap:10px;}
 
+/* SCORE TABLE */
+.sc-table{width:100%;border-collapse:collapse;font-size:12px;min-width:300px;}
+.sc-table th{background:var(--s2);padding:8px 10px;text-align:center;color:var(--muted);font-weight:700;font-size:11px;text-transform:uppercase;border:1px solid var(--border);}
+.sc-table th.team-col{text-align:left;}
+.sc-table td{padding:8px 10px;border:1px solid var(--border);text-align:center;font-weight:600;}
+.sc-table td.team-name-cell{text-align:left;font-weight:700;}
+.sc-table .pts-pos{color:var(--green);}
+.sc-table .pts-neg{color:var(--red);}
+.sc-table .pts-zero{color:var(--muted);}
+.sc-table tfoot td{background:var(--s2);font-weight:700;font-size:13px;}
+.sc-table tfoot td.total-lbl{text-align:left;color:var(--accent);}
+.sc-table .my-team{background:rgba(245,158,11,0.07);}
+
 /* TOAST */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;z-index:100;transition:transform .3s;white-space:nowrap;max-width:90vw;}
 .toast.show{transform:translateX(-50%) translateY(0);}
@@ -324,13 +337,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div><div class="pnm" id="sc-name"></div><div class="pteam" id="sc-team"></div></div>
   </div>
   <div class="body">
-    <div>
-      <div class="sec-label" style="margin-bottom:10px">Team Answers This Round</div>
-      <div class="ta-grid" id="ta-grid"></div>
-    </div>
-    <div>
-      <div class="sec-label" style="margin-bottom:10px">🏆 Scoreboard</div>
-      <div class="score-list" id="sc-scores"></div>
+    <div class="sc-table-wrap">
+      <div class="sec-label" style="margin-bottom:10px">🏆 Score Board — All Rounds</div>
+      <div style="overflow-x:auto">
+        <table class="sc-table" id="sc-main-table">
+          <thead><tr id="sc-thead"></tr></thead>
+          <tbody id="sc-tbody"></tbody>
+          <tfoot><tr id="sc-tfoot"></tr></tfoot>
+        </table>
+      </div>
     </div>
     <div class="wait-card">
       <div class="spinner"></div>
@@ -506,55 +521,110 @@ function showBoDone(ans){
 // TIMER
 function startTimer(r){
   if(P.timerT)clearInterval(P.timerT);
-  if(!r.timer_started_at||!r.timer_seconds)return;
-  const end=new Date(r.timer_started_at).getTime()+(r.timer_seconds*1000);
-  P.timerT=setInterval(()=>{
-    const rem=Math.max(0,Math.floor((end-Date.now())/1000));
-    const m=Math.floor(rem/60).toString().padStart(2,'0');
-    const s=(rem%60).toString().padStart(2,'0');
-    const el=document.getElementById('timer-val');
-    el.textContent=m+':'+s;
-    el.className='timer-val'+(rem<=30?' urgent':'');
-    if(rem===0)clearInterval(P.timerT);
-  },500);
+  if(!r.timer_started_at||!r.timer_seconds){
+    // Show default timer if not started yet
+    document.getElementById('timer-val').textContent='--:--';
+    return;
+  }
+  // Ensure UTC parsing — append Z if missing
+  const startStr = r.timer_started_at.endsWith('Z') ? r.timer_started_at : r.timer_started_at+'Z';
+  const end = new Date(startStr).getTime() + (r.timer_seconds * 1000);
+  console.log('Timer: started='+startStr+' seconds='+r.timer_seconds+' end='+new Date(end).toISOString()+' now='+new Date().toISOString());
+  
+  function tick(){
+    const rem = Math.max(0, Math.floor((end - Date.now()) / 1000));
+    const m = Math.floor(rem/60).toString().padStart(2,'0');
+    const s = (rem%60).toString().padStart(2,'0');
+    const el = document.getElementById('timer-val');
+    el.textContent = m+':'+s;
+    el.className = 'timer-val'+(rem<=30?' urgent':'');
+    if(rem===0){ clearInterval(P.timerT); el.textContent='00:00'; }
+  }
+  tick(); // run immediately
+  P.timerT = setInterval(tick, 1000);
 }
 
 // SCORES SCREEN
 async function updScores(r){
   document.getElementById('sc-badge').textContent='R'+r.round_number;
-  const ta=await GET('ta_team_answers','round_id=eq.'+r.id+'&select=*,ta_teams(name,color)')||[];
-  const grid=document.getElementById('ta-grid');
-  grid.innerHTML=ta.map(a=>`<div class="ta-card">
-    <div class="ta-nm" style="color:${a.ta_teams?.color||'#3B82F6'}">${a.ta_teams?.name||'Team'}</div>
-    <div class="ta-val ${a.answer}">${a.answer==='H'?'HIGH':'LOW'}</div>
-  </div>`).join('');
-  loadScoreBoard('sc-scores');
+  await buildScoreTable();
 }
+
+async function buildScoreTable(){
+  // Get all scores for this session with round info
+  const allScores = await GET('ta_scores',
+    'session_id=eq.'+P.session.id+
+    '&select=*,ta_teams(name,color),ta_rounds(round_number,multiplier)'+
+    '&order=ta_rounds(round_number)') || [];
+
+  // Get all teams
+  const teams = await GET('ta_teams','session_id=eq.'+P.session.id+'&order=created_at') || [];
+  if(!teams.length) return;
+
+  // Get unique round numbers sorted
+  const roundNos = [...new Set(allScores.map(s=>s.ta_rounds?.round_number))].filter(Boolean).sort((a,b)=>a-b);
+  const mults = {};
+  allScores.forEach(s=>{ if(s.ta_rounds) mults[s.ta_rounds.round_number]=s.ta_rounds.multiplier||1; });
+
+  // Build team->round->points map
+  const teamMap = {};
+  allScores.forEach(s=>{
+    if(!teamMap[s.team_id]) teamMap[s.team_id]={team:s.ta_teams,rounds:{},cum:0};
+    if(s.ta_rounds) teamMap[s.team_id].rounds[s.ta_rounds.round_number]=s.round_points;
+    teamMap[s.team_id].cum=s.cumulative_points||0;
+  });
+
+  // THEAD
+  const thead = document.getElementById('sc-thead');
+  thead.innerHTML = '<th class="team-col">Team</th>';
+  roundNos.forEach(rn=>{
+    const mult = mults[rn]||1;
+    thead.innerHTML += `<th>R${rn}${mult>1?'<br><span style="color:var(--accent);font-size:10px">×'+mult+'</span>':''}</th>`;
+  });
+  thead.innerHTML += '<th style="color:var(--accent)">TOTAL</th>';
+
+  // TBODY
+  const tbody = document.getElementById('sc-tbody');
+  tbody.innerHTML = '';
+  const sorted = teams.map(t=>({...t,...(teamMap[t.id]||{rounds:{},cum:0,team:t})}))
+    .sort((a,b)=>(b.cum||0)-(a.cum||0));
+
+  sorted.forEach(t=>{
+    const isMe = P.participant && t.id === P.participant.team_id;
+    const teamData = teamMap[t.id]||{rounds:{},cum:0};
+    let row = `<tr class="${isMe?'my-team':''}">
+      <td class="team-name-cell">
+        <span style="display:inline-flex;align-items:center;gap:6px">
+          <span style="width:10px;height:10px;border-radius:50%;background:${t.color||'#3B82F6'};display:inline-block"></span>
+          ${t.name}${isMe?' 👤':''}
+        </span>
+      </td>`;
+    roundNos.forEach(rn=>{
+      const pts = teamData.rounds[rn];
+      if(pts===undefined){ row+=`<td class="pts-zero">—</td>`; }
+      else { row+=`<td class="${pts>0?'pts-pos':pts<0?'pts-neg':'pts-zero'}">${pts>0?'+':''}${pts}</td>`; }
+    });
+    const cum = teamData.cum||0;
+    row += `<td class="${cum>0?'pts-pos':cum<0?'pts-neg':'pts-zero'}" style="font-size:14px">${cum>0?'+':''}${cum}</td></tr>`;
+    tbody.innerHTML += row;
+  });
+
+  // TFOOT — Net totals row
+  const tfoot = document.getElementById('sc-tfoot');
+  tfoot.innerHTML = '<td class="total-lbl">Net Cash</td>';
+  roundNos.forEach(rn=>{
+    const total = Object.values(teamMap).reduce((sum,t)=>{
+      const pts=t.rounds[rn];return sum+(pts||0);
+    },0);
+    tfoot.innerHTML += `<td class="${total>0?'pts-pos':total<0?'pts-neg':'pts-zero'}">${total>0?'+':''}${total}</td>`;
+  });
+  const grandTotal = Object.values(teamMap).reduce((sum,t)=>sum+(t.cum||0),0);
+  tfoot.innerHTML += `<td class="${grandTotal>0?'pts-pos':grandTotal<0?'pts-neg':'pts-zero'}">${grandTotal>0?'+':''}${grandTotal}</td>`;
+}
+
 async function loadWaitScores(){
-  const sc=document.getElementById('score-section');
-  const scores=await GET('ta_scores','session_id=eq.'+P.session.id+'&select=*,ta_teams(name,color)&order=cumulative_points.desc');
-  if(!scores||!scores.length){sc.style.display='none';return;}
-  sc.style.display='block';
-  buildScoreList('wait-scores',scores);
-}
-async function loadScoreBoard(containerId){
-  const scores=await GET('ta_scores','session_id=eq.'+P.session.id+'&select=*,ta_teams(name,color)&order=cumulative_points.desc');
-  buildScoreList(containerId,scores||[]);
-}
-function buildScoreList(id,scores){
-  const container=document.getElementById(id);
-  const tm={};scores.forEach(s=>{if(!tm[s.team_id]||s.cumulative_points!==undefined)tm[s.team_id]=s;});
-  const sorted=Object.values(tm).sort((a,b)=>b.cumulative_points-a.cumulative_points);
-  const ranks=['🥇','🥈','🥉'];
-  container.innerHTML=sorted.map((s,i)=>{
-    const t=s.ta_teams;const pts=s.cumulative_points||0;const isMe=P.participant&&s.team_id===P.participant.team_id;
-    return `<div class="score-row${isMe?' mine':''}">
-      <div class="srank">${ranks[i]||i+1}</div>
-      <div class="sdot" style="background:${t?.color||'#3B82F6'}"></div>
-      <div class="snm">${t?.name||'Team'}</div>
-      <div class="spts ${pts>=0?'p':'n'}">${pts>0?'+':''}${pts}</div>
-    </div>`;
-  }).join('');
+  // Not shown during waiting — only after scores revealed
+  document.getElementById('score-section').style.display='none';
 }
 
 // VOTING
