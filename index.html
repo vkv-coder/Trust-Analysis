@@ -256,6 +256,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="case-card">
       <div class="case-lbl">📋 Case Study</div>
       <div class="case-txt" id="main-case">Loading...</div>
+    <div id="main-case-file" style="display:none;margin-top:8px"></div>
     </div>
     <div class="matrix-card">
       <div class="sec-label" style="margin-bottom:10px">Points Matrix</div>
@@ -524,7 +525,11 @@ async function loadCapName(){
 function updMain(r){
   document.getElementById('main-rno').textContent=r.round_number;
   document.getElementById('main-badge').textContent='R'+r.round_number;
-  document.getElementById('main-case').textContent=r.case_study||'Case study will appear here.';
+  document.getElementById('main-case').caseText=r.case_study||'';
+  const caseUrl=r.case_study_url||'';
+  document.getElementById('main-case').textContent=caseText||(caseUrl?'':' Case study will appear here.');
+  const cfd=document.getElementById('main-case-file');
+  if(cfd){if(caseUrl){cfd.style.display='block';const isImg=/\.(jpg|jpeg|png)$/i.test(caseUrl);cfd.innerHTML=isImg?'<img src="'+caseUrl+'" style="width:100%;border-radius:8px;margin-top:8px"/>':'<a href="'+caseUrl+'" target="_blank" style="display:flex;align-items:center;gap:8px;background:rgba(245,158,11,0.1);border:1px solid var(--accent);border-radius:8px;padding:12px;color:var(--accent);text-decoration:none;font-weight:600;margin-top:8px">📄 Open Case Study PDF</a>';}else cfd.style.display='none';}
   const m=document.getElementById('main-mult');
   if(r.multiplier>1){m.style.display='block';m.textContent='×'+r.multiplier;}else m.style.display='none';
 }
