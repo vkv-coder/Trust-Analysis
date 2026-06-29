@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Trust Analysis — DB Test</title>
+<style>
+body{font-family:sans-serif;background:#0F172A;color:#F1F5F9;padding:24px;max-width:500px;margin:0 auto;}
+h2{color:#F59E0B;margin-bottom:20px;}
+input{width:100%;padding:10px;background:#1E293B;border:1px solid #334155;border-radius:8px;color:#F1F5F9;font-size:14px;margin-bottom:10px;box-sizing:border-box;}
+button{width:100%;padding:12px;background:#F59E0B;color:#000;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;}
+button.sec{background:#1E293B;color:#F1F5F9;border:1px solid #334155;}
+#log{background:#1E293B;border:1px solid #334155;border-radius:8px;padding:16px;font-size:13px;min-height:100px;white-space:pre-wrap;word-break:break-all;margin-top:10px;}
+.ok{color:#22C55E;} .err{color:#EF4444;} .info{color:#F59E0B;}
+</style>
+</head>
+<body>
+<h2>🔧 Trust Analysis — DB Test</h2>
+
+<button onclick="testRead()">1. Test READ ta_sessions</button>
+<button onclick="testWrite()">2. Test WRITE (create event)</button>
+<button class="sec" onclick="clearLog()">Clear Log</button>
+
+<div id="log">Click a button to test...</div>
+
+<script>
+const SUPA_URL = 'https://wrzpgultvahxbrgooibn.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndyenBndWx0dmFoeGJyZ29vaWJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzc2MTcsImV4cCI6MjA5MzExMzYxN30.sZM4GQiwom34d7TjeK_Jc_n8KYoC8VhI48jfq71dwb8';
+
+function log(msg, type='info'){
+  const el = document.getElementById('log');
+  const time = new Date().toLocaleTimeString();
+  el.innerHTML += `<span class="${type}">[${time}] ${msg}</span>\n`;
+}
+function clearLog(){ document.getElementById('log').innerHTML = ''; }
+
+async function testRead(){
+  log('Testing READ from ta_sessions...','info');
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/ta_sessions?select=*&limit=5`, {
+      headers:{
+        'apikey': SUPA_KEY,
+        'Authorization': `Bearer ${SUPA_KEY}`
+      }
+    });
+    log(`HTTP Status: ${r.status} ${r.statusText}`, r.ok?'ok':'err');
+    const data = await r.json();
+    log('Response: ' + JSON.stringify(data), r.ok?'ok':'err');
+  } catch(e){
+    log('EXCEPTION: ' + e.message, 'err');
+  }
+}
+
+async function testWrite(){
+  log('Testing WRITE to ta_sessions...','info');
+  try {
+    const body = {
+      name: 'Test Event',
+      pin: '9999',
+      total_rounds: 2,
+      status: 'setup',
+      current_round: 0
+    };
+    log('Sending: ' + JSON.stringify(body),'info');
+    const r = await fetch(`${SUPA_URL}/rest/v1/ta_sessions`, {
+      method: 'POST',
+      headers:{
+        'apikey': SUPA_KEY,
+        'Authorization': `Bearer ${SUPA_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(body)
+    });
+    log(`HTTP Status: ${r.status} ${r.statusText}`, r.ok?'ok':'err');
+    const data = await r.json();
+    log('Response: ' + JSON.stringify(data), r.ok?'ok':'err');
+  } catch(e){
+    log('EXCEPTION: ' + e.message, 'err');
+  }
+}
+</script>
+</body>
+</html>
