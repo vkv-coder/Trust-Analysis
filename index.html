@@ -521,26 +521,37 @@ function showBoDone(ans){
 // TIMER
 function startTimer(r){
   if(P.timerT)clearInterval(P.timerT);
-  if(!r.timer_started_at||!r.timer_seconds){
-    // Show default timer if not started yet
-    document.getElementById('timer-val').textContent='--:--';
+  const totalSecs = r.timer_seconds || 300;
+
+  // Calculate remaining time from server timestamp
+  let remSecs = totalSecs;
+  if(r.timer_started_at){
+    const startStr = r.timer_started_at.endsWith('Z') ? r.timer_started_at : r.timer_started_at+'+00:00';
+    const startMs = new Date(startStr).getTime();
+    const elapsedSecs = Math.floor((Date.now() - startMs) / 1000);
+    remSecs = Math.max(0, totalSecs - elapsedSecs);
+    console.log('Timer: totalSecs='+totalSecs+' elapsed='+elapsedSecs+' remaining='+remSecs);
+  }
+
+  // If already expired
+  if(remSecs <= 0){
+    document.getElementById('timer-val').textContent='00:00';
+    document.getElementById('timer-val').className='timer-val urgent';
     return;
   }
-  // Ensure UTC parsing — append Z if missing
-  const startStr = r.timer_started_at.endsWith('Z') ? r.timer_started_at : r.timer_started_at+'Z';
-  const end = new Date(startStr).getTime() + (r.timer_seconds * 1000);
-  console.log('Timer: started='+startStr+' seconds='+r.timer_seconds+' end='+new Date(end).toISOString()+' now='+new Date().toISOString());
-  
+
+  // Count down from remaining seconds
+  let rem = remSecs;
   function tick(){
-    const rem = Math.max(0, Math.floor((end - Date.now()) / 1000));
     const m = Math.floor(rem/60).toString().padStart(2,'0');
     const s = (rem%60).toString().padStart(2,'0');
     const el = document.getElementById('timer-val');
     el.textContent = m+':'+s;
     el.className = 'timer-val'+(rem<=30?' urgent':'');
-    if(rem===0){ clearInterval(P.timerT); el.textContent='00:00'; }
+    if(rem <= 0){ clearInterval(P.timerT); return; }
+    rem--;
   }
-  tick(); // run immediately
+  tick();
   P.timerT = setInterval(tick, 1000);
 }
 
