@@ -33,7 +33,7 @@ textarea{resize:vertical;min-height:70px;}
 .snav a{display:flex;align-items:center;gap:9px;padding:12px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--mut);border-left:3px solid transparent;text-decoration:none;}
 .snav a:hover{color:var(--txt);background:var(--sur2);}
 .snav a.on{color:var(--acc);border-left-color:var(--acc);background:rgba(245,158,11,.06);}
-.ssel{margin-top:auto;padding:12px;border-top:1px solid var(--bdr);}
+.ssel{padding:12px;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr);}
 .ssel label{font-size:11px;color:var(--mut);display:block;margin-bottom:4px;text-transform:uppercase;}
 .main{margin-left:210px;padding:24px;flex:1;}
 .pg{display:none;}.pg.on{display:block;}
@@ -126,6 +126,12 @@ tr:hover td{background:var(--sur2);}
 <div id="app" class="layout" style="display:none">
   <div class="side">
     <div class="slogo"><div class="slogo-t">Trust Analysis</div><div class="slogo-s">Admin v5</div></div>
+    <div class="ssel">
+      <label>Active Event</label>
+      <select id="ev-sel" onchange="switchEvent(this.value)" style="margin-bottom:6px"></select>
+      <label>Active Session</label>
+      <select id="sess-sel" onchange="switchSession(this.value)" style="margin-bottom:0"></select>
+    </div>
     <div class="snav">
       <a onclick="go('dash')" id="n-dash" class="on">📊 Dashboard</a>
       <a onclick="go('events')" id="n-events">🏢 Events</a>
@@ -134,12 +140,6 @@ tr:hover td{background:var(--sur2);}
       <a onclick="go('session')" id="n-session">🎮 Session</a>
       <a onclick="go('scores')" id="n-scores">🏆 Scores</a>
       <a onclick="go('resps')" id="n-resps">📋 Responses</a>
-    </div>
-    <div class="ssel">
-      <label>Active Event</label>
-      <select id="ev-sel" onchange="switchEvent(this.value)" style="margin-bottom:6px"></select>
-      <label>Active Session</label>
-      <select id="sess-sel" onchange="switchSession(this.value)" style="margin-bottom:0"></select>
     </div>
   </div>
 
