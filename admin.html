@@ -412,15 +412,25 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const ADMIN_PASS = 'admin1';
 const APP_URL = 'https://vkv-coder.github.io/Trust-Analysis/';
 
-const api = (path, opts={}) => fetch(`${SUPA_URL}/rest/v1/${path}`, {
-  headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Content-Type':'application/json','Prefer':opts.prefer||'return=representation',...(opts.headers||{})},
-  ...opts
-});
+const api = (path, method='GET', body=null, prefer='return=representation') => {
+  const opts = {
+    method,
+    headers:{
+      'apikey': SUPA_KEY,
+      'Authorization': `Bearer ${SUPA_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': prefer
+    }
+  };
+  if(body) opts.body = JSON.stringify(body);
+  return fetch(`${SUPA_URL}/rest/v1/${path}`, opts);
+};
 const db = {
-  get: (t,q='') => api(`${t}?${q}`).then(r=>r.json()),
-  post: (t,b,pref) => api(t,{method:'POST',prefer:pref||'return=representation',body:JSON.stringify(b)}).then(r=>r.json()),
-  patch: (t,q,b) => api(`${t}?${q}`,{method:'PATCH',prefer:'return=representation',body:JSON.stringify(b)}).then(r=>r.json()),
-  del: (t,q) => api(`${t}?${q}`,{method:'DELETE'})
+  get:   (t,q='')  => api(`${t}?${q}`,'GET').then(r=>r.json()),
+  post:  (t,b)     => api(t,'POST',b,'return=representation').then(r=>r.json()),
+  patch: (t,q,b)   => api(`${t}?${q}`,'PATCH',b,'return=representation').then(r=>r.json()),
+  del:   (t,q)     => api(`${t}?${q}`,'DELETE'),
+  upsert:(t,b)     => api(t,'POST',b,'resolution=merge-duplicates,return=representation').then(r=>r.json())
 };
 
 let S = { event:null, teams:[], participants:[], rounds:[], selectedColor:'#EF4444', poll:null };
@@ -483,28 +493,33 @@ async function loadEventList(){
 }
 
 async function createEvent(){
-  const name=document.getElementById('ev-name').value.trim();
-  const pin=document.getElementById('ev-pin').value.trim();
-  const rounds=parseInt(document.getElementById('ev-rounds').value)||10;
-  if(!name){toast('Event name required','error');return;}
-  if(!pin||pin.length!==4){toast('4-digit PIN required','error');return;}
-  
-  toast('Creating event...','info');
-  const res = await db.post('ta_sessions',{name,pin,total_rounds:rounds,status:'setup',current_round:0});
-  if(!res||res.error){toast('Error: '+(res?.message||'Try again'),'error');return;}
-  
-  const session = Array.isArray(res)?res[0]:res;
-  // Create round entries
-  for(let i=1;i<=rounds;i++){
-    await db.post('ta_rounds',{session_id:session.id,round_number:i,multiplier:1,status:'pending',timer_seconds:300});
+  try {
+    const name=document.getElementById('ev-name').value.trim();
+    const pin=document.getElementById('ev-pin').value.trim();
+    const rounds=parseInt(document.getElementById('ev-rounds').value)||10;
+    if(!name){toast('Event name required','error');return;}
+    if(!pin||pin.length!==4){toast('4-digit PIN required','error');return;}
+    toast('Creating...','info');
+    const res = await db.post('ta_sessions',{name,pin,total_rounds:rounds,status:'setup',current_round:0});
+    console.log('createEvent result:',JSON.stringify(res));
+    if(!res){toast('No server response','error');return;}
+    if(res.code||res.error){toast('DB Error: '+(res.message||res.error),'error');return;}
+    const session=Array.isArray(res)?res[0]:res;
+    if(!session||!session.id){toast('Session not created — check console','error');return;}
+    for(let i=1;i<=rounds;i++){
+      await db.post('ta_rounds',{session_id:session.id,round_number:i,multiplier:1,status:'pending',timer_seconds:300});
+    }
+    document.getElementById('ev-name').value='';
+    document.getElementById('ev-pin').value='';
+    toast('Event created!','success');
+    await loadEventList();
+    await switchEvent(session.id);
+    document.getElementById('event-select').value=session.id;
+    showPage('participants');
+  } catch(e){
+    console.error('createEvent error:',e);
+    toast('Error: '+e.message,'error');
   }
-  document.getElementById('ev-name').value='';
-  document.getElementById('ev-pin').value='';
-  toast(`Event "${name}" created!`,'success');
-  await loadEventList();
-  switchEvent(session.id);
-  document.getElementById('event-select').value=session.id;
-  showPage('participants');
 }
 
 async function deleteEvent(id){
@@ -806,7 +821,7 @@ async function calculateScores(round){
     const rpts=(ta.answer==='H'?hp:lp)*mult;
     const prev=await db.get('ta_scores',`session_id=eq.${S.event.id}&team_id=eq.${team.id}&order=calculated_at.desc&limit=1`);
     const prevCum=(prev&&prev.length>0)?(prev[0].cumulative_points||0):0;
-    await api('ta_scores',{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify({session_id:S.event.id,round_id:round.id,team_id:team.id,round_points:rpts,cumulative_points:prevCum+rpts,calculated_at:new Date().toISOString()})});
+    await db.upsert('ta_scores',{session_id:S.event.id,round_id:round.id,team_id:team.id,round_points:rpts,cumulative_points:prevCum+rpts,calculated_at:new Date().toISOString()});
   }
 }
 
