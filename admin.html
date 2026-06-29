@@ -3,349 +3,155 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<meta name="theme-color" content="#0F172A"/>
 <title>Trust Analysis — Admin</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
-
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
   :root {
-    --bg: #0F172A;
-    --surface: #1E293B;
-    --surface2: #273548;
-    --border: #334155;
-    --accent: #F59E0B;
-    --accent2: #3B82F6;
-    --high: #EF4444;
-    --low: #22C55E;
-    --text: #F1F5F9;
-    --muted: #94A3B8;
-    --radius: 12px;
+    --bg:#0F172A; --surface:#1E293B; --surface2:#273548; --border:#334155;
+    --accent:#F59E0B; --accent2:#3B82F6; --high:#EF4444; --low:#22C55E;
+    --text:#F1F5F9; --muted:#94A3B8; --radius:12px;
   }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
   /* LOGIN */
-  .login-wrap {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-  .login-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 40px;
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-  }
-  .login-card h1 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 26px;
-    font-weight: 700;
-    color: var(--accent);
-    margin-bottom: 6px;
-  }
-  .login-card p { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:400px;text-align:center;}
+  .login-card h1{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:var(--accent);margin-bottom:6px;}
+  .login-card p{font-size:14px;color:var(--muted);margin-bottom:28px;}
 
   /* LAYOUT */
-  .admin-layout { display: flex; min-height: 100vh; }
-  .sidebar {
-    width: 240px;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    padding: 0;
-    position: fixed;
-    top: 0; left: 0; bottom: 0;
-    z-index: 20;
-  }
-  .sidebar-logo {
-    padding: 24px 20px;
-    border-bottom: 1px solid var(--border);
-  }
-  .sidebar-logo .logo {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--accent);
-  }
-  .sidebar-logo .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 20px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--muted);
-    transition: all 0.15s;
-    border-left: 3px solid transparent;
-  }
-  .nav-item:hover { color: var(--text); background: var(--surface2); }
-  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(245,158,11,0.06); }
-  .nav-item .icon { font-size: 18px; width: 22px; text-align: center; }
+  .admin-layout{display:flex;min-height:100vh;}
+  .sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:20;}
+  .sidebar-logo{padding:20px;border-bottom:1px solid var(--border);}
+  .sidebar-logo .logo{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:var(--accent);}
+  .sidebar-logo .sub{font-size:11px;color:var(--muted);margin-top:2px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:13px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--muted);transition:all 0.15s;border-left:3px solid transparent;}
+  .nav-item:hover{color:var(--text);background:var(--surface2);}
+  .nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(245,158,11,0.06);}
+  .nav-icon{font-size:16px;width:20px;text-align:center;}
 
-  .sidebar-session {
-    margin-top: auto;
-    padding: 16px 20px;
-    border-top: 1px solid var(--border);
-  }
-  .session-selector { width: 100%; }
-  .session-selector label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .session-selector select {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    padding: 8px 10px;
-    font-size: 13px;
-    font-family: 'Inter', sans-serif;
-  }
+  /* EVENT SELECTOR */
+  .event-selector{margin-top:auto;padding:16px;border-top:1px solid var(--border);}
+  .event-selector label{font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;}
+  .event-selector select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 10px;font-size:12px;font-family:'Inter',sans-serif;}
 
-  .main-content {
-    margin-left: 240px;
-    flex: 1;
-    padding: 32px;
-    max-width: calc(100vw - 240px);
-  }
-
-  .page { display: none; }
-  .page.active { display: block; }
-
-  .page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 28px;
-  }
-  .page-header h2 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 24px;
-    font-weight: 700;
-  }
+  .main-content{margin-left:220px;flex:1;padding:28px;max-width:calc(100vw - 220px);}
+  .page{display:none;} .page.active{display:block;}
+  .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+  .page-header h2{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;}
 
   /* CARDS */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-bottom: 16px;
-  }
-  .card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-  .card-title { font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
+  .card-title{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px;}
 
   /* GRID */
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
 
-  /* STAT TILES */
-  .stat-tile {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-  }
-  .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-  .stat-value { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700; color: var(--accent); }
-  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  /* STAT */
+  .stat-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
+  .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+  .stat-value{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:var(--accent);}
 
   /* FORM */
-  .form-group { margin-bottom: 16px; }
-  .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
-  .form-control {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    padding: 10px 14px;
-    font-size: 14px;
-    font-family: 'Inter', sans-serif;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .form-control:focus { border-color: var(--accent); }
-  textarea.form-control { resize: vertical; min-height: 80px; }
+  .form-group{margin-bottom:14px;}
+  .form-group label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:5px;}
+  .form-control{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 12px;font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.15s;}
+  .form-control:focus{border-color:var(--accent);}
+  textarea.form-control{resize:vertical;min-height:70px;}
 
   /* BUTTONS */
-  .btn {
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: none;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    transition: all 0.15s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .btn:active { transform: scale(0.98); }
-  .btn-primary { background: var(--accent); color: #000; }
-  .btn-success { background: var(--low); color: #000; }
-  .btn-danger { background: var(--high); color: #fff; }
-  .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
-  .btn-sm { padding: 6px 14px; font-size: 12px; }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn{padding:9px 18px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;}
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{background:var(--accent);color:#000;}
+  .btn-success{background:var(--low);color:#000;}
+  .btn-danger{background:var(--high);color:#fff;}
+  .btn-outline{background:transparent;color:var(--text);border:1px solid var(--border);}
+  .btn-sm{padding:5px 12px;font-size:12px;}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+  .btn-full{width:100%;justify-content:center;padding:12px;}
 
-  /* STATUS BADGE */
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-  }
-  .status-setup { background: rgba(148,163,184,0.15); color: var(--muted); }
-  .status-registration { background: rgba(59,130,246,0.15); color: var(--accent2); }
-  .status-breakout { background: rgba(245,158,11,0.15); color: var(--accent); }
-  .status-scoring { background: rgba(34,197,94,0.15); color: var(--low); }
-  .status-complete { background: rgba(139,92,246,0.15); color: #8B5CF6; }
+  /* STATUS */
+  .status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;}
+  .status-setup{background:rgba(148,163,184,0.15);color:var(--muted);}
+  .status-waiting{background:rgba(59,130,246,0.15);color:var(--accent2);}
+  .status-registration{background:rgba(245,158,11,0.15);color:var(--accent);}
+  .status-breakout{background:rgba(239,68,68,0.15);color:var(--high);}
+  .status-scoring{background:rgba(34,197,94,0.15);color:var(--low);}
+  .status-complete{background:rgba(139,92,246,0.15);color:#8B5CF6;}
 
-  /* TEAMS */
-  .team-card {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-    margin-bottom: 10px;
-  }
-  .team-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-  .team-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
-  .team-name { font-weight: 600; font-size: 15px; flex: 1; }
-  .participant-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .chip .captain-star { color: var(--accent); }
-  .chip .remove-chip { color: var(--high); cursor: pointer; font-size: 14px; }
+  /* TEAM CARD */
+  .team-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;}
+  .team-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .team-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+  .team-name-text{font-weight:600;font-size:14px;flex:1;}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .chip{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:12px;display:flex;align-items:center;gap:5px;}
+  .chip-remove{color:var(--high);cursor:pointer;font-size:14px;line-height:1;}
 
   /* TABLE */
-  table { width: 100%; border-collapse: collapse; }
-  th { text-align: left; padding: 10px 14px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
-  td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--surface2); }
+  table{width:100%;border-collapse:collapse;}
+  th{text-align:left;padding:9px 12px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border);}
+  td{padding:11px 12px;border-bottom:1px solid var(--border);font-size:13px;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:var(--surface2);}
 
-  /* ROUND CONTROL */
-  .round-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    padding: 16px;
-    background: var(--surface2);
-    border-radius: 10px;
-    margin-bottom: 10px;
-    border: 2px solid transparent;
-  }
-  .round-row.current-round { border-color: var(--accent); }
-  .round-number {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--accent);
-    width: 32px;
-    flex-shrink: 0;
-    text-align: center;
-    margin-top: 4px;
-  }
-  .round-body { flex: 1; }
-  .round-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  /* ROUND ROW */
+  .round-row{background:var(--surface2);border:2px solid transparent;border-radius:10px;padding:14px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;}
+  .round-row.current{border-color:var(--accent);}
+  .round-num{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--accent);width:28px;flex-shrink:0;margin-top:2px;}
+  .round-body{flex:1;}
 
   /* SCOREBOARD */
-  .score-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    background: var(--surface2);
-    border-radius: 10px;
-    margin-bottom: 8px;
-  }
-  .score-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
-  .score-name { flex: 1; font-weight: 600; }
-  .score-pts {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 22px;
-    font-weight: 700;
-  }
+  .score-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface2);border-radius:10px;margin-bottom:8px;}
+  .score-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+  .score-name{flex:1;font-weight:600;font-size:14px;}
+  .score-pts{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;}
+
+  /* COLORS */
+  .color-opts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+  .color-opt{width:26px;height:26px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all 0.1s;}
+  .color-opt.selected{border-color:#fff;transform:scale(1.15);}
+
+  /* CONTROL BUTTONS */
+  .control-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .control-btn{padding:16px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .control-btn .cb-icon{font-size:24px;}
+  .control-btn:active{transform:scale(0.97);}
+  .cb-registration{background:rgba(59,130,246,0.15);color:var(--accent2);border:1px solid rgba(59,130,246,0.3);}
+  .cb-breakout{background:rgba(245,158,11,0.15);color:var(--accent);border:1px solid rgba(245,158,11,0.3);}
+  .cb-reveal{background:rgba(34,197,94,0.15);color:var(--low);border:1px solid rgba(34,197,94,0.3);}
+  .cb-end{background:rgba(239,68,68,0.15);color:var(--high);border:1px solid rgba(239,68,68,0.3);}
+
+  /* PRESENCE */
+  .presence-grid{display:flex;flex-wrap:wrap;gap:8px;}
+  .presence-chip{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;border:1px solid var(--border);background:var(--surface2);}
+  .presence-chip.present{border-color:var(--low);background:rgba(34,197,94,0.1);color:var(--low);}
+  .presence-chip.absent{color:var(--muted);}
 
   /* TOAST */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 20px;
-    font-size: 14px;
-    font-weight: 500;
-    z-index: 100;
-    transform: translateY(80px);
-    opacity: 0;
-    transition: all 0.3s;
-  }
-  .toast.show { transform: translateY(0); opacity: 1; }
-  .toast.success { border-color: var(--low); color: var(--low); }
-  .toast.error { border-color: var(--high); color: var(--high); }
-  .toast.info { border-color: var(--accent); color: var(--accent); }
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 18px;font-size:13px;font-weight:500;z-index:100;transform:translateY(80px);opacity:0;transition:all 0.3s;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .toast.success{border-color:var(--low);color:var(--low);}
+  .toast.error{border-color:var(--high);color:var(--high);}
+  .toast.info{border-color:var(--accent);color:var(--accent);}
 
-  /* COLOR PICKER */
-  .color-options { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-  .color-opt {
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 3px solid transparent;
-    transition: all 0.1s;
-  }
-  .color-opt.selected { border-color: #fff; transform: scale(1.15); }
+  .divider{height:1px;background:var(--border);margin:16px 0;}
+  .no-event{text-align:center;padding:40px;color:var(--muted);font-size:14px;}
 
-  .divider { height: 1px; background: var(--border); margin: 20px 0; }
-
-  .inline-flex { display: flex; gap: 10px; align-items: center; }
-  .flex-wrap { flex-wrap: wrap; }
-
-  @media (max-width: 900px) {
-    .sidebar { width: 200px; }
-    .main-content { margin-left: 200px; padding: 20px; max-width: calc(100vw - 200px); }
-    .grid3 { grid-template-columns: 1fr 1fr; }
-  }
-  @media (max-width: 680px) {
-    .sidebar { display: none; }
-    .main-content { margin-left: 0; max-width: 100vw; }
-    .grid2, .grid3 { grid-template-columns: 1fr; }
+  @media(max-width:768px){
+    .sidebar{display:none;}
+    .main-content{margin-left:0;max-width:100vw;padding:16px;}
+    .grid2,.grid3,.grid4{grid-template-columns:1fr;}
+    .control-grid{grid-template-columns:1fr 1fr;}
   }
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════ LOGIN -->
+<!-- LOGIN -->
 <div id="login-wrap" class="login-wrap">
   <div class="login-card">
     <div style="font-size:48px;margin-bottom:16px">🎯</div>
@@ -354,228 +160,244 @@
     <div class="form-group">
       <input type="password" class="form-control" id="admin-password" placeholder="Admin password" onkeydown="if(event.key==='Enter')adminLogin()"/>
     </div>
-    <button class="btn btn-primary" style="width:100%" onclick="adminLogin()">Login →</button>
+    <button class="btn btn-primary btn-full" onclick="adminLogin()">Login →</button>
     <div id="login-error" style="color:#EF4444;font-size:13px;margin-top:10px;min-height:18px"></div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════ ADMIN LAYOUT -->
+<!-- ADMIN LAYOUT -->
 <div id="admin-layout" class="admin-layout" style="display:none">
   <div class="sidebar">
     <div class="sidebar-logo">
       <div class="logo">Trust Analysis</div>
       <div class="sub">Admin Panel</div>
     </div>
-    <div style="padding: 8px 0;">
-      <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
-        <span class="icon">📊</span> Dashboard
-      </div>
-      <div class="nav-item" onclick="showPage('setup')" id="nav-setup">
-        <span class="icon">⚙️</span> Setup Session
-      </div>
-      <div class="nav-item" onclick="showPage('teams')" id="nav-teams">
-        <span class="icon">👥</span> Teams
-      </div>
-      <div class="nav-item" onclick="showPage('rounds')" id="nav-rounds">
-        <span class="icon">🎮</span> Rounds
-      </div>
-      <div class="nav-item" onclick="showPage('scores')" id="nav-scores">
-        <span class="icon">🏆</span> Scoreboard
-      </div>
-      <div class="nav-item" onclick="showPage('responses')" id="nav-responses">
-        <span class="icon">📋</span> Responses
-      </div>
+    <div style="padding:6px 0">
+      <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard"><span class="nav-icon">📊</span>Dashboard</div>
+      <div class="nav-item" onclick="showPage('events')" id="nav-events"><span class="nav-icon">🏢</span>Events</div>
+      <div class="nav-item" onclick="showPage('participants')" id="nav-participants"><span class="nav-icon">👤</span>Participants</div>
+      <div class="nav-item" onclick="showPage('teams')" id="nav-teams"><span class="nav-icon">👥</span>Teams</div>
+      <div class="nav-item" onclick="showPage('rounds')" id="nav-rounds"><span class="nav-icon">🎮</span>Rounds</div>
+      <div class="nav-item" onclick="showPage('scores')" id="nav-scores"><span class="nav-icon">🏆</span>Scoreboard</div>
+      <div class="nav-item" onclick="showPage('responses')" id="nav-responses"><span class="nav-icon">📋</span>Responses</div>
     </div>
-    <div class="sidebar-session">
-      <div class="session-selector">
-        <label>Active Session</label>
-        <select id="session-select" onchange="switchSession(this.value)">
-          <option value="">— Select —</option>
-        </select>
-      </div>
+    <div class="event-selector">
+      <label>Active Event</label>
+      <select id="event-select" onchange="switchEvent(this.value)">
+        <option value="">— Select Event —</option>
+      </select>
     </div>
   </div>
 
   <div class="main-content">
 
-    <!-- DASHBOARD -->
+    <!-- ═══ DASHBOARD ═══ -->
     <div class="page active" id="page-dashboard">
       <div class="page-header">
         <h2>Dashboard</h2>
-        <div id="session-status-badge" class="status-badge status-setup">Setup</div>
+        <span class="status-badge status-setup" id="dash-status">Setup</span>
       </div>
-      <div class="grid3" style="margin-bottom:20px">
-        <div class="stat-tile">
-          <div class="stat-label">Teams</div>
-          <div class="stat-value" id="stat-teams">0</div>
+      <div id="no-event-dash" class="no-event">← Select or create an Event to begin</div>
+      <div id="dash-content" style="display:none">
+        <div class="grid4" style="margin-bottom:16px">
+          <div class="stat-tile"><div class="stat-label">Teams</div><div class="stat-value" id="stat-teams">0</div></div>
+          <div class="stat-tile"><div class="stat-label">Participants</div><div class="stat-value" id="stat-participants">0</div></div>
+          <div class="stat-tile"><div class="stat-label">Present</div><div class="stat-value" id="stat-present" style="color:var(--low)">0</div></div>
+          <div class="stat-tile"><div class="stat-label">Round</div><div class="stat-value" id="stat-round">—</div></div>
         </div>
-        <div class="stat-tile">
-          <div class="stat-label">Participants</div>
-          <div class="stat-value" id="stat-participants">0</div>
-        </div>
-        <div class="stat-tile">
-          <div class="stat-label">Current Round</div>
-          <div class="stat-value" id="stat-round">—</div>
-        </div>
-      </div>
 
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Session Control</div>
+        <div class="card">
+          <div class="card-title">Event Info</div>
+          <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:13px">
+            <div><span style="color:var(--muted)">Event: </span><strong id="dash-event-name">—</strong></div>
+            <div><span style="color:var(--muted)">PIN: </span><strong style="font-size:18px;color:var(--accent);font-family:'Space Grotesk',sans-serif" id="dash-pin">—</strong></div>
+            <div><span style="color:var(--muted)">Link: </span><span style="color:var(--accent2);font-size:12px" id="dash-link"></span>
+              <button class="btn btn-sm btn-outline" style="margin-left:8px" onclick="copyLink()">📋 Copy</button>
+            </div>
+          </div>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="openRegistration()">▶ Open Registration (Main Room)</button>
-          <button class="btn btn-success" onclick="openBreakout()">🔀 Start Breakout</button>
-          <button class="btn btn-outline" onclick="revealScores()">📊 Reveal Scores</button>
-          <button class="btn btn-danger" onclick="endSession()">⏹ End Session</button>
-        </div>
-        <div style="margin-top:14px;padding:14px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--muted)">
-          <strong style="color:var(--text)">Session PIN:</strong> <span id="dash-pin" style="font-family:'Space Grotesk';font-size:18px;color:var(--accent);font-weight:700">—</span>
-          &nbsp;&nbsp;|&nbsp;&nbsp;
-          <strong style="color:var(--text)">Link:</strong> <span id="dash-link" style="color:var(--accent2);font-size:12px"></span>
-          <button class="btn btn-sm btn-outline" style="margin-left:10px" onclick="copyLink()">📋 Copy</button>
-        </div>
-      </div>
 
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Individual Responses (This Round)</div>
+        <div class="card">
+          <div class="card-title">Game Control</div>
+          <div class="control-grid">
+            <button class="control-btn cb-registration" onclick="openRegistration()">
+              <span class="cb-icon">▶️</span>Open Main Room
+            </button>
+            <button class="control-btn cb-breakout" onclick="openBreakout()">
+              <span class="cb-icon">🔀</span>Start Breakout
+            </button>
+            <button class="control-btn cb-reveal" onclick="revealScores()">
+              <span class="cb-icon">📊</span>Reveal Scores
+            </button>
+            <button class="control-btn cb-end" onclick="endSession()">
+              <span class="cb-icon">⏹️</span>End Session
+            </button>
+          </div>
         </div>
-        <table>
-          <thead><tr><th>Participant</th><th>Team</th><th>Answer</th></tr></thead>
-          <tbody id="dash-responses"></tbody>
-        </table>
+
+        <div class="card">
+          <div class="card-title">Participant Presence</div>
+          <div class="presence-grid" id="presence-grid">
+            <span style="color:var(--muted);font-size:13px">Waiting for participants to join...</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Individual Opinions — Current Round</div>
+          <table>
+            <thead><tr><th>Participant</th><th>Team</th><th>Opinion</th></tr></thead>
+            <tbody id="dash-opinions"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- SETUP SESSION -->
-    <div class="page" id="page-setup">
-      <div class="page-header">
-        <h2>Setup Session</h2>
-        <button class="btn btn-primary" onclick="createSession()">+ New Session</button>
-      </div>
+    <!-- ═══ EVENTS ═══ -->
+    <div class="page" id="page-events">
+      <div class="page-header"><h2>Events</h2></div>
 
       <div class="card">
-        <div class="card-title" style="margin-bottom:16px">Create New Session</div>
+        <div class="card-title">Create New Event</div>
         <div class="grid2">
           <div class="form-group">
-            <label>Session Name</label>
-            <input class="form-control" id="session-name" placeholder="e.g. Trust Analysis — Batch 1"/>
+            <label>Company / Event Name</label>
+            <input class="form-control" id="ev-name" placeholder="e.g. Tata Motors Batch 1"/>
           </div>
           <div class="form-group">
-            <label>4-Digit PIN</label>
-            <input class="form-control" id="session-pin" placeholder="e.g. 2026" maxlength="4" type="number"/>
+            <label>4-Digit PIN (for participants)</label>
+            <input class="form-control" id="ev-pin" placeholder="e.g. 5678" maxlength="4" type="number"/>
           </div>
         </div>
         <div class="form-group">
           <label>Total Rounds</label>
-          <input class="form-control" id="session-rounds" placeholder="10" type="number" value="10" style="max-width:120px"/>
+          <input class="form-control" id="ev-rounds" type="number" value="10" style="max-width:100px"/>
         </div>
-        <button class="btn btn-primary" onclick="createSession()">Create Session</button>
+        <button class="btn btn-primary" onclick="createEvent()">+ Create Event</button>
       </div>
 
-      <div class="card" id="existing-sessions-card">
-        <div class="card-title" style="margin-bottom:16px">All Sessions</div>
+      <div class="card">
+        <div class="card-title">All Events</div>
         <table>
-          <thead><tr><th>Session Name</th><th>PIN</th><th>Status</th><th>Rounds</th><th>Action</th></tr></thead>
-          <tbody id="sessions-table"></tbody>
+          <thead><tr><th>Event Name</th><th>PIN</th><th>Rounds</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="events-table"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- TEAMS -->
-    <div class="page" id="page-teams">
-      <div class="page-header">
-        <h2>Teams & Participants</h2>
-        <button class="btn btn-primary" onclick="showAddTeam()">+ Add Team</button>
-      </div>
-
-      <div class="card" id="add-team-card" style="display:none">
-        <div class="card-title" style="margin-bottom:16px">New Team</div>
-        <div class="form-group">
-          <label>Team Name</label>
-          <input class="form-control" id="new-team-name" placeholder="e.g. Red, Alpha, Falcon..."/>
-        </div>
-        <div class="form-group">
-          <label>Team Colour</label>
-          <div class="color-options" id="team-color-picker">
-            <div class="color-opt selected" style="background:#EF4444" data-color="#EF4444" onclick="selectColor(this)"></div>
-            <div class="color-opt" style="background:#3B82F6" data-color="#3B82F6" onclick="selectColor(this)"></div>
-            <div class="color-opt" style="background:#EAB308" data-color="#EAB308" onclick="selectColor(this)"></div>
-            <div class="color-opt" style="background:#22C55E" data-color="#22C55E" onclick="selectColor(this)"></div>
-            <div class="color-opt" style="background:#8B5CF6" data-color="#8B5CF6" onclick="selectColor(this)"></div>
-            <div class="color-opt" style="background:#F97316" data-color="#F97316" onclick="selectColor(this)"></div>
-            <div class="color-opt" style="background:#06B6D4" data-color="#06B6D4" onclick="selectColor(this)"></div>
-            <div class="color-opt" style="background:#EC4899" data-color="#EC4899" onclick="selectColor(this)"></div>
+    <!-- ═══ PARTICIPANTS ═══ -->
+    <div class="page" id="page-participants">
+      <div class="page-header"><h2>Participants</h2></div>
+      <div id="no-event-part" class="no-event">← Select an Event first</div>
+      <div id="part-content" style="display:none">
+        <div class="card">
+          <div class="card-title">Add Participant</div>
+          <div style="display:flex;gap:10px;align-items:flex-end">
+            <div class="form-group" style="flex:1;margin-bottom:0">
+              <label>Participant Name</label>
+              <input class="form-control" id="new-part-name" placeholder="Full name" onkeydown="if(event.key==='Enter')addParticipant()"/>
+            </div>
+            <button class="btn btn-primary" onclick="addParticipant()">+ Add</button>
           </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:8px">Add all participant names first, then assign to teams</div>
         </div>
-        <div style="display:flex;gap:10px">
-          <button class="btn btn-primary" onclick="addTeam()">Add Team</button>
-          <button class="btn btn-outline" onclick="document.getElementById('add-team-card').style.display='none'">Cancel</button>
+        <div class="card">
+          <div class="card-title">Participant List (<span id="part-count">0</span>)</div>
+          <div id="part-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
         </div>
-      </div>
-
-      <div id="teams-list"></div>
-
-      <!-- Add Participant -->
-      <div class="card">
-        <div class="card-title" style="margin-bottom:16px">Add Participant</div>
-        <div class="grid2">
-          <div class="form-group">
-            <label>Name</label>
-            <input class="form-control" id="new-participant-name" placeholder="Full name"/>
-          </div>
-          <div class="form-group">
-            <label>Team</label>
-            <select class="form-control" id="new-participant-team">
-              <option value="">Select team</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label><input type="checkbox" id="new-participant-captain" style="margin-right:6px"/> Captain (submits team answer in breakout)</label>
-        </div>
-        <button class="btn btn-primary" onclick="addParticipant()">Add Participant</button>
       </div>
     </div>
 
-    <!-- ROUNDS -->
-    <div class="page" id="page-rounds">
-      <div class="page-header">
-        <h2>Rounds</h2>
-        <button class="btn btn-outline" onclick="loadRounds()">↺ Refresh</button>
+    <!-- ═══ TEAMS ═══ -->
+    <div class="page" id="page-teams">
+      <div class="page-header"><h2>Teams</h2></div>
+      <div id="no-event-teams" class="no-event">← Select an Event first</div>
+      <div id="teams-content" style="display:none">
+        <div class="card">
+          <div class="card-title">Create Team</div>
+          <div class="grid2">
+            <div class="form-group">
+              <label>Team Name</label>
+              <input class="form-control" id="new-team-name" placeholder="e.g. Red, Alpha, Falcon..."/>
+            </div>
+            <div class="form-group">
+              <label>Team Colour</label>
+              <div class="color-opts" id="color-picker">
+                <div class="color-opt selected" style="background:#EF4444" data-color="#EF4444" onclick="pickColor(this)"></div>
+                <div class="color-opt" style="background:#3B82F6" data-color="#3B82F6" onclick="pickColor(this)"></div>
+                <div class="color-opt" style="background:#EAB308" data-color="#EAB308" onclick="pickColor(this)"></div>
+                <div class="color-opt" style="background:#22C55E" data-color="#22C55E" onclick="pickColor(this)"></div>
+                <div class="color-opt" style="background:#8B5CF6" data-color="#8B5CF6" onclick="pickColor(this)"></div>
+                <div class="color-opt" style="background:#F97316" data-color="#F97316" onclick="pickColor(this)"></div>
+                <div class="color-opt" style="background:#06B6D4" data-color="#06B6D4" onclick="pickColor(this)"></div>
+                <div class="color-opt" style="background:#EC4899" data-color="#EC4899" onclick="pickColor(this)"></div>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="addTeam()">+ Add Team</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Assign Participant to Team</div>
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+            <div class="form-group" style="flex:1;min-width:160px;margin-bottom:0">
+              <label>Participant</label>
+              <select class="form-control" id="assign-participant">
+                <option value="">Select participant</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex:1;min-width:140px;margin-bottom:0">
+              <label>Team</label>
+              <select class="form-control" id="assign-team">
+                <option value="">Select team</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label>&nbsp;</label>
+              <label style="display:flex;align-items:center;gap:6px;padding:10px 0;font-size:13px;color:var(--text)">
+                <input type="checkbox" id="assign-captain"/> 👑 Captain
+              </label>
+            </div>
+            <button class="btn btn-primary" onclick="assignParticipant()">Assign</button>
+          </div>
+        </div>
+
+        <div id="teams-list"></div>
       </div>
+    </div>
+
+    <!-- ═══ ROUNDS ═══ -->
+    <div class="page" id="page-rounds">
+      <div class="page-header"><h2>Rounds</h2><button class="btn btn-outline btn-sm" onclick="loadRounds()">↺ Refresh</button></div>
+      <div id="no-event-rounds" class="no-event">← Select an Event first</div>
       <div id="rounds-list"></div>
     </div>
 
-    <!-- SCOREBOARD -->
+    <!-- ═══ SCOREBOARD ═══ -->
     <div class="page" id="page-scores">
-      <div class="page-header">
-        <h2>Scoreboard</h2>
-        <button class="btn btn-outline" onclick="loadScores()">↺ Refresh</button>
-      </div>
+      <div class="page-header"><h2>Scoreboard</h2><button class="btn btn-outline btn-sm" onclick="loadScores()">↺ Refresh</button></div>
+      <div id="no-event-scores" class="no-event">← Select an Event first</div>
       <div id="scores-container"></div>
     </div>
 
-    <!-- RESPONSES -->
+    <!-- ═══ RESPONSES ═══ -->
     <div class="page" id="page-responses">
-      <div class="page-header">
-        <h2>All Responses</h2>
-        <button class="btn btn-outline" onclick="loadResponses()">↺ Refresh</button>
-      </div>
-      <div class="card">
-        <div class="card-title" style="margin-bottom:16px">Individual Opinions (Phase 1)</div>
-        <table>
-          <thead><tr><th>Round</th><th>Participant</th><th>Team</th><th>Opinion</th><th>Time</th></tr></thead>
-          <tbody id="individual-responses-table"></tbody>
-        </table>
-      </div>
-      <div class="card">
-        <div class="card-title" style="margin-bottom:16px">Team Answers (Phase 2)</div>
-        <table>
-          <thead><tr><th>Round</th><th>Team</th><th>Answer</th><th>Submitted By</th><th>Time</th></tr></thead>
-          <tbody id="team-responses-table"></tbody>
-        </table>
+      <div class="page-header"><h2>All Responses</h2><button class="btn btn-outline btn-sm" onclick="loadResponses()">↺ Refresh</button></div>
+      <div id="no-event-resp" class="no-event">← Select an Event first</div>
+      <div id="responses-content" style="display:none">
+        <div class="card">
+          <div class="card-title">Individual Opinions (Phase 1)</div>
+          <table>
+            <thead><tr><th>Round</th><th>Participant</th><th>Team</th><th>Opinion</th><th>Time</th></tr></thead>
+            <tbody id="indiv-resp-table"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-title">Team Answers (Phase 2 — Captain)</div>
+          <table>
+            <thead><tr><th>Round</th><th>Team</th><th>Answer</th><th>Captain</th><th>Time</th></tr></thead>
+            <tbody id="team-resp-table"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -585,588 +407,539 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════════════
-// CONFIG
-// ═══════════════════════════════════════════════════════
 const SUPA_URL = 'https://wrzpgultvahxbrgooibn.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndyenBndWx0dmFoeGJyZ29vaWJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzc2MTcsImV4cCI6MjA5MzExMzYxN30.sZM4GQiwom34d7TjeK_Jc_n8KYoC8VhI48jfq71dwb8';
 const ADMIN_PASS = 'admin1';
-const PARTICIPANT_URL = 'https://vkv-coder.github.io/trust-analysis/';
+const APP_URL = 'https://vkv-coder.github.io/Trust-Analysis/';
 
-const supa = (path, opts={}) => fetch(`${SUPA_URL}/rest/v1/${path}`, {
-  headers: {
-    'apikey': SUPA_KEY,
-    'Authorization': `Bearer ${SUPA_KEY}`,
-    'Content-Type': 'application/json',
-    'Prefer': opts.prefer || 'return=representation',
-    ...(opts.headers||{})
-  },
+const api = (path, opts={}) => fetch(`${SUPA_URL}/rest/v1/${path}`, {
+  headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Content-Type':'application/json','Prefer':opts.prefer||'return=representation',...(opts.headers||{})},
   ...opts
 });
 const db = {
-  get: (t, q='') => supa(`${t}?${q}`).then(r=>r.json()),
-  post: (t, b) => supa(t, {method:'POST', body:JSON.stringify(b)}).then(r=>r.json()),
-  patch: (t, q, b) => supa(`${t}?${q}`, {method:'PATCH', body:JSON.stringify(b), headers:{'Prefer':'return=representation'}}).then(r=>r.json()),
-  delete: (t, q) => supa(`${t}?${q}`, {method:'DELETE'})
+  get: (t,q='') => api(`${t}?${q}`).then(r=>r.json()),
+  post: (t,b,pref) => api(t,{method:'POST',prefer:pref||'return=representation',body:JSON.stringify(b)}).then(r=>r.json()),
+  patch: (t,q,b) => api(`${t}?${q}`,{method:'PATCH',prefer:'return=representation',body:JSON.stringify(b)}).then(r=>r.json()),
+  del: (t,q) => api(`${t}?${q}`,{method:'DELETE'})
 };
 
-let state = {
-  session: null,
-  teams: [],
-  participants: [],
-  rounds: [],
-  selectedColor: '#EF4444',
-  pollInterval: null
-};
+let S = { event:null, teams:[], participants:[], rounds:[], selectedColor:'#EF4444', poll:null };
 
-// ═══════════════════════════════════════════════════════
-// LOGIN
-// ═══════════════════════════════════════════════════════
-function adminLogin() {
-  const pass = document.getElementById('admin-password').value;
-  if (pass !== ADMIN_PASS) {
-    document.getElementById('login-error').textContent = 'Incorrect password.';
-    return;
+// ── LOGIN ──
+function adminLogin(){
+  if(document.getElementById('admin-password').value !== ADMIN_PASS){
+    document.getElementById('login-error').textContent='Incorrect password.'; return;
   }
-  document.getElementById('login-wrap').style.display = 'none';
-  document.getElementById('admin-layout').style.display = 'flex';
-  initAdmin();
+  document.getElementById('login-wrap').style.display='none';
+  document.getElementById('admin-layout').style.display='flex';
+  loadEventList();
+  startPoll();
 }
 
-async function initAdmin() {
-  await loadSessionList();
-  startAdminPoll();
+// ── NAVIGATION ──
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  if(name==='dashboard') refreshDashboard();
+  if(name==='participants') renderParticipants();
+  if(name==='teams') renderTeams();
+  if(name==='rounds') loadRounds();
+  if(name==='scores') loadScores();
+  if(name==='responses') loadResponses();
+  if(name==='events') loadEventList();
 }
 
-// ═══════════════════════════════════════════════════════
-// SESSIONS
-// ═══════════════════════════════════════════════════════
-async function loadSessionList() {
-  const sessions = await db.get('ta_sessions', 'order=created_at.desc&select=*');
-  const sel = document.getElementById('session-select');
-  sel.innerHTML = '<option value="">— Select —</option>';
-  const tbody = document.getElementById('sessions-table');
-  tbody.innerHTML = '';
+// ── TOAST ──
+function toast(msg,type='info'){
+  const t=document.getElementById('toast');
+  t.className=`toast ${type}`;t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
 
-  (sessions||[]).forEach(s => {
-    sel.innerHTML += `<option value="${s.id}">${s.name} (PIN: ${s.pin})</option>`;
-    tbody.innerHTML += `<tr>
-      <td>${s.name}</td>
-      <td><strong style="font-size:16px;color:var(--accent)">${s.pin}</strong></td>
-      <td><span class="status-badge status-${s.status}">${s.status}</span></td>
-      <td>${s.total_rounds}</td>
-      <td><button class="btn btn-sm btn-outline" onclick="switchSession('${s.id}')">Load</button></td>
+// ── EVENTS ──
+async function loadEventList(){
+  const events = await db.get('ta_sessions','order=created_at.desc&select=*');
+  const sel = document.getElementById('event-select');
+  const tbody = document.getElementById('events-table');
+  sel.innerHTML='<option value="">— Select Event —</option>';
+  if(tbody) tbody.innerHTML='';
+  (events||[]).forEach(e=>{
+    sel.innerHTML+=`<option value="${e.id}">${e.name}</option>`;
+    if(tbody) tbody.innerHTML+=`<tr>
+      <td><strong>${e.name}</strong></td>
+      <td><span style="font-size:17px;color:var(--accent);font-family:'Space Grotesk',sans-serif;font-weight:700">${e.pin}</span></td>
+      <td>${e.total_rounds}</td>
+      <td><span class="status-badge status-${e.status}">${e.status}</span></td>
+      <td><button class="btn btn-sm btn-outline" onclick="switchEvent('${e.id}')">Load</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteEvent('${e.id}')">Delete</button></td>
     </tr>`;
   });
-
-  // Auto-load first
-  if (sessions && sessions.length > 0 && !state.session) {
-    switchSession(sessions[0].id);
-    sel.value = sessions[0].id;
+  if(events && events.length>0 && !S.event){
+    switchEvent(events[0].id);
+    sel.value=events[0].id;
   }
 }
 
-async function switchSession(id) {
-  if (!id) return;
-  const sessions = await db.get('ta_sessions', `id=eq.${id}&select=*`);
-  if (sessions && sessions.length > 0) {
-    state.session = sessions[0];
-    await loadTeams();
-    await loadParticipants();
-    await loadRounds();
-    updateDashboard();
-    toast(`Session loaded: ${state.session.name}`, 'info');
+async function createEvent(){
+  const name=document.getElementById('ev-name').value.trim();
+  const pin=document.getElementById('ev-pin').value.trim();
+  const rounds=parseInt(document.getElementById('ev-rounds').value)||10;
+  if(!name){toast('Event name required','error');return;}
+  if(!pin||pin.length!==4){toast('4-digit PIN required','error');return;}
+  
+  toast('Creating event...','info');
+  const res = await db.post('ta_sessions',{name,pin,total_rounds:rounds,status:'setup',current_round:0});
+  if(!res||res.error){toast('Error: '+(res?.message||'Try again'),'error');return;}
+  
+  const session = Array.isArray(res)?res[0]:res;
+  // Create round entries
+  for(let i=1;i<=rounds;i++){
+    await db.post('ta_rounds',{session_id:session.id,round_number:i,multiplier:1,status:'pending',timer_seconds:300});
   }
+  document.getElementById('ev-name').value='';
+  document.getElementById('ev-pin').value='';
+  toast(`Event "${name}" created!`,'success');
+  await loadEventList();
+  switchEvent(session.id);
+  document.getElementById('event-select').value=session.id;
+  showPage('participants');
 }
 
-async function createSession() {
-  const name = document.getElementById('session-name').value.trim();
-  const pin = document.getElementById('session-pin').value.trim();
-  const rounds = parseInt(document.getElementById('session-rounds').value) || 10;
-  if (!name || !pin || pin.length !== 4) { toast('Name and 4-digit PIN required', 'error'); return; }
-
-  const s = await db.post('ta_sessions', { name, pin, total_rounds: rounds, status: 'setup', current_round: 0 });
-  if (s && s[0]) {
-    state.session = s[0];
-    toast('Session created!', 'success');
-    // Create round entries
-    for (let i=1; i<=rounds; i++) {
-      await db.post('ta_rounds', { session_id: s[0].id, round_number: i, multiplier: 1, status: 'pending', timer_seconds: 300 });
-    }
-    await loadSessionList();
-    await loadRounds();
-    document.getElementById('session-select').value = s[0].id;
-    showPage('dashboard');
-  }
+async function deleteEvent(id){
+  if(!confirm('Delete this event and all its data?'))return;
+  await db.del('ta_scores',`session_id=eq.${id}`);
+  await db.del('ta_team_answers',`session_id=eq.${id}`);
+  await db.del('ta_individual_answers',`session_id=eq.${id}`);
+  await db.del('ta_rounds',`session_id=eq.${id}`);
+  await db.del('ta_participants',`session_id=eq.${id}`);
+  await db.del('ta_teams',`session_id=eq.${id}`);
+  await db.del('ta_sessions',`id=eq.${id}`);
+  S.event=null;
+  toast('Event deleted','info');
+  await loadEventList();
 }
 
-// ═══════════════════════════════════════════════════════
-// TEAMS
-// ═══════════════════════════════════════════════════════
-function selectColor(el) {
-  document.querySelectorAll('.color-opt').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  state.selectedColor = el.dataset.color;
-}
-
-function showAddTeam() {
-  document.getElementById('add-team-card').style.display = 'block';
-}
-
-async function addTeam() {
-  if (!state.session) { toast('Select a session first', 'error'); return; }
-  const name = document.getElementById('new-team-name').value.trim();
-  if (!name) { toast('Team name required', 'error'); return; }
-
-  await db.post('ta_teams', { session_id: state.session.id, name, color: state.selectedColor });
-  document.getElementById('new-team-name').value = '';
-  document.getElementById('add-team-card').style.display = 'none';
-  toast(`Team "${name}" added!`, 'success');
-  await loadTeams();
-  await renderTeams();
-}
-
-async function loadTeams() {
-  if (!state.session) return;
-  state.teams = await db.get('ta_teams', `session_id=eq.${state.session.id}&order=created_at`) || [];
-}
-
-async function loadParticipants() {
-  if (!state.session) return;
-  state.participants = await db.get('ta_participants',
-    `session_id=eq.${state.session.id}&select=*,ta_teams(name,color)&order=name`) || [];
-}
-
-async function renderTeams() {
+async function switchEvent(id){
+  if(!id)return;
+  const sessions=await db.get('ta_sessions',`id=eq.${id}&select=*`);
+  if(!sessions||sessions.length===0)return;
+  S.event=sessions[0];
+  document.getElementById('event-select').value=id;
   await loadTeams();
   await loadParticipants();
+  await loadRounds();
+  refreshDashboard();
+  toast(`Event loaded: ${S.event.name}`,'info');
+}
 
-  const list = document.getElementById('teams-list');
-  list.innerHTML = '';
+// ── PARTICIPANTS ──
+async function loadParticipants(){
+  if(!S.event)return;
+  S.participants=await db.get('ta_participants',`session_id=eq.${S.event.id}&select=*,ta_teams(name,color)&order=name`)||[];
+}
 
-  const teamSel = document.getElementById('new-participant-team');
-  teamSel.innerHTML = '<option value="">Select team</option>';
+async function addParticipant(){
+  if(!S.event){toast('Select an event first','error');return;}
+  const name=document.getElementById('new-part-name').value.trim();
+  if(!name){toast('Name required','error');return;}
+  await db.post('ta_participants',{session_id:S.event.id,name,is_captain:false});
+  document.getElementById('new-part-name').value='';
+  await loadParticipants();
+  renderParticipants();
+  populateAssignDropdowns();
+  toast(`${name} added`,'success');
+}
 
-  state.teams.forEach(team => {
-    teamSel.innerHTML += `<option value="${team.id}">${team.name}</option>`;
+function renderParticipants(){
+  if(!S.event){
+    document.getElementById('no-event-part').style.display='block';
+    document.getElementById('part-content').style.display='none';
+    return;
+  }
+  document.getElementById('no-event-part').style.display='none';
+  document.getElementById('part-content').style.display='block';
+  document.getElementById('part-count').textContent=S.participants.length;
+  const list=document.getElementById('part-list');
+  list.innerHTML='';
+  S.participants.forEach(p=>{
+    const team=p.ta_teams;
+    list.innerHTML+=`<div class="chip" style="border-color:${team?.color||'var(--border)'}">
+      ${p.is_captain?'👑 ':''}${p.name}
+      ${team?`<span style="color:${team.color};font-size:11px">(${team.name})</span>`:'<span style="color:var(--muted);font-size:11px">(unassigned)</span>'}
+      <span class="chip-remove" onclick="removeParticipant('${p.id}','${p.name}')">×</span>
+    </div>`;
+  });
+}
 
-    const members = state.participants.filter(p => p.team_id === team.id);
-    const chipsHtml = members.map(p => `
+async function removeParticipant(id,name){
+  if(!confirm(`Remove ${name}?`))return;
+  await db.del('ta_participants',`id=eq.${id}`);
+  await loadParticipants();
+  renderParticipants();
+  populateAssignDropdowns();
+  toast(`${name} removed`,'info');
+}
+
+// ── TEAMS ──
+function pickColor(el){
+  document.querySelectorAll('.color-opt').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  S.selectedColor=el.dataset.color;
+}
+
+async function loadTeams(){
+  if(!S.event)return;
+  S.teams=await db.get('ta_teams',`session_id=eq.${S.event.id}&order=created_at`)||[];
+}
+
+async function addTeam(){
+  if(!S.event){toast('Select an event first','error');return;}
+  const name=document.getElementById('new-team-name').value.trim();
+  if(!name){toast('Team name required','error');return;}
+  await db.post('ta_teams',{session_id:S.event.id,name,color:S.selectedColor});
+  document.getElementById('new-team-name').value='';
+  await loadTeams();
+  await loadParticipants();
+  renderTeams();
+  populateAssignDropdowns();
+  toast(`Team "${name}" created`,'success');
+}
+
+async function assignParticipant(){
+  const pid=document.getElementById('assign-participant').value;
+  const tid=document.getElementById('assign-team').value;
+  const cap=document.getElementById('assign-captain').checked;
+  if(!pid||!tid){toast('Select participant and team','error');return;}
+  await db.patch('ta_participants',`id=eq.${pid}`,{team_id:tid,is_captain:cap});
+  document.getElementById('assign-captain').checked=false;
+  await loadParticipants();
+  renderTeams();
+  populateAssignDropdowns();
+  toast('Assigned!','success');
+}
+
+async function removeFromTeam(pid){
+  await db.patch('ta_participants',`id=eq.${pid}`,{team_id:null,is_captain:false});
+  await loadParticipants();
+  renderTeams();
+  populateAssignDropdowns();
+  toast('Removed from team','info');
+}
+
+async function removeTeam(id,name){
+  if(!confirm(`Remove team "${name}"? Participants will be unassigned.`))return;
+  await db.patch('ta_participants',`team_id=eq.${id}`,{team_id:null,is_captain:false});
+  await db.del('ta_teams',`id=eq.${id}`);
+  await loadTeams();
+  await loadParticipants();
+  renderTeams();
+  populateAssignDropdowns();
+  toast('Team removed','info');
+}
+
+function renderTeams(){
+  if(!S.event){
+    document.getElementById('no-event-teams').style.display='block';
+    document.getElementById('teams-content').style.display='none';
+    return;
+  }
+  document.getElementById('no-event-teams').style.display='none';
+  document.getElementById('teams-content').style.display='block';
+
+  const list=document.getElementById('teams-list');
+  list.innerHTML='';
+  S.teams.forEach(team=>{
+    const members=S.participants.filter(p=>p.team_id===team.id);
+    const chipsHtml=members.map(p=>`
       <div class="chip">
-        ${p.is_captain ? '<span class="captain-star">👑</span>' : ''}
-        ${p.name}
-        <span class="remove-chip" onclick="removeParticipant('${p.id}')">×</span>
+        ${p.is_captain?'👑 ':''}${p.name}
+        <span class="chip-remove" onclick="removeFromTeam('${p.id}')">×</span>
+      </div>`).join('');
+    list.innerHTML+=`<div class="card">
+      <div class="team-header">
+        <div class="team-dot" style="background:${team.color}"></div>
+        <div class="team-name-text">${team.name}</div>
+        <span style="font-size:12px;color:var(--muted)">${members.length} member${members.length!==1?'s':''}</span>
+        <button class="btn btn-sm btn-danger" onclick="removeTeam('${team.id}','${team.name}')">Remove</button>
       </div>
-    `).join('');
-
-    list.innerHTML += `
-      <div class="team-card">
-        <div class="team-header">
-          <div class="team-dot" style="background:${team.color}"></div>
-          <div class="team-name">${team.name}</div>
-          <span style="font-size:12px;color:var(--muted)">${members.length} member${members.length!==1?'s':''}</span>
-          <button class="btn btn-sm btn-danger" onclick="removeTeam('${team.id}')">Remove</button>
-        </div>
-        <div class="participant-chips">
-          ${chipsHtml || '<span style="font-size:12px;color:var(--muted)">No participants yet</span>'}
-        </div>
-      </div>`;
+      <div class="chips">${chipsHtml||'<span style="font-size:12px;color:var(--muted)">No members yet</span>'}</div>
+    </div>`;
   });
 }
 
-async function addParticipant() {
-  if (!state.session) { toast('Select a session first', 'error'); return; }
-  const name = document.getElementById('new-participant-name').value.trim();
-  const teamId = document.getElementById('new-participant-team').value;
-  const isCaptain = document.getElementById('new-participant-captain').checked;
-  if (!name || !teamId) { toast('Name and team required', 'error'); return; }
-
-  await db.post('ta_participants', { session_id: state.session.id, team_id: teamId, name, is_captain: isCaptain });
-  document.getElementById('new-participant-name').value = '';
-  document.getElementById('new-participant-captain').checked = false;
-  toast(`${name} added!`, 'success');
-  await renderTeams();
-}
-
-async function removeParticipant(id) {
-  if (!confirm('Remove this participant?')) return;
-  await db.delete('ta_participants', `id=eq.${id}`);
-  await renderTeams();
-  toast('Participant removed', 'info');
-}
-
-async function removeTeam(id) {
-  if (!confirm('Remove this team and all its participants?')) return;
-  await db.delete('ta_participants', `team_id=eq.${id}`);
-  await db.delete('ta_teams', `id=eq.${id}`);
-  await renderTeams();
-  toast('Team removed', 'info');
-}
-
-// ═══════════════════════════════════════════════════════
-// ROUNDS
-// ═══════════════════════════════════════════════════════
-async function loadRounds() {
-  if (!state.session) return;
-  state.rounds = await db.get('ta_rounds',
-    `session_id=eq.${state.session.id}&order=round_number`) || [];
-  renderRounds();
-}
-
-function renderRounds() {
-  const list = document.getElementById('rounds-list');
-  list.innerHTML = '';
-
-  state.rounds.forEach(round => {
-    const isCurrent = state.session && state.session.current_round === round.round_number;
-    list.innerHTML += `
-      <div class="round-row ${isCurrent ? 'current-round' : ''}">
-        <div class="round-number">${round.round_number}</div>
-        <div class="round-body">
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
-            <span class="status-badge status-${round.status === 'pending' ? 'setup' : round.status}">${round.status}</span>
-            ${round.multiplier > 1 ? `<span style="background:var(--accent);color:#000;padding:2px 10px;border-radius:10px;font-size:12px;font-weight:700">×${round.multiplier} BONUS</span>` : ''}
-            ${isCurrent ? '<span style="color:var(--accent);font-size:12px;font-weight:600">← CURRENT</span>' : ''}
-          </div>
-          <div style="margin-bottom:10px">
-            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Case Study</label>
-            <textarea class="form-control" id="case-${round.id}" rows="2" placeholder="Enter case study / incident for this round...">${round.case_study || ''}</textarea>
-          </div>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-            <div>
-              <label style="font-size:12px;color:var(--muted)">Multiplier</label>
-              <select class="form-control" id="mult-${round.id}" style="width:80px;margin-top:4px">
-                <option value="1" ${round.multiplier==1?'selected':''}>×1</option>
-                <option value="2" ${round.multiplier==2?'selected':''}>×2</option>
-                <option value="3" ${round.multiplier==3?'selected':''}>×3</option>
-                <option value="5" ${round.multiplier==5?'selected':''}>×5</option>
-                <option value="10" ${round.multiplier==10?'selected':''}>×10</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size:12px;color:var(--muted)">Timer (seconds)</label>
-              <input type="number" class="form-control" id="timer-${round.id}" value="${round.timer_seconds||300}" style="width:100px;margin-top:4px"/>
-            </div>
-          </div>
-          <button class="btn btn-sm btn-outline" onclick="saveRound('${round.id}', ${round.round_number})">💾 Save</button>
-        </div>
-      </div>`;
+function populateAssignDropdowns(){
+  const pSel=document.getElementById('assign-participant');
+  const tSel=document.getElementById('assign-team');
+  if(!pSel||!tSel)return;
+  pSel.innerHTML='<option value="">Select participant</option>';
+  tSel.innerHTML='<option value="">Select team</option>';
+  S.participants.forEach(p=>{
+    pSel.innerHTML+=`<option value="${p.id}">${p.name}${p.ta_teams?' ('+p.ta_teams.name+')':' (unassigned)'}</option>`;
+  });
+  S.teams.forEach(t=>{
+    tSel.innerHTML+=`<option value="${t.id}">${t.name}</option>`;
   });
 }
 
-async function saveRound(roundId, roundNum) {
-  const caseText = document.getElementById(`case-${roundId}`).value.trim();
-  const mult = parseInt(document.getElementById(`mult-${roundId}`).value);
-  const timer = parseInt(document.getElementById(`timer-${roundId}`).value) || 300;
+// ── ROUNDS ──
+async function loadRounds(){
+  if(!S.event){
+    document.getElementById('no-event-rounds').style.display='block';
+    document.getElementById('rounds-list').style.display='none';
+    return;
+  }
+  document.getElementById('no-event-rounds').style.display='none';
+  S.rounds=await db.get('ta_rounds',`session_id=eq.${S.event.id}&order=round_number`)||[];
+  const list=document.getElementById('rounds-list');
+  list.style.display='block';
+  list.innerHTML='';
+  S.rounds.forEach(r=>{
+    const isCurrent=S.event.current_round===r.round_number;
+    list.innerHTML+=`<div class="round-row ${isCurrent?'current':''}">
+      <div class="round-num">${r.round_number}</div>
+      <div class="round-body">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+          <span class="status-badge status-${r.status==='pending'?'setup':r.status}">${r.status}</span>
+          ${r.multiplier>1?`<span style="background:var(--accent);color:#000;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700">×${r.multiplier} BONUS</span>`:''}
+          ${isCurrent?'<span style="color:var(--accent);font-size:12px;font-weight:600">← CURRENT</span>':''}
+        </div>
+        <div class="form-group">
+          <label>Case Study / Incident</label>
+          <textarea class="form-control" id="case-${r.id}" rows="2" placeholder="Type case study for this round...">${r.case_study||''}</textarea>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+          <div>
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Multiplier</label>
+            <select class="form-control" id="mult-${r.id}" style="width:80px">
+              <option value="1" ${r.multiplier==1?'selected':''}>×1</option>
+              <option value="2" ${r.multiplier==2?'selected':''}>×2</option>
+              <option value="3" ${r.multiplier==3?'selected':''}>×3</option>
+              <option value="5" ${r.multiplier==5?'selected':''}>×5</option>
+              <option value="10" ${r.multiplier==10?'selected':''}>×10</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Timer (sec)</label>
+            <input type="number" class="form-control" id="timer-${r.id}" value="${r.timer_seconds||300}" style="width:90px"/>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-outline" onclick="saveRound('${r.id}',${r.round_number})">💾 Save Round ${r.round_number}</button>
+      </div>
+    </div>`;
+  });
+}
 
-  await db.patch('ta_rounds', `id=eq.${roundId}`, { case_study: caseText, multiplier: mult, timer_seconds: timer });
-  toast(`Round ${roundNum} saved!`, 'success');
+async function saveRound(id,num){
+  const caseText=document.getElementById(`case-${id}`).value.trim();
+  const mult=parseInt(document.getElementById(`mult-${id}`).value);
+  const timer=parseInt(document.getElementById(`timer-${id}`).value)||300;
+  await db.patch('ta_rounds',`id=eq.${id}`,{case_study:caseText,multiplier:mult,timer_seconds:timer});
+  toast(`Round ${num} saved`,'success');
   await loadRounds();
 }
 
-// ═══════════════════════════════════════════════════════
-// SESSION CONTROL
-// ═══════════════════════════════════════════════════════
-async function openRegistration() {
-  if (!state.session) { toast('Select a session first', 'error'); return; }
-  const nextRound = (state.session.current_round || 0) + 1;
-  if (nextRound > state.session.total_rounds) { toast('All rounds completed!', 'info'); return; }
-
-  // Update round status
-  const rounds = await db.get('ta_rounds',
-    `session_id=eq.${state.session.id}&round_number=eq.${nextRound}&select=*`);
-  if (rounds && rounds.length > 0) {
-    await db.patch('ta_rounds', `id=eq.${rounds[0].id}`, { status: 'registration_open' });
-  }
-
-  await db.patch('ta_sessions', `id=eq.${state.session.id}`,
-    { status: 'registration', current_round: nextRound });
-  toast(`Round ${nextRound} opened for registration!`, 'success');
-  await refreshSession();
+// ── GAME CONTROL ──
+async function openRegistration(){
+  if(!S.event){toast('No event loaded','error');return;}
+  const next=(S.event.current_round||0)+1;
+  if(next>S.event.total_rounds){toast('All rounds completed!','info');return;}
+  const rounds=await db.get('ta_rounds',`session_id=eq.${S.event.id}&round_number=eq.${next}&select=*`);
+  if(rounds&&rounds.length>0) await db.patch('ta_rounds',`id=eq.${rounds[0].id}`,{status:'registration_open'});
+  await db.patch('ta_sessions',`id=eq.${S.event.id}`,{status:'registration',current_round:next});
+  toast(`Round ${next} — Main Room open!`,'success');
+  await refreshEvent();
 }
 
-async function openBreakout() {
-  if (!state.session) return;
-  const round = await getCurrentRound();
-  if (!round) { toast('No active round', 'error'); return; }
-
-  await db.patch('ta_rounds', `id=eq.${round.id}`,
-    { status: 'breakout_open', timer_started_at: new Date().toISOString() });
-  await db.patch('ta_sessions', `id=eq.${state.session.id}`, { status: 'breakout' });
-  toast('Breakout started! Timer running on all devices.', 'success');
-  await refreshSession();
+async function openBreakout(){
+  if(!S.event)return;
+  const round=await getCurrentRound();
+  if(!round){toast('No active round','error');return;}
+  await db.patch('ta_rounds',`id=eq.${round.id}`,{status:'breakout_open',timer_started_at:new Date().toISOString()});
+  await db.patch('ta_sessions',`id=eq.${S.event.id}`,{status:'breakout'});
+  toast('Breakout started!','success');
+  await refreshEvent();
 }
 
-async function revealScores() {
-  if (!state.session) return;
-  const round = await getCurrentRound();
-  if (!round) return;
-
-  // Calculate scores
+async function revealScores(){
+  if(!S.event)return;
+  const round=await getCurrentRound();
+  if(!round)return;
   await calculateScores(round);
-  await db.patch('ta_rounds', `id=eq.${round.id}`, { status: 'revealed' });
-  await db.patch('ta_sessions', `id=eq.${state.session.id}`, { status: 'scoring' });
-  toast('Scores revealed to all participants!', 'success');
-  await refreshSession();
-  await loadScores();
+  await db.patch('ta_rounds',`id=eq.${round.id}`,{status:'revealed'});
+  await db.patch('ta_sessions',`id=eq.${S.event.id}`,{status:'scoring'});
+  toast('Scores revealed!','success');
+  await refreshEvent();
 }
 
-async function calculateScores(round) {
-  const teamAnswers = await db.get('ta_team_answers',
-    `round_id=eq.${round.id}&select=*`);
-  const teams = await db.get('ta_teams', `session_id=eq.${state.session.id}&select=*`);
+async function endSession(){
+  if(!S.event)return;
+  if(!confirm('End this session?'))return;
+  await db.patch('ta_sessions',`id=eq.${S.event.id}`,{status:'complete'});
+  toast('Session ended','info');
+  await refreshEvent();
+}
 
-  if (!teamAnswers || teamAnswers.length === 0) { toast('No team answers to calculate', 'error'); return; }
+async function getCurrentRound(){
+  if(!S.event||!S.event.current_round)return null;
+  const r=await db.get('ta_rounds',`session_id=eq.${S.event.id}&round_number=eq.${S.event.current_round}&select=*`);
+  return(r&&r.length>0)?r[0]:null;
+}
 
-  const highCount = teamAnswers.filter(a => a.answer === 'H').length;
-  const lowCount = teamAnswers.filter(a => a.answer === 'L').length;
-
-  // Points matrix
-  let highPoints = 0, lowPoints = 0;
-  if (highCount === 4) { highPoints = -100; lowPoints = 0; }
-  else if (highCount === 3 && lowCount === 1) { highPoints = 100; lowPoints = -300; }
-  else if (highCount === 2 && lowCount === 2) { highPoints = -100; lowPoints = -200; }
-  else if (highCount === 1 && lowCount === 3) { highPoints = 300; lowPoints = -100; }
-  else if (lowCount === 4) { highPoints = 0; lowPoints = 100; }
-
-  const multiplier = round.multiplier || 1;
-
-  for (const team of (teams||[])) {
-    const teamAns = teamAnswers.find(a => a.team_id === team.id);
-    if (!teamAns) continue;
-
-    const roundPts = (teamAns.answer === 'H' ? highPoints : lowPoints) * multiplier;
-
-    // Get previous cumulative
-    const prevScores = await db.get('ta_scores',
-      `session_id=eq.${state.session.id}&team_id=eq.${team.id}&order=calculated_at.desc&limit=1`);
-    const prevCumulative = (prevScores && prevScores.length > 0) ? (prevScores[0].cumulative_points || 0) : 0;
-
-    // Upsert score
-    await supa('ta_scores', {
-      method: 'POST',
-      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
-      body: JSON.stringify({
-        session_id: state.session.id,
-        round_id: round.id,
-        team_id: team.id,
-        round_points: roundPts,
-        cumulative_points: prevCumulative + roundPts,
-        calculated_at: new Date().toISOString()
-      })
-    });
+async function calculateScores(round){
+  const teamAnswers=await db.get('ta_team_answers',`round_id=eq.${round.id}&select=*`)||[];
+  const teams=await db.get('ta_teams',`session_id=eq.${S.event.id}&select=*`)||[];
+  if(teamAnswers.length===0){toast('No team answers yet','error');return;}
+  const highCount=teamAnswers.filter(a=>a.answer==='H').length;
+  const lowCount=teamAnswers.filter(a=>a.answer==='L').length;
+  let hp=0,lp=0;
+  if(highCount===4){hp=-100;lp=0;}
+  else if(highCount===3&&lowCount===1){hp=100;lp=-300;}
+  else if(highCount===2&&lowCount===2){hp=-100;lp=-200;}
+  else if(highCount===1&&lowCount===3){hp=300;lp=-100;}
+  else if(lowCount===4){hp=0;lp=100;}
+  const mult=round.multiplier||1;
+  for(const team of teams){
+    const ta=teamAnswers.find(a=>a.team_id===team.id);
+    if(!ta)continue;
+    const rpts=(ta.answer==='H'?hp:lp)*mult;
+    const prev=await db.get('ta_scores',`session_id=eq.${S.event.id}&team_id=eq.${team.id}&order=calculated_at.desc&limit=1`);
+    const prevCum=(prev&&prev.length>0)?(prev[0].cumulative_points||0):0;
+    await api('ta_scores',{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify({session_id:S.event.id,round_id:round.id,team_id:team.id,round_points:rpts,cumulative_points:prevCum+rpts,calculated_at:new Date().toISOString()})});
   }
 }
 
-async function endSession() {
-  if (!state.session) return;
-  if (!confirm('End this session? Participants will see final scores.')) return;
-  await db.patch('ta_sessions', `id=eq.${state.session.id}`, { status: 'complete' });
-  toast('Session ended.', 'info');
-  await refreshSession();
-}
-
-async function getCurrentRound() {
-  if (!state.session || !state.session.current_round) return null;
-  const rounds = await db.get('ta_rounds',
-    `session_id=eq.${state.session.id}&round_number=eq.${state.session.current_round}&select=*`);
-  return (rounds && rounds.length > 0) ? rounds[0] : null;
-}
-
-// ═══════════════════════════════════════════════════════
-// DASHBOARD
-// ═══════════════════════════════════════════════════════
-async function updateDashboard() {
-  if (!state.session) return;
-
-  document.getElementById('stat-teams').textContent = state.teams.length;
-  document.getElementById('stat-participants').textContent = state.participants.length;
-  document.getElementById('stat-round').textContent =
-    state.session.current_round > 0 ? `${state.session.current_round} / ${state.session.total_rounds}` : '—';
-
-  const badge = document.getElementById('session-status-badge');
-  badge.className = `status-badge status-${state.session.status}`;
-  badge.textContent = state.session.status.charAt(0).toUpperCase() + state.session.status.slice(1);
-
-  document.getElementById('dash-pin').textContent = state.session.pin;
-  document.getElementById('dash-link').textContent = PARTICIPANT_URL;
-
-  // Load individual responses for current round
-  if (state.session.current_round > 0) {
-    const round = await getCurrentRound();
-    if (round) {
-      const responses = await db.get('ta_individual_answers',
-        `round_id=eq.${round.id}&select=*,ta_participants(name,ta_teams(name,color))`);
-      const tbody = document.getElementById('dash-responses');
-      tbody.innerHTML = '';
-      (responses||[]).forEach(r => {
-        const p = r.ta_participants;
-        const team = p?.ta_teams;
-        tbody.innerHTML += `<tr>
-          <td>${p?.name||'—'}</td>
-          <td><span style="color:${team?.color||'#3B82F6'}">${team?.name||'—'}</span></td>
-          <td><span style="font-weight:700;color:${r.answer==='H'?'#EF4444':'#22C55E'}">${r.answer==='H'?'HIGH':'LOW'}</span></td>
-        </tr>`;
-      });
-
-      // Show total submitted vs total participants
-      const total = state.participants.length;
-      const submitted = (responses||[]).length;
-    }
-  }
-}
-
-function copyLink() {
-  navigator.clipboard.writeText(PARTICIPANT_URL).then(() => toast('Link copied!', 'success'));
-}
-
-// ═══════════════════════════════════════════════════════
-// SCORES
-// ═══════════════════════════════════════════════════════
-async function loadScores() {
-  if (!state.session) return;
-
-  const scores = await db.get('ta_scores',
-    `session_id=eq.${state.session.id}&select=*,ta_teams(name,color),ta_rounds(round_number,multiplier)&order=ta_rounds(round_number)`);
-
-  const container = document.getElementById('scores-container');
-  container.innerHTML = '';
-
-  if (!scores || scores.length === 0) {
-    container.innerHTML = '<div class="card" style="text-align:center;color:var(--muted);padding:40px">No scores yet. Complete a round first.</div>';
+// ── DASHBOARD ──
+async function refreshDashboard(){
+  if(!S.event){
+    document.getElementById('no-event-dash').style.display='block';
+    document.getElementById('dash-content').style.display='none';
     return;
   }
+  document.getElementById('no-event-dash').style.display='none';
+  document.getElementById('dash-content').style.display='block';
+  document.getElementById('stat-teams').textContent=S.teams.length;
+  document.getElementById('stat-participants').textContent=S.participants.length;
+  document.getElementById('stat-round').textContent=S.event.current_round>0?`${S.event.current_round}/${S.event.total_rounds}`:'—';
+  document.getElementById('dash-event-name').textContent=S.event.name;
+  document.getElementById('dash-pin').textContent=S.event.pin;
+  document.getElementById('dash-link').textContent=APP_URL;
+  const badge=document.getElementById('dash-status');
+  badge.className=`status-badge status-${S.event.status}`;
+  badge.textContent=S.event.status;
 
-  // Aggregate by team
-  const teamMap = {};
-  (scores||[]).forEach(s => {
-    if (!teamMap[s.team_id]) {
-      teamMap[s.team_id] = { team: s.ta_teams, rounds: [], cumulative: 0 };
+  // Presence
+  if(S.event.current_round>0){
+    const round=await getCurrentRound();
+    if(round){
+      const opinions=await db.get('ta_individual_answers',`round_id=eq.${round.id}&select=participant_id`)||[];
+      const presentIds=new Set(opinions.map(o=>o.participant_id));
+      document.getElementById('stat-present').textContent=presentIds.size;
+      const pg=document.getElementById('presence-grid');
+      pg.innerHTML='';
+      S.participants.forEach(p=>{
+        const present=presentIds.has(p.id);
+        pg.innerHTML+=`<div class="presence-chip ${present?'present':'absent'}">
+          ${present?'✅':'⏳'} ${p.name}
+        </div>`;
+      });
+      // Opinions table
+      const full=await db.get('ta_individual_answers',`round_id=eq.${round.id}&select=*,ta_participants(name,ta_teams(name,color))`)||[];
+      const tbody=document.getElementById('dash-opinions');
+      tbody.innerHTML='';
+      full.forEach(r=>{
+        const p=r.ta_participants;const t=p?.ta_teams;
+        tbody.innerHTML+=`<tr>
+          <td>${p?.name||'—'}</td>
+          <td style="color:${t?.color||'#3B82F6'}">${t?.name||'—'}</td>
+          <td><strong style="color:${r.answer==='H'?'var(--high)':'var(--low)'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td>
+        </tr>`;
+      });
     }
-    teamMap[s.team_id].rounds.push(s);
-    teamMap[s.team_id].cumulative = s.cumulative_points;
-  });
-
-  const sorted = Object.values(teamMap).sort((a,b) => b.cumulative - a.cumulative);
-  const ranks = ['🥇','🥈','🥉'];
-
-  let html = '<div class="card"><div class="card-title" style="margin-bottom:16px">Final Standings</div>';
-  sorted.forEach((t, i) => {
-    const pts = t.cumulative;
-    html += `<div class="score-row">
-      <div style="font-size:20px;width:28px">${ranks[i]||i+1}</div>
-      <div class="score-dot" style="background:${t.team?.color||'#3B82F6'}"></div>
-      <div class="score-name">${t.team?.name||'Team'}</div>
-      <div class="score-pts" style="color:${pts>=0?'var(--low)':'var(--high)'}">${pts>0?'+':''}${pts}</div>
-    </div>`;
-  });
-  html += '</div>';
-
-  // Round by round table
-  html += '<div class="card"><div class="card-title" style="margin-bottom:16px">Round by Round</div><div style="overflow-x:auto"><table><thead><tr><th>Team</th>';
-  const roundNos = [...new Set(scores.map(s => s.ta_rounds?.round_number))].sort((a,b)=>a-b);
-  roundNos.forEach(r => { html += `<th>R${r}</th>`; });
-  html += '<th>Total</th></tr></thead><tbody>';
-
-  sorted.forEach(t => {
-    html += `<tr><td><span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:${t.team?.color||'#3B82F6'};display:inline-block"></span>${t.team?.name||'Team'}</span></td>`;
-    roundNos.forEach(r => {
-      const rs = t.rounds.find(s => s.ta_rounds?.round_number === r);
-      const pts = rs ? rs.round_points : '—';
-      html += `<td style="color:${typeof pts==='number'?(pts>=0?'var(--low)':'var(--high)'):'var(--muted)'}">${typeof pts==='number'?(pts>0?'+':'')+pts:pts}</td>`;
-    });
-    html += `<td style="font-weight:700;color:${t.cumulative>=0?'var(--low)':'var(--high)'}">${t.cumulative>0?'+':''}${t.cumulative}</td></tr>`;
-  });
-  html += '</tbody></table></div></div>';
-
-  container.innerHTML = html;
-}
-
-// ═══════════════════════════════════════════════════════
-// RESPONSES
-// ═══════════════════════════════════════════════════════
-async function loadResponses() {
-  if (!state.session) return;
-
-  const indiv = await db.get('ta_individual_answers',
-    `session_id=eq.${state.session.id}&select=*,ta_participants(name,ta_teams(name,color)),ta_rounds(round_number)&order=ta_rounds(round_number),submitted_at`);
-
-  const team = await db.get('ta_team_answers',
-    `session_id=eq.${state.session.id}&select=*,ta_teams(name,color),ta_rounds(round_number),ta_participants(name)&order=ta_rounds(round_number),submitted_at`);
-
-  const itbody = document.getElementById('individual-responses-table');
-  itbody.innerHTML = '';
-  (indiv||[]).forEach(r => {
-    const p = r.ta_participants;
-    const t = p?.ta_teams;
-    const time = new Date(r.submitted_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-    itbody.innerHTML += `<tr>
-      <td>Round ${r.ta_rounds?.round_number||'?'}</td>
-      <td>${p?.name||'—'}</td>
-      <td style="color:${t?.color||'#3B82F6'}">${t?.name||'—'}</td>
-      <td><strong style="color:${r.answer==='H'?'#EF4444':'#22C55E'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td>
-      <td style="color:var(--muted)">${time}</td>
-    </tr>`;
-  });
-
-  const ttbody = document.getElementById('team-responses-table');
-  ttbody.innerHTML = '';
-  (team||[]).forEach(r => {
-    const t = r.ta_teams;
-    const cap = r.ta_participants;
-    const time = new Date(r.submitted_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-    ttbody.innerHTML += `<tr>
-      <td>Round ${r.ta_rounds?.round_number||'?'}</td>
-      <td style="color:${t?.color||'#3B82F6'}">${t?.name||'—'}</td>
-      <td><strong style="color:${r.answer==='H'?'#EF4444':'#22C55E'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td>
-      <td>${cap?.name||'—'}</td>
-      <td style="color:var(--muted)">${time}</td>
-    </tr>`;
-  });
-}
-
-// ═══════════════════════════════════════════════════════
-// NAVIGATION
-// ═══════════════════════════════════════════════════════
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  document.getElementById('nav-'+name).classList.add('active');
-
-  if (name === 'dashboard') updateDashboard();
-  if (name === 'teams') renderTeams();
-  if (name === 'rounds') loadRounds();
-  if (name === 'scores') loadScores();
-  if (name === 'responses') loadResponses();
-}
-
-// ═══════════════════════════════════════════════════════
-// POLLING
-// ═══════════════════════════════════════════════════════
-function startAdminPoll() {
-  if (state.pollInterval) clearInterval(state.pollInterval);
-  state.pollInterval = setInterval(refreshSession, 5000);
-}
-
-async function refreshSession() {
-  if (!state.session) return;
-  const sessions = await db.get('ta_sessions', `id=eq.${state.session.id}&select=*`);
-  if (sessions && sessions.length > 0) {
-    state.session = sessions[0];
-    updateDashboard();
   }
 }
 
-// ═══════════════════════════════════════════════════════
-// TOAST
-// ═══════════════════════════════════════════════════════
-function toast(msg, type='info') {
-  const t = document.getElementById('toast');
-  t.className = `toast ${type}`;
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+async function refreshEvent(){
+  if(!S.event)return;
+  const s=await db.get('ta_sessions',`id=eq.${S.event.id}&select=*`);
+  if(s&&s.length>0) S.event=s[0];
+  refreshDashboard();
+}
+
+function startPoll(){
+  if(S.poll)clearInterval(S.poll);
+  S.poll=setInterval(async()=>{
+    await refreshEvent();
+  },5000);
+}
+
+function copyLink(){
+  navigator.clipboard.writeText(APP_URL).then(()=>toast('Link copied!','success'));
+}
+
+// ── SCORES ──
+async function loadScores(){
+  if(!S.event){document.getElementById('no-event-scores').style.display='block';document.getElementById('scores-container').style.display='none';return;}
+  document.getElementById('no-event-scores').style.display='none';
+  const scores=await db.get('ta_scores',`session_id=eq.${S.event.id}&select=*,ta_teams(name,color),ta_rounds(round_number,multiplier)&order=ta_rounds(round_number)`)||[];
+  const container=document.getElementById('scores-container');
+  container.style.display='block';
+  if(scores.length===0){container.innerHTML='<div class="card" style="text-align:center;color:var(--muted);padding:40px">No scores yet.</div>';return;}
+  const teamMap={};
+  scores.forEach(s=>{
+    if(!teamMap[s.team_id]) teamMap[s.team_id]={team:s.ta_teams,rounds:[],cum:0};
+    teamMap[s.team_id].rounds.push(s);
+    teamMap[s.team_id].cum=s.cumulative_points;
+  });
+  const sorted=Object.values(teamMap).sort((a,b)=>b.cum-a.cum);
+  const ranks=['🥇','🥈','🥉'];
+  let html='<div class="card"><div class="card-title">Standings</div>';
+  sorted.forEach((t,i)=>{
+    html+=`<div class="score-row">
+      <div style="font-size:18px;width:24px">${ranks[i]||i+1}</div>
+      <div class="score-dot" style="background:${t.team?.color||'#3B82F6'}"></div>
+      <div class="score-name">${t.team?.name||'Team'}</div>
+      <div class="score-pts" style="color:${t.cum>=0?'var(--low)':'var(--high)'}">${t.cum>0?'+':''}${t.cum}</div>
+    </div>`;
+  });
+  html+='</div>';
+  const roundNos=[...new Set(scores.map(s=>s.ta_rounds?.round_number))].sort((a,b)=>a-b);
+  html+='<div class="card"><div class="card-title">Round by Round</div><div style="overflow-x:auto"><table><thead><tr><th>Team</th>';
+  roundNos.forEach(r=>{html+=`<th>R${r}</th>`;});
+  html+='<th>Total</th></tr></thead><tbody>';
+  sorted.forEach(t=>{
+    html+=`<tr><td><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:${t.team?.color};display:inline-block"></span>${t.team?.name}</span></td>`;
+    roundNos.forEach(r=>{
+      const rs=t.rounds.find(s=>s.ta_rounds?.round_number===r);
+      const pts=rs?rs.round_points:'—';
+      html+=`<td style="color:${typeof pts==='number'?(pts>=0?'var(--low)':'var(--high)'):'var(--muted)'}">${typeof pts==='number'?(pts>0?'+':'')+pts:pts}</td>`;
+    });
+    html+=`<td style="font-weight:700;color:${t.cum>=0?'var(--low)':'var(--high)'}">${t.cum>0?'+':''}${t.cum}</td></tr>`;
+  });
+  html+='</tbody></table></div></div>';
+  container.innerHTML=html;
+}
+
+// ── RESPONSES ──
+async function loadResponses(){
+  if(!S.event){document.getElementById('no-event-resp').style.display='block';document.getElementById('responses-content').style.display='none';return;}
+  document.getElementById('no-event-resp').style.display='none';
+  document.getElementById('responses-content').style.display='block';
+  const indiv=await db.get('ta_individual_answers',`session_id=eq.${S.event.id}&select=*,ta_participants(name,ta_teams(name,color)),ta_rounds(round_number)&order=ta_rounds(round_number),submitted_at`)||[];
+  const team=await db.get('ta_team_answers',`session_id=eq.${S.event.id}&select=*,ta_teams(name,color),ta_rounds(round_number),ta_participants(name)&order=ta_rounds(round_number),submitted_at`)||[];
+  const it=document.getElementById('indiv-resp-table');it.innerHTML='';
+  indiv.forEach(r=>{
+    const p=r.ta_participants;const t=p?.ta_teams;
+    const time=new Date(r.submitted_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    it.innerHTML+=`<tr><td>R${r.ta_rounds?.round_number||'?'}</td><td>${p?.name||'—'}</td><td style="color:${t?.color||'#3B82F6'}">${t?.name||'—'}</td><td><strong style="color:${r.answer==='H'?'var(--high)':'var(--low)'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td><td style="color:var(--muted)">${time}</td></tr>`;
+  });
+  const tt=document.getElementById('team-resp-table');tt.innerHTML='';
+  team.forEach(r=>{
+    const t=r.ta_teams;const cap=r.ta_participants;
+    const time=new Date(r.submitted_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    tt.innerHTML+=`<tr><td>R${r.ta_rounds?.round_number||'?'}</td><td style="color:${t?.color||'#3B82F6'}">${t?.name||'—'}</td><td><strong style="color:${r.answer==='H'?'var(--high)':'var(--low)'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td><td>${cap?.name||'—'}</td><td style="color:var(--muted)">${time}</td></tr>`;
+  });
 }
 </script>
 </body>
