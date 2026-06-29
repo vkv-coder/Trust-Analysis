@@ -1,0 +1,22 @@
+{
+  "name": "Trust Analysis",
+  "short_name": "Trust Analysis",
+  "description": "Group Decision & Trust Building Game",
+  "start_url": "/trust-analysis/",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#0F172A",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://api.iconify.design/twemoji/bullseye.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "https://api.iconify.design/twemoji/bullseye.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

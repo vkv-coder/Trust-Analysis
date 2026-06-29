@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#0F172A"/>
+<title>Trust Analysis — Admin</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+
+  :root {
+    --bg: #0F172A;
+    --surface: #1E293B;
+    --surface2: #273548;
+    --border: #334155;
+    --accent: #F59E0B;
+    --accent2: #3B82F6;
+    --high: #EF4444;
+    --low: #22C55E;
+    --text: #F1F5F9;
+    --muted: #94A3B8;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* LOGIN */
+  .login-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+  }
+  .login-card h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .login-card p { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+
+  /* LAYOUT */
+  .admin-layout { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 240px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 20;
+  }
+  .sidebar-logo {
+    padding: 24px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo .logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .sidebar-logo .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(245,158,11,0.06); }
+  .nav-item .icon { font-size: 18px; width: 22px; text-align: center; }
+
+  .sidebar-session {
+    margin-top: auto;
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .session-selector { width: 100%; }
+  .session-selector label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .session-selector select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .main-content {
+    margin-left: 240px;
+    flex: 1;
+    padding: 32px;
+    max-width: calc(100vw - 240px);
+  }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .page-header h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* GRID */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  /* STAT TILES */
+  .stat-tile {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .stat-value { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700; color: var(--accent); }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* FORM */
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+  .form-control {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-control:focus { border-color: var(--accent); }
+  textarea.form-control { resize: vertical; min-height: 80px; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-success { background: var(--low); color: #000; }
+  .btn-danger { background: var(--high); color: #fff; }
+  .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* STATUS BADGE */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .status-setup { background: rgba(148,163,184,0.15); color: var(--muted); }
+  .status-registration { background: rgba(59,130,246,0.15); color: var(--accent2); }
+  .status-breakout { background: rgba(245,158,11,0.15); color: var(--accent); }
+  .status-scoring { background: rgba(34,197,94,0.15); color: var(--low); }
+  .status-complete { background: rgba(139,92,246,0.15); color: #8B5CF6; }
+
+  /* TEAMS */
+  .team-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+  .team-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .team-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+  .team-name { font-weight: 600; font-size: 15px; flex: 1; }
+  .participant-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip .captain-star { color: var(--accent); }
+  .chip .remove-chip { color: var(--high); cursor: pointer; font-size: 14px; }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 10px 14px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+
+  /* ROUND CONTROL */
+  .round-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    background: var(--surface2);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border: 2px solid transparent;
+  }
+  .round-row.current-round { border-color: var(--accent); }
+  .round-number {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+    width: 32px;
+    flex-shrink: 0;
+    text-align: center;
+    margin-top: 4px;
+  }
+  .round-body { flex: 1; }
+  .round-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+  /* SCOREBOARD */
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--surface2);
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  .score-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+  .score-name { flex: 1; font-weight: 600; }
+  .score-pts {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 100;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: var(--low); color: var(--low); }
+  .toast.error { border-color: var(--high); color: var(--high); }
+  .toast.info { border-color: var(--accent); color: var(--accent); }
+
+  /* COLOR PICKER */
+  .color-options { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .color-opt {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.1s;
+  }
+  .color-opt.selected { border-color: #fff; transform: scale(1.15); }
+
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  .inline-flex { display: flex; gap: 10px; align-items: center; }
+  .flex-wrap { flex-wrap: wrap; }
+
+  @media (max-width: 900px) {
+    .sidebar { width: 200px; }
+    .main-content { margin-left: 200px; padding: 20px; max-width: calc(100vw - 200px); }
+    .grid3 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 680px) {
+    .sidebar { display: none; }
+    .main-content { margin-left: 0; max-width: 100vw; }
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ LOGIN -->
+<div id="login-wrap" class="login-wrap">
+  <div class="login-card">
+    <div style="font-size:48px;margin-bottom:16px">🎯</div>
+    <h1>Trust Analysis</h1>
+    <p>Admin Panel — Enter your password</p>
+    <div class="form-group">
+      <input type="password" class="form-control" id="admin-password" placeholder="Admin password" onkeydown="if(event.key==='Enter')adminLogin()"/>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="adminLogin()">Login →</button>
+    <div id="login-error" style="color:#EF4444;font-size:13px;margin-top:10px;min-height:18px"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ ADMIN LAYOUT -->
+<div id="admin-layout" class="admin-layout" style="display:none">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo">Trust Analysis</div>
+      <div class="sub">Admin Panel</div>
+    </div>
+    <div style="padding: 8px 0;">
+      <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+        <span class="icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showPage('setup')" id="nav-setup">
+        <span class="icon">⚙️</span> Setup Session
+      </div>
+      <div class="nav-item" onclick="showPage('teams')" id="nav-teams">
+        <span class="icon">👥</span> Teams
+      </div>
+      <div class="nav-item" onclick="showPage('rounds')" id="nav-rounds">
+        <span class="icon">🎮</span> Rounds
+      </div>
+      <div class="nav-item" onclick="showPage('scores')" id="nav-scores">
+        <span class="icon">🏆</span> Scoreboard
+      </div>
+      <div class="nav-item" onclick="showPage('responses')" id="nav-responses">
+        <span class="icon">📋</span> Responses
+      </div>
+    </div>
+    <div class="sidebar-session">
+      <div class="session-selector">
+        <label>Active Session</label>
+        <select id="session-select" onchange="switchSession(this.value)">
+          <option value="">— Select —</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h2>Dashboard</h2>
+        <div id="session-status-badge" class="status-badge status-setup">Setup</div>
+      </div>
+      <div class="grid3" style="margin-bottom:20px">
+        <div class="stat-tile">
+          <div class="stat-label">Teams</div>
+          <div class="stat-value" id="stat-teams">0</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Participants</div>
+          <div class="stat-value" id="stat-participants">0</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Current Round</div>
+          <div class="stat-value" id="stat-round">—</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Session Control</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="openRegistration()">▶ Open Registration (Main Room)</button>
+          <button class="btn btn-success" onclick="openBreakout()">🔀 Start Breakout</button>
+          <button class="btn btn-outline" onclick="revealScores()">📊 Reveal Scores</button>
+          <button class="btn btn-danger" onclick="endSession()">⏹ End Session</button>
+        </div>
+        <div style="margin-top:14px;padding:14px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--muted)">
+          <strong style="color:var(--text)">Session PIN:</strong> <span id="dash-pin" style="font-family:'Space Grotesk';font-size:18px;color:var(--accent);font-weight:700">—</span>
+          &nbsp;&nbsp;|&nbsp;&nbsp;
+          <strong style="color:var(--text)">Link:</strong> <span id="dash-link" style="color:var(--accent2);font-size:12px"></span>
+          <button class="btn btn-sm btn-outline" style="margin-left:10px" onclick="copyLink()">📋 Copy</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Individual Responses (This Round)</div>
+        </div>
+        <table>
+          <thead><tr><th>Participant</th><th>Team</th><th>Answer</th></tr></thead>
+          <tbody id="dash-responses"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SETUP SESSION -->
+    <div class="page" id="page-setup">
+      <div class="page-header">
+        <h2>Setup Session</h2>
+        <button class="btn btn-primary" onclick="createSession()">+ New Session</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">Create New Session</div>
+        <div class="grid2">
+          <div class="form-group">
+            <label>Session Name</label>
+            <input class="form-control" id="session-name" placeholder="e.g. Trust Analysis — Batch 1"/>
+          </div>
+          <div class="form-group">
+            <label>4-Digit PIN</label>
+            <input class="form-control" id="session-pin" placeholder="e.g. 2026" maxlength="4" type="number"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Total Rounds</label>
+          <input class="form-control" id="session-rounds" placeholder="10" type="number" value="10" style="max-width:120px"/>
+        </div>
+        <button class="btn btn-primary" onclick="createSession()">Create Session</button>
+      </div>
+
+      <div class="card" id="existing-sessions-card">
+        <div class="card-title" style="margin-bottom:16px">All Sessions</div>
+        <table>
+          <thead><tr><th>Session Name</th><th>PIN</th><th>Status</th><th>Rounds</th><th>Action</th></tr></thead>
+          <tbody id="sessions-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TEAMS -->
+    <div class="page" id="page-teams">
+      <div class="page-header">
+        <h2>Teams & Participants</h2>
+        <button class="btn btn-primary" onclick="showAddTeam()">+ Add Team</button>
+      </div>
+
+      <div class="card" id="add-team-card" style="display:none">
+        <div class="card-title" style="margin-bottom:16px">New Team</div>
+        <div class="form-group">
+          <label>Team Name</label>
+          <input class="form-control" id="new-team-name" placeholder="e.g. Red, Alpha, Falcon..."/>
+        </div>
+        <div class="form-group">
+          <label>Team Colour</label>
+          <div class="color-options" id="team-color-picker">
+            <div class="color-opt selected" style="background:#EF4444" data-color="#EF4444" onclick="selectColor(this)"></div>
+            <div class="color-opt" style="background:#3B82F6" data-color="#3B82F6" onclick="selectColor(this)"></div>
+            <div class="color-opt" style="background:#EAB308" data-color="#EAB308" onclick="selectColor(this)"></div>
+            <div class="color-opt" style="background:#22C55E" data-color="#22C55E" onclick="selectColor(this)"></div>
+            <div class="color-opt" style="background:#8B5CF6" data-color="#8B5CF6" onclick="selectColor(this)"></div>
+            <div class="color-opt" style="background:#F97316" data-color="#F97316" onclick="selectColor(this)"></div>
+            <div class="color-opt" style="background:#06B6D4" data-color="#06B6D4" onclick="selectColor(this)"></div>
+            <div class="color-opt" style="background:#EC4899" data-color="#EC4899" onclick="selectColor(this)"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="addTeam()">Add Team</button>
+          <button class="btn btn-outline" onclick="document.getElementById('add-team-card').style.display='none'">Cancel</button>
+        </div>
+      </div>
+
+      <div id="teams-list"></div>
+
+      <!-- Add Participant -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">Add Participant</div>
+        <div class="grid2">
+          <div class="form-group">
+            <label>Name</label>
+            <input class="form-control" id="new-participant-name" placeholder="Full name"/>
+          </div>
+          <div class="form-group">
+            <label>Team</label>
+            <select class="form-control" id="new-participant-team">
+              <option value="">Select team</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="new-participant-captain" style="margin-right:6px"/> Captain (submits team answer in breakout)</label>
+        </div>
+        <button class="btn btn-primary" onclick="addParticipant()">Add Participant</button>
+      </div>
+    </div>
+
+    <!-- ROUNDS -->
+    <div class="page" id="page-rounds">
+      <div class="page-header">
+        <h2>Rounds</h2>
+        <button class="btn btn-outline" onclick="loadRounds()">↺ Refresh</button>
+      </div>
+      <div id="rounds-list"></div>
+    </div>
+
+    <!-- SCOREBOARD -->
+    <div class="page" id="page-scores">
+      <div class="page-header">
+        <h2>Scoreboard</h2>
+        <button class="btn btn-outline" onclick="loadScores()">↺ Refresh</button>
+      </div>
+      <div id="scores-container"></div>
+    </div>
+
+    <!-- RESPONSES -->
+    <div class="page" id="page-responses">
+      <div class="page-header">
+        <h2>All Responses</h2>
+        <button class="btn btn-outline" onclick="loadResponses()">↺ Refresh</button>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">Individual Opinions (Phase 1)</div>
+        <table>
+          <thead><tr><th>Round</th><th>Participant</th><th>Team</th><th>Opinion</th><th>Time</th></tr></thead>
+          <tbody id="individual-responses-table"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">Team Answers (Phase 2)</div>
+        <table>
+          <thead><tr><th>Round</th><th>Team</th><th>Answer</th><th>Submitted By</th><th>Time</th></tr></thead>
+          <tbody id="team-responses-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════
+const SUPA_URL = 'https://wrzpgultvahxbrgooibn.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndyenBndWx0dmFoeGJyZ29vaWJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzc2MTcsImV4cCI6MjA5MzExMzYxN30.sZM4GQiwom34d7TjeK_Jc_n8KYoC8VhI48jfq71dwb8';
+const ADMIN_PASS = 'admin1';
+const PARTICIPANT_URL = 'https://vkv-coder.github.io/trust-analysis/';
+
+const supa = (path, opts={}) => fetch(`${SUPA_URL}/rest/v1/${path}`, {
+  headers: {
+    'apikey': SUPA_KEY,
+    'Authorization': `Bearer ${SUPA_KEY}`,
+    'Content-Type': 'application/json',
+    'Prefer': opts.prefer || 'return=representation',
+    ...(opts.headers||{})
+  },
+  ...opts
+});
+const db = {
+  get: (t, q='') => supa(`${t}?${q}`).then(r=>r.json()),
+  post: (t, b) => supa(t, {method:'POST', body:JSON.stringify(b)}).then(r=>r.json()),
+  patch: (t, q, b) => supa(`${t}?${q}`, {method:'PATCH', body:JSON.stringify(b), headers:{'Prefer':'return=representation'}}).then(r=>r.json()),
+  delete: (t, q) => supa(`${t}?${q}`, {method:'DELETE'})
+};
+
+let state = {
+  session: null,
+  teams: [],
+  participants: [],
+  rounds: [],
+  selectedColor: '#EF4444',
+  pollInterval: null
+};
+
+// ═══════════════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════════════
+function adminLogin() {
+  const pass = document.getElementById('admin-password').value;
+  if (pass !== ADMIN_PASS) {
+    document.getElementById('login-error').textContent = 'Incorrect password.';
+    return;
+  }
+  document.getElementById('login-wrap').style.display = 'none';
+  document.getElementById('admin-layout').style.display = 'flex';
+  initAdmin();
+}
+
+async function initAdmin() {
+  await loadSessionList();
+  startAdminPoll();
+}
+
+// ═══════════════════════════════════════════════════════
+// SESSIONS
+// ═══════════════════════════════════════════════════════
+async function loadSessionList() {
+  const sessions = await db.get('ta_sessions', 'order=created_at.desc&select=*');
+  const sel = document.getElementById('session-select');
+  sel.innerHTML = '<option value="">— Select —</option>';
+  const tbody = document.getElementById('sessions-table');
+  tbody.innerHTML = '';
+
+  (sessions||[]).forEach(s => {
+    sel.innerHTML += `<option value="${s.id}">${s.name} (PIN: ${s.pin})</option>`;
+    tbody.innerHTML += `<tr>
+      <td>${s.name}</td>
+      <td><strong style="font-size:16px;color:var(--accent)">${s.pin}</strong></td>
+      <td><span class="status-badge status-${s.status}">${s.status}</span></td>
+      <td>${s.total_rounds}</td>
+      <td><button class="btn btn-sm btn-outline" onclick="switchSession('${s.id}')">Load</button></td>
+    </tr>`;
+  });
+
+  // Auto-load first
+  if (sessions && sessions.length > 0 && !state.session) {
+    switchSession(sessions[0].id);
+    sel.value = sessions[0].id;
+  }
+}
+
+async function switchSession(id) {
+  if (!id) return;
+  const sessions = await db.get('ta_sessions', `id=eq.${id}&select=*`);
+  if (sessions && sessions.length > 0) {
+    state.session = sessions[0];
+    await loadTeams();
+    await loadParticipants();
+    await loadRounds();
+    updateDashboard();
+    toast(`Session loaded: ${state.session.name}`, 'info');
+  }
+}
+
+async function createSession() {
+  const name = document.getElementById('session-name').value.trim();
+  const pin = document.getElementById('session-pin').value.trim();
+  const rounds = parseInt(document.getElementById('session-rounds').value) || 10;
+  if (!name || !pin || pin.length !== 4) { toast('Name and 4-digit PIN required', 'error'); return; }
+
+  const s = await db.post('ta_sessions', { name, pin, total_rounds: rounds, status: 'setup', current_round: 0 });
+  if (s && s[0]) {
+    state.session = s[0];
+    toast('Session created!', 'success');
+    // Create round entries
+    for (let i=1; i<=rounds; i++) {
+      await db.post('ta_rounds', { session_id: s[0].id, round_number: i, multiplier: 1, status: 'pending', timer_seconds: 300 });
+    }
+    await loadSessionList();
+    await loadRounds();
+    document.getElementById('session-select').value = s[0].id;
+    showPage('dashboard');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// TEAMS
+// ═══════════════════════════════════════════════════════
+function selectColor(el) {
+  document.querySelectorAll('.color-opt').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedColor = el.dataset.color;
+}
+
+function showAddTeam() {
+  document.getElementById('add-team-card').style.display = 'block';
+}
+
+async function addTeam() {
+  if (!state.session) { toast('Select a session first', 'error'); return; }
+  const name = document.getElementById('new-team-name').value.trim();
+  if (!name) { toast('Team name required', 'error'); return; }
+
+  await db.post('ta_teams', { session_id: state.session.id, name, color: state.selectedColor });
+  document.getElementById('new-team-name').value = '';
+  document.getElementById('add-team-card').style.display = 'none';
+  toast(`Team "${name}" added!`, 'success');
+  await loadTeams();
+  await renderTeams();
+}
+
+async function loadTeams() {
+  if (!state.session) return;
+  state.teams = await db.get('ta_teams', `session_id=eq.${state.session.id}&order=created_at`) || [];
+}
+
+async function loadParticipants() {
+  if (!state.session) return;
+  state.participants = await db.get('ta_participants',
+    `session_id=eq.${state.session.id}&select=*,ta_teams(name,color)&order=name`) || [];
+}
+
+async function renderTeams() {
+  await loadTeams();
+  await loadParticipants();
+
+  const list = document.getElementById('teams-list');
+  list.innerHTML = '';
+
+  const teamSel = document.getElementById('new-participant-team');
+  teamSel.innerHTML = '<option value="">Select team</option>';
+
+  state.teams.forEach(team => {
+    teamSel.innerHTML += `<option value="${team.id}">${team.name}</option>`;
+
+    const members = state.participants.filter(p => p.team_id === team.id);
+    const chipsHtml = members.map(p => `
+      <div class="chip">
+        ${p.is_captain ? '<span class="captain-star">👑</span>' : ''}
+        ${p.name}
+        <span class="remove-chip" onclick="removeParticipant('${p.id}')">×</span>
+      </div>
+    `).join('');
+
+    list.innerHTML += `
+      <div class="team-card">
+        <div class="team-header">
+          <div class="team-dot" style="background:${team.color}"></div>
+          <div class="team-name">${team.name}</div>
+          <span style="font-size:12px;color:var(--muted)">${members.length} member${members.length!==1?'s':''}</span>
+          <button class="btn btn-sm btn-danger" onclick="removeTeam('${team.id}')">Remove</button>
+        </div>
+        <div class="participant-chips">
+          ${chipsHtml || '<span style="font-size:12px;color:var(--muted)">No participants yet</span>'}
+        </div>
+      </div>`;
+  });
+}
+
+async function addParticipant() {
+  if (!state.session) { toast('Select a session first', 'error'); return; }
+  const name = document.getElementById('new-participant-name').value.trim();
+  const teamId = document.getElementById('new-participant-team').value;
+  const isCaptain = document.getElementById('new-participant-captain').checked;
+  if (!name || !teamId) { toast('Name and team required', 'error'); return; }
+
+  await db.post('ta_participants', { session_id: state.session.id, team_id: teamId, name, is_captain: isCaptain });
+  document.getElementById('new-participant-name').value = '';
+  document.getElementById('new-participant-captain').checked = false;
+  toast(`${name} added!`, 'success');
+  await renderTeams();
+}
+
+async function removeParticipant(id) {
+  if (!confirm('Remove this participant?')) return;
+  await db.delete('ta_participants', `id=eq.${id}`);
+  await renderTeams();
+  toast('Participant removed', 'info');
+}
+
+async function removeTeam(id) {
+  if (!confirm('Remove this team and all its participants?')) return;
+  await db.delete('ta_participants', `team_id=eq.${id}`);
+  await db.delete('ta_teams', `id=eq.${id}`);
+  await renderTeams();
+  toast('Team removed', 'info');
+}
+
+// ═══════════════════════════════════════════════════════
+// ROUNDS
+// ═══════════════════════════════════════════════════════
+async function loadRounds() {
+  if (!state.session) return;
+  state.rounds = await db.get('ta_rounds',
+    `session_id=eq.${state.session.id}&order=round_number`) || [];
+  renderRounds();
+}
+
+function renderRounds() {
+  const list = document.getElementById('rounds-list');
+  list.innerHTML = '';
+
+  state.rounds.forEach(round => {
+    const isCurrent = state.session && state.session.current_round === round.round_number;
+    list.innerHTML += `
+      <div class="round-row ${isCurrent ? 'current-round' : ''}">
+        <div class="round-number">${round.round_number}</div>
+        <div class="round-body">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+            <span class="status-badge status-${round.status === 'pending' ? 'setup' : round.status}">${round.status}</span>
+            ${round.multiplier > 1 ? `<span style="background:var(--accent);color:#000;padding:2px 10px;border-radius:10px;font-size:12px;font-weight:700">×${round.multiplier} BONUS</span>` : ''}
+            ${isCurrent ? '<span style="color:var(--accent);font-size:12px;font-weight:600">← CURRENT</span>' : ''}
+          </div>
+          <div style="margin-bottom:10px">
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Case Study</label>
+            <textarea class="form-control" id="case-${round.id}" rows="2" placeholder="Enter case study / incident for this round...">${round.case_study || ''}</textarea>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+            <div>
+              <label style="font-size:12px;color:var(--muted)">Multiplier</label>
+              <select class="form-control" id="mult-${round.id}" style="width:80px;margin-top:4px">
+                <option value="1" ${round.multiplier==1?'selected':''}>×1</option>
+                <option value="2" ${round.multiplier==2?'selected':''}>×2</option>
+                <option value="3" ${round.multiplier==3?'selected':''}>×3</option>
+                <option value="5" ${round.multiplier==5?'selected':''}>×5</option>
+                <option value="10" ${round.multiplier==10?'selected':''}>×10</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px;color:var(--muted)">Timer (seconds)</label>
+              <input type="number" class="form-control" id="timer-${round.id}" value="${round.timer_seconds||300}" style="width:100px;margin-top:4px"/>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-outline" onclick="saveRound('${round.id}', ${round.round_number})">💾 Save</button>
+        </div>
+      </div>`;
+  });
+}
+
+async function saveRound(roundId, roundNum) {
+  const caseText = document.getElementById(`case-${roundId}`).value.trim();
+  const mult = parseInt(document.getElementById(`mult-${roundId}`).value);
+  const timer = parseInt(document.getElementById(`timer-${roundId}`).value) || 300;
+
+  await db.patch('ta_rounds', `id=eq.${roundId}`, { case_study: caseText, multiplier: mult, timer_seconds: timer });
+  toast(`Round ${roundNum} saved!`, 'success');
+  await loadRounds();
+}
+
+// ═══════════════════════════════════════════════════════
+// SESSION CONTROL
+// ═══════════════════════════════════════════════════════
+async function openRegistration() {
+  if (!state.session) { toast('Select a session first', 'error'); return; }
+  const nextRound = (state.session.current_round || 0) + 1;
+  if (nextRound > state.session.total_rounds) { toast('All rounds completed!', 'info'); return; }
+
+  // Update round status
+  const rounds = await db.get('ta_rounds',
+    `session_id=eq.${state.session.id}&round_number=eq.${nextRound}&select=*`);
+  if (rounds && rounds.length > 0) {
+    await db.patch('ta_rounds', `id=eq.${rounds[0].id}`, { status: 'registration_open' });
+  }
+
+  await db.patch('ta_sessions', `id=eq.${state.session.id}`,
+    { status: 'registration', current_round: nextRound });
+  toast(`Round ${nextRound} opened for registration!`, 'success');
+  await refreshSession();
+}
+
+async function openBreakout() {
+  if (!state.session) return;
+  const round = await getCurrentRound();
+  if (!round) { toast('No active round', 'error'); return; }
+
+  await db.patch('ta_rounds', `id=eq.${round.id}`,
+    { status: 'breakout_open', timer_started_at: new Date().toISOString() });
+  await db.patch('ta_sessions', `id=eq.${state.session.id}`, { status: 'breakout' });
+  toast('Breakout started! Timer running on all devices.', 'success');
+  await refreshSession();
+}
+
+async function revealScores() {
+  if (!state.session) return;
+  const round = await getCurrentRound();
+  if (!round) return;
+
+  // Calculate scores
+  await calculateScores(round);
+  await db.patch('ta_rounds', `id=eq.${round.id}`, { status: 'revealed' });
+  await db.patch('ta_sessions', `id=eq.${state.session.id}`, { status: 'scoring' });
+  toast('Scores revealed to all participants!', 'success');
+  await refreshSession();
+  await loadScores();
+}
+
+async function calculateScores(round) {
+  const teamAnswers = await db.get('ta_team_answers',
+    `round_id=eq.${round.id}&select=*`);
+  const teams = await db.get('ta_teams', `session_id=eq.${state.session.id}&select=*`);
+
+  if (!teamAnswers || teamAnswers.length === 0) { toast('No team answers to calculate', 'error'); return; }
+
+  const highCount = teamAnswers.filter(a => a.answer === 'H').length;
+  const lowCount = teamAnswers.filter(a => a.answer === 'L').length;
+
+  // Points matrix
+  let highPoints = 0, lowPoints = 0;
+  if (highCount === 4) { highPoints = -100; lowPoints = 0; }
+  else if (highCount === 3 && lowCount === 1) { highPoints = 100; lowPoints = -300; }
+  else if (highCount === 2 && lowCount === 2) { highPoints = -100; lowPoints = -200; }
+  else if (highCount === 1 && lowCount === 3) { highPoints = 300; lowPoints = -100; }
+  else if (lowCount === 4) { highPoints = 0; lowPoints = 100; }
+
+  const multiplier = round.multiplier || 1;
+
+  for (const team of (teams||[])) {
+    const teamAns = teamAnswers.find(a => a.team_id === team.id);
+    if (!teamAns) continue;
+
+    const roundPts = (teamAns.answer === 'H' ? highPoints : lowPoints) * multiplier;
+
+    // Get previous cumulative
+    const prevScores = await db.get('ta_scores',
+      `session_id=eq.${state.session.id}&team_id=eq.${team.id}&order=calculated_at.desc&limit=1`);
+    const prevCumulative = (prevScores && prevScores.length > 0) ? (prevScores[0].cumulative_points || 0) : 0;
+
+    // Upsert score
+    await supa('ta_scores', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify({
+        session_id: state.session.id,
+        round_id: round.id,
+        team_id: team.id,
+        round_points: roundPts,
+        cumulative_points: prevCumulative + roundPts,
+        calculated_at: new Date().toISOString()
+      })
+    });
+  }
+}
+
+async function endSession() {
+  if (!state.session) return;
+  if (!confirm('End this session? Participants will see final scores.')) return;
+  await db.patch('ta_sessions', `id=eq.${state.session.id}`, { status: 'complete' });
+  toast('Session ended.', 'info');
+  await refreshSession();
+}
+
+async function getCurrentRound() {
+  if (!state.session || !state.session.current_round) return null;
+  const rounds = await db.get('ta_rounds',
+    `session_id=eq.${state.session.id}&round_number=eq.${state.session.current_round}&select=*`);
+  return (rounds && rounds.length > 0) ? rounds[0] : null;
+}
+
+// ═══════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════
+async function updateDashboard() {
+  if (!state.session) return;
+
+  document.getElementById('stat-teams').textContent = state.teams.length;
+  document.getElementById('stat-participants').textContent = state.participants.length;
+  document.getElementById('stat-round').textContent =
+    state.session.current_round > 0 ? `${state.session.current_round} / ${state.session.total_rounds}` : '—';
+
+  const badge = document.getElementById('session-status-badge');
+  badge.className = `status-badge status-${state.session.status}`;
+  badge.textContent = state.session.status.charAt(0).toUpperCase() + state.session.status.slice(1);
+
+  document.getElementById('dash-pin').textContent = state.session.pin;
+  document.getElementById('dash-link').textContent = PARTICIPANT_URL;
+
+  // Load individual responses for current round
+  if (state.session.current_round > 0) {
+    const round = await getCurrentRound();
+    if (round) {
+      const responses = await db.get('ta_individual_answers',
+        `round_id=eq.${round.id}&select=*,ta_participants(name,ta_teams(name,color))`);
+      const tbody = document.getElementById('dash-responses');
+      tbody.innerHTML = '';
+      (responses||[]).forEach(r => {
+        const p = r.ta_participants;
+        const team = p?.ta_teams;
+        tbody.innerHTML += `<tr>
+          <td>${p?.name||'—'}</td>
+          <td><span style="color:${team?.color||'#3B82F6'}">${team?.name||'—'}</span></td>
+          <td><span style="font-weight:700;color:${r.answer==='H'?'#EF4444':'#22C55E'}">${r.answer==='H'?'HIGH':'LOW'}</span></td>
+        </tr>`;
+      });
+
+      // Show total submitted vs total participants
+      const total = state.participants.length;
+      const submitted = (responses||[]).length;
+    }
+  }
+}
+
+function copyLink() {
+  navigator.clipboard.writeText(PARTICIPANT_URL).then(() => toast('Link copied!', 'success'));
+}
+
+// ═══════════════════════════════════════════════════════
+// SCORES
+// ═══════════════════════════════════════════════════════
+async function loadScores() {
+  if (!state.session) return;
+
+  const scores = await db.get('ta_scores',
+    `session_id=eq.${state.session.id}&select=*,ta_teams(name,color),ta_rounds(round_number,multiplier)&order=ta_rounds(round_number)`);
+
+  const container = document.getElementById('scores-container');
+  container.innerHTML = '';
+
+  if (!scores || scores.length === 0) {
+    container.innerHTML = '<div class="card" style="text-align:center;color:var(--muted);padding:40px">No scores yet. Complete a round first.</div>';
+    return;
+  }
+
+  // Aggregate by team
+  const teamMap = {};
+  (scores||[]).forEach(s => {
+    if (!teamMap[s.team_id]) {
+      teamMap[s.team_id] = { team: s.ta_teams, rounds: [], cumulative: 0 };
+    }
+    teamMap[s.team_id].rounds.push(s);
+    teamMap[s.team_id].cumulative = s.cumulative_points;
+  });
+
+  const sorted = Object.values(teamMap).sort((a,b) => b.cumulative - a.cumulative);
+  const ranks = ['🥇','🥈','🥉'];
+
+  let html = '<div class="card"><div class="card-title" style="margin-bottom:16px">Final Standings</div>';
+  sorted.forEach((t, i) => {
+    const pts = t.cumulative;
+    html += `<div class="score-row">
+      <div style="font-size:20px;width:28px">${ranks[i]||i+1}</div>
+      <div class="score-dot" style="background:${t.team?.color||'#3B82F6'}"></div>
+      <div class="score-name">${t.team?.name||'Team'}</div>
+      <div class="score-pts" style="color:${pts>=0?'var(--low)':'var(--high)'}">${pts>0?'+':''}${pts}</div>
+    </div>`;
+  });
+  html += '</div>';
+
+  // Round by round table
+  html += '<div class="card"><div class="card-title" style="margin-bottom:16px">Round by Round</div><div style="overflow-x:auto"><table><thead><tr><th>Team</th>';
+  const roundNos = [...new Set(scores.map(s => s.ta_rounds?.round_number))].sort((a,b)=>a-b);
+  roundNos.forEach(r => { html += `<th>R${r}</th>`; });
+  html += '<th>Total</th></tr></thead><tbody>';
+
+  sorted.forEach(t => {
+    html += `<tr><td><span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:${t.team?.color||'#3B82F6'};display:inline-block"></span>${t.team?.name||'Team'}</span></td>`;
+    roundNos.forEach(r => {
+      const rs = t.rounds.find(s => s.ta_rounds?.round_number === r);
+      const pts = rs ? rs.round_points : '—';
+      html += `<td style="color:${typeof pts==='number'?(pts>=0?'var(--low)':'var(--high)'):'var(--muted)'}">${typeof pts==='number'?(pts>0?'+':'')+pts:pts}</td>`;
+    });
+    html += `<td style="font-weight:700;color:${t.cumulative>=0?'var(--low)':'var(--high)'}">${t.cumulative>0?'+':''}${t.cumulative}</td></tr>`;
+  });
+  html += '</tbody></table></div></div>';
+
+  container.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════
+// RESPONSES
+// ═══════════════════════════════════════════════════════
+async function loadResponses() {
+  if (!state.session) return;
+
+  const indiv = await db.get('ta_individual_answers',
+    `session_id=eq.${state.session.id}&select=*,ta_participants(name,ta_teams(name,color)),ta_rounds(round_number)&order=ta_rounds(round_number),submitted_at`);
+
+  const team = await db.get('ta_team_answers',
+    `session_id=eq.${state.session.id}&select=*,ta_teams(name,color),ta_rounds(round_number),ta_participants(name)&order=ta_rounds(round_number),submitted_at`);
+
+  const itbody = document.getElementById('individual-responses-table');
+  itbody.innerHTML = '';
+  (indiv||[]).forEach(r => {
+    const p = r.ta_participants;
+    const t = p?.ta_teams;
+    const time = new Date(r.submitted_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    itbody.innerHTML += `<tr>
+      <td>Round ${r.ta_rounds?.round_number||'?'}</td>
+      <td>${p?.name||'—'}</td>
+      <td style="color:${t?.color||'#3B82F6'}">${t?.name||'—'}</td>
+      <td><strong style="color:${r.answer==='H'?'#EF4444':'#22C55E'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td>
+      <td style="color:var(--muted)">${time}</td>
+    </tr>`;
+  });
+
+  const ttbody = document.getElementById('team-responses-table');
+  ttbody.innerHTML = '';
+  (team||[]).forEach(r => {
+    const t = r.ta_teams;
+    const cap = r.ta_participants;
+    const time = new Date(r.submitted_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    ttbody.innerHTML += `<tr>
+      <td>Round ${r.ta_rounds?.round_number||'?'}</td>
+      <td style="color:${t?.color||'#3B82F6'}">${t?.name||'—'}</td>
+      <td><strong style="color:${r.answer==='H'?'#EF4444':'#22C55E'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td>
+      <td>${cap?.name||'—'}</td>
+      <td style="color:var(--muted)">${time}</td>
+    </tr>`;
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+
+  if (name === 'dashboard') updateDashboard();
+  if (name === 'teams') renderTeams();
+  if (name === 'rounds') loadRounds();
+  if (name === 'scores') loadScores();
+  if (name === 'responses') loadResponses();
+}
+
+// ═══════════════════════════════════════════════════════
+// POLLING
+// ═══════════════════════════════════════════════════════
+function startAdminPoll() {
+  if (state.pollInterval) clearInterval(state.pollInterval);
+  state.pollInterval = setInterval(refreshSession, 5000);
+}
+
+async function refreshSession() {
+  if (!state.session) return;
+  const sessions = await db.get('ta_sessions', `id=eq.${state.session.id}&select=*`);
+  if (sessions && sessions.length > 0) {
+    state.session = sessions[0];
+    updateDashboard();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════
+function toast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

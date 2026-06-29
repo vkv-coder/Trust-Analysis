@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="theme-color" content="#0F172A"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>Trust Analysis</title>
+<link rel="manifest" href="manifest.json"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+
+  :root {
+    --bg: #0F172A;
+    --surface: #1E293B;
+    --surface2: #273548;
+    --border: #334155;
+    --accent: #F59E0B;
+    --accent2: #3B82F6;
+    --high: #EF4444;
+    --low: #22C55E;
+    --text: #F1F5F9;
+    --muted: #94A3B8;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .screen { display: none; width: 100%; max-width: 480px; min-height: 100vh; padding: 0; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* HEADER */
+  .app-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .app-header .logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+  .app-header .subtitle { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .badge {
+    background: var(--accent);
+    color: #000;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  .screen-body { flex: 1; padding: 24px 20px; display: flex; flex-direction: column; gap: 20px; }
+
+  /* PIN SCREEN */
+  .pin-hero {
+    text-align: center;
+    padding: 32px 0 16px;
+  }
+  .pin-hero .icon {
+    font-size: 56px;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .pin-hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .pin-hero p { font-size: 14px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+
+  .pin-display {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin: 8px 0;
+  }
+  .pin-dot {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+    transition: all 0.15s;
+  }
+  .pin-dot.filled { border-color: var(--accent); background: rgba(245,158,11,0.1); }
+
+  .keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-width: 260px;
+    margin: 0 auto;
+  }
+  .key {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.1s;
+    user-select: none;
+  }
+  .key:active { background: var(--surface2); transform: scale(0.95); }
+  .key.del { color: var(--muted); font-size: 16px; }
+  .key.zero { grid-column: 2; }
+
+  /* NAME SCREEN */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .name-list { display: flex; flex-direction: column; gap: 8px; }
+  .name-card {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.15s;
+  }
+  .name-card:active { transform: scale(0.98); }
+  .name-card.selected { border-color: var(--accent); background: rgba(245,158,11,0.08); }
+  .name-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .name-info .name { font-size: 16px; font-weight: 600; color: var(--text); }
+  .name-info .team { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .name-card .check { margin-left: auto; color: var(--accent); font-size: 20px; opacity: 0; }
+  .name-card.selected .check { opacity: 1; }
+
+  /* MAIN ROOM */
+  .round-banner {
+    background: linear-gradient(135deg, var(--accent) 0%, #D97706 100%);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .round-banner .round-no {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #000;
+  }
+  .round-banner .multiplier {
+    background: #000;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  .case-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .case-card .case-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .case-card .case-text { font-size: 14px; color: var(--text); line-height: 1.7; }
+
+  .matrix-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    overflow-x: auto;
+  }
+  .matrix-card table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .matrix-card th {
+    background: var(--surface2);
+    padding: 8px 10px;
+    text-align: left;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .matrix-card td { padding: 8px 10px; border-bottom: 1px solid var(--border); color: var(--text); }
+  .matrix-card tr:last-child td { border-bottom: none; }
+  .win { color: var(--low); font-weight: 600; }
+  .lose { color: var(--high); font-weight: 600; }
+
+  /* VOTE SECTION */
+  .vote-section { display: flex; flex-direction: column; gap: 12px; }
+  .vote-label { font-size: 14px; color: var(--muted); text-align: center; }
+
+  .vote-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .vote-btn {
+    border: none;
+    border-radius: var(--radius);
+    padding: 28px 20px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    border: 3px solid transparent;
+  }
+  .vote-btn span { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; }
+  .vote-btn.high { background: rgba(239,68,68,0.12); color: var(--high); border-color: rgba(239,68,68,0.3); }
+  .vote-btn.high.selected { background: rgba(239,68,68,0.25); border-color: var(--high); }
+  .vote-btn.low { background: rgba(34,197,94,0.12); color: var(--low); border-color: rgba(34,197,94,0.3); }
+  .vote-btn.low.selected { background: rgba(34,197,94,0.25); border-color: var(--low); }
+  .vote-btn:active { transform: scale(0.97); }
+
+  /* TIMER */
+  .timer-card {
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+  }
+  .timer-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .timer-display {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+  .timer-display.urgent { color: var(--high); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  /* SCOREBOARD */
+  .score-table { display: flex; flex-direction: column; gap: 8px; }
+  .score-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .score-row.highlight { border-color: var(--accent); background: rgba(245,158,11,0.06); }
+  .score-rank {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--muted);
+    width: 28px;
+    text-align: center;
+  }
+  .score-rank.gold { color: #FFD700; }
+  .score-rank.silver { color: #C0C0C0; }
+  .score-rank.bronze { color: #CD7F32; }
+  .score-team-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+  .score-team-name { flex: 1; font-size: 15px; font-weight: 600; }
+  .score-points {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .score-points.positive { color: var(--low); }
+  .score-points.negative { color: var(--high); }
+
+  /* WAITING */
+  .waiting-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 40px 24px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .waiting-title { font-size: 18px; font-weight: 600; }
+  .waiting-sub { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* BTN */
+  .btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 12px;
+    border: none;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-outline { background: transparent; color: var(--text); border: 2px solid var(--border); }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 100;
+    transition: transform 0.3s ease;
+    white-space: nowrap;
+    max-width: 90vw;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--low); color: var(--low); }
+  .toast.error { border-color: var(--high); color: var(--high); }
+  .toast.info { border-color: var(--accent); color: var(--accent); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 50;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    padding: 32px 24px;
+    width: 100%;
+    max-width: 480px;
+    border-top: 1px solid var(--border);
+  }
+  .modal-title { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+  .modal-body { font-size: 15px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+  .modal-actions { display: flex; gap: 10px; }
+
+  .participant-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .participant-bar .p-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .participant-bar .p-name { font-size: 13px; font-weight: 600; flex: 1; }
+  .participant-bar .p-team { font-size: 11px; color: var(--muted); }
+  .participant-bar .captain-tag {
+    background: var(--accent);
+    color: #000;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  .phase-indicator {
+    display: flex;
+    gap: 6px;
+    padding: 12px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .phase-pip {
+    height: 3px;
+    flex: 1;
+    background: var(--border);
+    border-radius: 2px;
+    transition: background 0.3s;
+  }
+  .phase-pip.done { background: var(--accent); }
+  .phase-pip.active { background: var(--accent2); }
+
+  .submitted-overlay {
+    background: rgba(34,197,94,0.08);
+    border: 2px solid var(--low);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+  }
+  .submitted-overlay .check-icon { font-size: 36px; margin-bottom: 8px; }
+  .submitted-overlay .sub-title { font-size: 16px; font-weight: 600; color: var(--low); }
+  .submitted-overlay .sub-detail { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  .answer-tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .answer-tag.H { background: rgba(239,68,68,0.2); color: var(--high); }
+  .answer-tag.L { background: rgba(34,197,94,0.2); color: var(--low); }
+
+  .round-answers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .team-answer-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+  }
+  .team-answer-card .ta-name { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .team-answer-card .ta-val {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+  }
+  .team-answer-card .ta-val.H { color: var(--high); }
+  .team-answer-card .ta-val.L { color: var(--low); }
+  .team-answer-card .ta-val.pending { color: var(--muted); font-size: 16px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ SCREEN 1: PIN -->
+<div class="screen active" id="screen-pin">
+  <div class="app-header">
+    <div>
+      <div class="logo">Trust Analysis</div>
+      <div class="subtitle">Group Decision Game</div>
+    </div>
+  </div>
+  <div class="screen-body">
+    <div class="pin-hero">
+      <span class="icon">🔐</span>
+      <h1>Enter Session PIN</h1>
+      <p>Enter the 4-digit PIN shared by your facilitator</p>
+    </div>
+    <div class="pin-display">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div id="pin-error" style="text-align:center;color:#EF4444;font-size:13px;min-height:18px;"></div>
+    <div class="keypad">
+      <div class="key" onclick="pinKey('1')">1</div>
+      <div class="key" onclick="pinKey('2')">2</div>
+      <div class="key" onclick="pinKey('3')">3</div>
+      <div class="key" onclick="pinKey('4')">4</div>
+      <div class="key" onclick="pinKey('5')">5</div>
+      <div class="key" onclick="pinKey('6')">6</div>
+      <div class="key" onclick="pinKey('7')">7</div>
+      <div class="key" onclick="pinKey('8')">8</div>
+      <div class="key" onclick="pinKey('9')">9</div>
+      <div class="key del" onclick="pinDel()">⌫</div>
+      <div class="key zero" onclick="pinKey('0')">0</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SCREEN 2: SELECT NAME -->
+<div class="screen" id="screen-name">
+  <div class="app-header">
+    <div>
+      <div class="logo">Trust Analysis</div>
+      <div class="subtitle" id="session-name-display">Loading...</div>
+    </div>
+  </div>
+  <div class="screen-body">
+    <div>
+      <div class="section-label">Who are you?</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Tap your name from the list below</p>
+      <div class="name-list" id="name-list">
+        <div class="waiting-card"><div class="spinner"></div><div class="waiting-sub">Loading participants...</div></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="btn-select-name" onclick="confirmName()" disabled>Continue →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SCREEN 3: WAITING ROOM -->
+<div class="screen" id="screen-waiting">
+  <div class="app-header">
+    <div>
+      <div class="logo">Trust Analysis</div>
+      <div class="subtitle" id="waiting-session-name">Session</div>
+    </div>
+    <div class="badge" id="waiting-badge">WAITING</div>
+  </div>
+  <div id="participant-bar-waiting" class="participant-bar" style="display:none">
+    <div class="p-dot" id="pb-dot"></div>
+    <div>
+      <div class="p-name" id="pb-name"></div>
+      <div class="p-team" id="pb-team"></div>
+    </div>
+  </div>
+  <div class="screen-body">
+    <div class="waiting-card">
+      <div class="spinner"></div>
+      <div class="waiting-title">Waiting for Facilitator</div>
+      <div class="waiting-sub">The session will begin shortly. Keep this screen open on your mobile.</div>
+    </div>
+    <div id="scoreboard-section" style="display:none">
+      <div class="section-label" style="margin-bottom:12px">Scoreboard</div>
+      <div class="score-table" id="score-table"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SCREEN 4: MAIN ROOM (Phase 1) -->
+<div class="screen" id="screen-main">
+  <div class="app-header">
+    <div>
+      <div class="logo">Trust Analysis</div>
+      <div class="subtitle">Main Room — Individual Vote</div>
+    </div>
+    <div class="badge" id="main-round-badge">R1</div>
+  </div>
+  <div id="participant-bar-main" class="participant-bar">
+    <div class="p-dot" id="pm-dot"></div>
+    <div>
+      <div class="p-name" id="pm-name"></div>
+      <div class="p-team" id="pm-team"></div>
+    </div>
+    <div id="pm-captain" class="captain-tag" style="display:none">CAPTAIN</div>
+  </div>
+  <div class="phase-indicator">
+    <div class="phase-pip active" id="pip1"></div>
+    <div class="phase-pip" id="pip2"></div>
+  </div>
+  <div class="screen-body">
+    <div class="round-banner">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:rgba(0,0,0,0.6);text-transform:uppercase;letter-spacing:1px;">Round</div>
+        <div class="round-no" id="main-round-no">1</div>
+      </div>
+      <div id="main-multiplier" class="multiplier" style="display:none">×1</div>
+    </div>
+
+    <div class="case-card">
+      <div class="case-label">📋 Case Study</div>
+      <div class="case-text" id="main-case-text">Loading case study...</div>
+    </div>
+
+    <div class="matrix-card">
+      <div class="section-label" style="margin-bottom:10px">Points Matrix</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Bid Combination</th>
+            <th>HIGH Teams</th>
+            <th>LOW Teams</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>4 HIGH</td><td class="lose">−100 each</td><td>—</td></tr>
+          <tr><td>3H + 1L</td><td class="win">+100 each</td><td class="lose">−300</td></tr>
+          <tr><td>2H + 2L</td><td class="lose">−100 each</td><td class="lose">−200 each</td></tr>
+          <tr><td>1H + 3L</td><td class="win">+300</td><td class="lose">−100 each</td></tr>
+          <tr><td>4 LOW</td><td>—</td><td class="win">+100 each</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="vote-section" id="main-vote-section">
+      <div class="vote-label">Your individual opinion (no points — for reference only)</div>
+      <div class="vote-buttons">
+        <button class="vote-btn high" id="btn-high-main" onclick="selectVote('H','main')">
+          H
+          <span>HIGH</span>
+        </button>
+        <button class="vote-btn low" id="btn-low-main" onclick="selectVote('L','main')">
+          L
+          <span>LOW</span>
+        </button>
+      </div>
+      <button class="btn btn-primary" id="btn-submit-main" onclick="openConfirmModal('main')" disabled>Submit My Opinion</button>
+    </div>
+
+    <div class="submitted-overlay" id="main-submitted" style="display:none">
+      <div class="check-icon">✅</div>
+      <div class="sub-title">Opinion Submitted</div>
+      <div class="sub-detail">Your answer: <span id="main-submitted-answer" class="answer-tag"></span></div>
+      <div class="sub-detail" style="margin-top:8px">Waiting for Breakout Round to begin...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SCREEN 5: BREAKOUT ROOM (Phase 2) -->
+<div class="screen" id="screen-breakout">
+  <div class="app-header">
+    <div>
+      <div class="logo">Trust Analysis</div>
+      <div class="subtitle">Breakout — Team Vote</div>
+    </div>
+    <div class="badge" id="breakout-round-badge">R1</div>
+  </div>
+  <div id="participant-bar-breakout" class="participant-bar">
+    <div class="p-dot" id="pb2-dot"></div>
+    <div>
+      <div class="p-name" id="pb2-name"></div>
+      <div class="p-team" id="pb2-team"></div>
+    </div>
+    <div id="pb2-captain" class="captain-tag" style="display:none">CAPTAIN</div>
+  </div>
+  <div class="phase-indicator">
+    <div class="phase-pip done"></div>
+    <div class="phase-pip active"></div>
+  </div>
+  <div class="screen-body">
+    <div class="timer-card">
+      <div class="timer-label">⏱ Time Remaining</div>
+      <div class="timer-display" id="timer-display">05:00</div>
+    </div>
+
+    <div class="round-banner">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:rgba(0,0,0,0.6);text-transform:uppercase;letter-spacing:1px;">Round</div>
+        <div class="round-no" id="breakout-round-no">1</div>
+      </div>
+      <div id="breakout-multiplier" class="multiplier" style="display:none">×1</div>
+    </div>
+
+    <!-- Captain only sees voting -->
+    <div id="captain-vote-section" style="display:none">
+      <div class="vote-section" id="breakout-vote-section">
+        <div class="vote-label">You are the Captain — submit your team's decision</div>
+        <div class="vote-buttons">
+          <button class="vote-btn high" id="btn-high-breakout" onclick="selectVote('H','breakout')">
+            H
+            <span>HIGH</span>
+          </button>
+          <button class="vote-btn low" id="btn-low-breakout" onclick="selectVote('L','breakout')">
+            L
+            <span>LOW</span>
+          </button>
+        </div>
+        <button class="btn btn-primary" id="btn-submit-breakout" onclick="openConfirmModal('breakout')" disabled>Submit Team Answer</button>
+      </div>
+    </div>
+
+    <!-- Non-captain waiting -->
+    <div id="member-wait-section" style="display:none">
+      <div class="waiting-card">
+        <div style="font-size:32px">🗣️</div>
+        <div class="waiting-title">Discuss with your team</div>
+        <div class="waiting-sub" id="captain-name-display">Your Captain will submit the team's answer</div>
+      </div>
+    </div>
+
+    <div class="submitted-overlay" id="breakout-submitted" style="display:none">
+      <div class="check-icon">✅</div>
+      <div class="sub-title">Team Answer Submitted</div>
+      <div class="sub-detail">Team voted: <span id="breakout-submitted-answer" class="answer-tag"></span></div>
+      <div class="sub-detail" style="margin-top:8px">Waiting for facilitator to reveal scores...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SCREEN 6: SCORES REVEALED -->
+<div class="screen" id="screen-scores">
+  <div class="app-header">
+    <div>
+      <div class="logo">Trust Analysis</div>
+      <div class="subtitle">Round Results</div>
+    </div>
+    <div class="badge" id="scores-round-badge">R1</div>
+  </div>
+  <div id="participant-bar-scores" class="participant-bar">
+    <div class="p-dot" id="ps-dot"></div>
+    <div>
+      <div class="p-name" id="ps-name"></div>
+      <div class="p-team" id="ps-team"></div>
+    </div>
+  </div>
+  <div class="screen-body">
+    <div>
+      <div class="section-label" style="margin-bottom:12px">Team Answers This Round</div>
+      <div class="round-answers-grid" id="round-answers-grid"></div>
+    </div>
+    <div>
+      <div class="section-label" style="margin-bottom:12px">🏆 Cumulative Scoreboard</div>
+      <div class="score-table" id="full-score-table"></div>
+    </div>
+    <div class="waiting-card" id="next-round-wait">
+      <div class="spinner"></div>
+      <div class="waiting-sub">Waiting for next round...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ CONFIRM MODAL -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Confirm your answer?</div>
+    <div class="modal-body" id="modal-body">Once submitted, this cannot be changed.</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1" id="modal-confirm-btn" onclick="submitVote()">Submit</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// SUPABASE CONFIG — Replace with your values
+// ═══════════════════════════════════════════════════════
+const SUPA_URL = 'https://wrzpgultvahxbrgooibn.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndyenBndWx0dmFoeGJyZ29vaWJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzc2MTcsImV4cCI6MjA5MzExMzYxN30.sZM4GQiwom34d7TjeK_Jc_n8KYoC8VhI48jfq71dwb8';
+
+const supa = (path, opts={}) => fetch(`${SUPA_URL}/rest/v1/${path}`, {
+  headers: {
+    'apikey': SUPA_KEY,
+    'Authorization': `Bearer ${SUPA_KEY}`,
+    'Content-Type': 'application/json',
+    'Prefer': opts.prefer || 'return=representation',
+    ...(opts.headers||{})
+  },
+  ...opts
+});
+
+const db = {
+  get: (table, query='') => supa(`${table}?${query}`).then(r=>r.json()),
+  post: (table, body) => supa(table, {method:'POST', body:JSON.stringify(body)}),
+  patch: (table, query, body) => supa(`${table}?${query}`, {method:'PATCH', body:JSON.stringify(body)}),
+};
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let state = {
+  pin: '',
+  session: null,
+  participant: null,
+  team: null,
+  currentRound: null,
+  selectedVote: null,
+  voteContext: null, // 'main' or 'breakout'
+  pollInterval: null,
+};
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+}
+
+function toast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════════════════════════════
+// PIN SCREEN
+// ═══════════════════════════════════════════════════════
+function pinKey(k) {
+  if (state.pin.length >= 4) return;
+  state.pin += k;
+  updatePinDisplay();
+  if (state.pin.length === 4) verifyPin();
+}
+function pinDel() {
+  state.pin = state.pin.slice(0,-1);
+  document.getElementById('pin-error').textContent = '';
+  updatePinDisplay();
+}
+function updatePinDisplay() {
+  for (let i=0;i<4;i++) {
+    const d = document.getElementById('pd'+i);
+    if (i < state.pin.length) {
+      d.textContent = '●';
+      d.classList.add('filled');
+    } else {
+      d.textContent = '';
+      d.classList.remove('filled');
+    }
+  }
+}
+async function verifyPin() {
+  document.getElementById('pin-error').textContent = '';
+  const sessions = await db.get('ta_sessions', `pin=eq.${state.pin}&select=*`);
+  if (!sessions || sessions.length === 0) {
+    document.getElementById('pin-error').textContent = 'Incorrect PIN. Try again.';
+    state.pin = '';
+    updatePinDisplay();
+    return;
+  }
+  state.session = sessions[0];
+  loadNameScreen();
+}
+
+// ═══════════════════════════════════════════════════════
+// NAME SCREEN
+// ═══════════════════════════════════════════════════════
+const teamColors = ['#EF4444','#3B82F6','#EAB308','#22C55E','#8B5CF6','#F97316','#06B6D4','#EC4899'];
+
+async function loadNameScreen() {
+  document.getElementById('session-name-display').textContent = state.session.name;
+  showScreen('name');
+
+  const participants = await db.get('ta_participants',
+    `session_id=eq.${state.session.id}&select=*,ta_teams(name,color)&order=name`);
+
+  const list = document.getElementById('name-list');
+  if (!participants || participants.length === 0) {
+    list.innerHTML = '<div class="waiting-card"><div class="waiting-sub">No participants found. Contact facilitator.</div></div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  participants.forEach(p => {
+    const team = p.ta_teams;
+    const color = team?.color || '#3B82F6';
+    const initial = p.name.charAt(0).toUpperCase();
+    const card = document.createElement('div');
+    card.className = 'name-card';
+    card.dataset.id = p.id;
+    card.innerHTML = `
+      <div class="name-avatar" style="background:${color}22;color:${color}">${initial}</div>
+      <div class="name-info">
+        <div class="name">${p.name}</div>
+        <div class="team">${team?.name || 'Team'} ${p.is_captain ? '👑 Captain' : ''}</div>
+      </div>
+      <div class="check">✓</div>
+    `;
+    card.onclick = () => selectName(p, card, color);
+    list.appendChild(card);
+  });
+}
+
+function selectName(participant, card, color) {
+  document.querySelectorAll('.name-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  state.participant = participant;
+  state.team = participant.ta_teams;
+  document.getElementById('btn-select-name').disabled = false;
+}
+
+function confirmName() {
+  if (!state.participant) return;
+  setupParticipantBars();
+  startPolling();
+  showScreen('waiting');
+}
+
+function setupParticipantBars() {
+  const p = state.participant;
+  const team = state.team;
+  const color = team?.color || '#3B82F6';
+
+  ['pb-dot','pm-dot','pb2-dot','ps-dot'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) { el.style.background = color; }
+  });
+  ['pb-name','pm-name','pb2-name','ps-name'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = p.name;
+  });
+  ['pb-team','pm-team','pb2-team','ps-team'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = team?.name || '';
+  });
+  document.getElementById('participant-bar-waiting').style.display = 'flex';
+
+  if (p.is_captain) {
+    ['pm-captain','pb2-captain'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.style.display = 'block';
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// POLLING — CHECK SESSION STATUS
+// ═══════════════════════════════════════════════════════
+function startPolling() {
+  if (state.pollInterval) clearInterval(state.pollInterval);
+  state.pollInterval = setInterval(pollSession, 3000);
+  pollSession();
+}
+
+async function pollSession() {
+  try {
+    const sessions = await db.get('ta_sessions', `id=eq.${state.session.id}&select=*`);
+    if (!sessions || sessions.length === 0) return;
+    const session = sessions[0];
+    state.session = session;
+
+    // Get current round
+    if (session.current_round > 0) {
+      const rounds = await db.get('ta_rounds',
+        `session_id=eq.${session.id}&round_number=eq.${session.current_round}&select=*`);
+      if (rounds && rounds.length > 0) {
+        state.currentRound = rounds[0];
+      }
+    }
+
+    routeByStatus(session);
+  } catch(e) { console.error(e); }
+}
+
+async function routeByStatus(session) {
+  const status = session.status;
+  const round = state.currentRound;
+
+  if (status === 'setup' || status === 'complete') {
+    showScreen('waiting');
+    if (status === 'complete') {
+      document.getElementById('waiting-badge').textContent = 'DONE';
+    }
+    // Show scores if available
+    loadScoreboard('score-table');
+    return;
+  }
+
+  if (status === 'registration') {
+    // Check if already submitted individual answer
+    if (round) {
+      const existing = await db.get('ta_individual_answers',
+        `round_id=eq.${round.id}&participant_id=eq.${state.participant.id}&select=*`);
+      showScreen('main');
+      updateMainScreen(round);
+      if (existing && existing.length > 0) {
+        showMainSubmitted(existing[0].answer);
+      }
+    }
+    return;
+  }
+
+  if (status === 'breakout') {
+    if (round) {
+      showScreen('breakout');
+      updateBreakoutScreen(round);
+      startTimer(round);
+
+      // Check if team already submitted
+      const teamAns = await db.get('ta_team_answers',
+        `round_id=eq.${round.id}&team_id=eq.${state.participant.team_id}&select=*`);
+      if (teamAns && teamAns.length > 0) {
+        showBreakoutSubmitted(teamAns[0].answer);
+      } else if (state.participant.is_captain) {
+        document.getElementById('captain-vote-section').style.display = 'block';
+        document.getElementById('member-wait-section').style.display = 'none';
+      } else {
+        document.getElementById('captain-vote-section').style.display = 'none';
+        document.getElementById('member-wait-section').style.display = 'block';
+        // Find captain name
+        loadCaptainName();
+      }
+    }
+    return;
+  }
+
+  if (status === 'scoring') {
+    showScreen('scores');
+    updateScoresScreen(round);
+    return;
+  }
+}
+
+async function loadCaptainName() {
+  const captains = await db.get('ta_participants',
+    `team_id=eq.${state.participant.team_id}&is_captain=eq.true&select=name`);
+  if (captains && captains.length > 0) {
+    document.getElementById('captain-name-display').textContent =
+      `Captain ${captains[0].name} will submit your team's answer`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// MAIN ROOM (Phase 1)
+// ═══════════════════════════════════════════════════════
+function updateMainScreen(round) {
+  document.getElementById('main-round-no').textContent = round.round_number;
+  document.getElementById('main-round-badge').textContent = `R${round.round_number}`;
+  document.getElementById('main-case-text').textContent = round.case_study || 'Case study will be shown here by facilitator.';
+  const mult = document.getElementById('main-multiplier');
+  if (round.multiplier > 1) {
+    mult.style.display = 'block';
+    mult.textContent = `×${round.multiplier}`;
+  } else {
+    mult.style.display = 'none';
+  }
+}
+
+function showMainSubmitted(answer) {
+  document.getElementById('main-vote-section').style.display = 'none';
+  document.getElementById('main-submitted').style.display = 'block';
+  const el = document.getElementById('main-submitted-answer');
+  el.textContent = answer === 'H' ? 'HIGH' : 'LOW';
+  el.className = `answer-tag ${answer}`;
+}
+
+// ═══════════════════════════════════════════════════════
+// BREAKOUT (Phase 2)
+// ═══════════════════════════════════════════════════════
+function updateBreakoutScreen(round) {
+  document.getElementById('breakout-round-no').textContent = round.round_number;
+  document.getElementById('breakout-round-badge').textContent = `R${round.round_number}`;
+  const mult = document.getElementById('breakout-multiplier');
+  if (round.multiplier > 1) {
+    mult.style.display = 'block';
+    mult.textContent = `×${round.multiplier}`;
+  } else {
+    mult.style.display = 'none';
+  }
+}
+
+function showBreakoutSubmitted(answer) {
+  document.getElementById('captain-vote-section').style.display = 'none';
+  document.getElementById('member-wait-section').style.display = 'none';
+  document.getElementById('breakout-submitted').style.display = 'block';
+  const el = document.getElementById('breakout-submitted-answer');
+  el.textContent = answer === 'H' ? 'HIGH' : 'LOW';
+  el.className = `answer-tag ${answer}`;
+}
+
+// ═══════════════════════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════════════════════
+let timerInterval = null;
+function startTimer(round) {
+  if (timerInterval) clearInterval(timerInterval);
+  if (!round.timer_started_at || !round.timer_seconds) return;
+
+  const endTime = new Date(round.timer_started_at).getTime() + (round.timer_seconds * 1000);
+
+  timerInterval = setInterval(() => {
+    const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+    const m = Math.floor(remaining / 60).toString().padStart(2,'0');
+    const s = (remaining % 60).toString().padStart(2,'0');
+    const el = document.getElementById('timer-display');
+    el.textContent = `${m}:${s}`;
+    el.className = `timer-display${remaining <= 30 ? ' urgent' : ''}`;
+    if (remaining === 0) clearInterval(timerInterval);
+  }, 500);
+}
+
+// ═══════════════════════════════════════════════════════
+// SCORES SCREEN
+// ═══════════════════════════════════════════════════════
+async function updateScoresScreen(round) {
+  if (!round) return;
+  document.getElementById('scores-round-badge').textContent = `R${round.round_number}`;
+
+  // Team answers this round
+  const teamAnswers = await db.get('ta_team_answers',
+    `round_id=eq.${round.id}&select=*,ta_teams(name,color)`);
+  const grid = document.getElementById('round-answers-grid');
+  grid.innerHTML = '';
+  (teamAnswers||[]).forEach(ta => {
+    const team = ta.ta_teams;
+    const div = document.createElement('div');
+    div.className = 'team-answer-card';
+    div.innerHTML = `
+      <div class="ta-name" style="color:${team?.color||'#3B82F6'}">${team?.name||'Team'}</div>
+      <div class="ta-val ${ta.answer}">${ta.answer === 'H' ? 'HIGH' : 'LOW'}</div>
+    `;
+    grid.appendChild(div);
+  });
+
+  // Cumulative scores
+  loadScoreboard('full-score-table');
+}
+
+async function loadScoreboard(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const scores = await db.get('ta_scores',
+    `session_id=eq.${state.session.id}&select=*,ta_teams(name,color)&order=cumulative_points.desc`);
+
+  if (!scores || scores.length === 0) {
+    document.getElementById('scoreboard-section')?.style && (document.getElementById('scoreboard-section').style.display = 'none');
+    return;
+  }
+
+  document.getElementById('scoreboard-section')?.style && (document.getElementById('scoreboard-section').style.display = 'block');
+  const ranks = ['🥇','🥈','🥉'];
+  const rankClasses = ['gold','silver','bronze'];
+
+  // Aggregate cumulative per team (latest round)
+  const teamMap = {};
+  scores.forEach(s => {
+    const tid = s.team_id;
+    if (!teamMap[tid] || s.cumulative_points !== undefined) {
+      teamMap[tid] = s;
+    }
+  });
+
+  const sorted = Object.values(teamMap).sort((a,b) => b.cumulative_points - a.cumulative_points);
+  container.innerHTML = '';
+  sorted.forEach((s, i) => {
+    const team = s.ta_teams;
+    const isMyTeam = state.participant && s.team_id === state.participant.team_id;
+    const pts = s.cumulative_points || 0;
+    const div = document.createElement('div');
+    div.className = `score-row${isMyTeam ? ' highlight' : ''}`;
+    div.innerHTML = `
+      <div class="score-rank ${rankClasses[i]||''}">${ranks[i]||i+1}</div>
+      <div class="score-team-dot" style="background:${team?.color||'#3B82F6'}"></div>
+      <div class="score-team-name">${team?.name||'Team'}</div>
+      <div class="score-points ${pts>=0?'positive':'negative'}">${pts>0?'+':''}${pts}</div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// VOTING
+// ═══════════════════════════════════════════════════════
+function selectVote(val, context) {
+  state.selectedVote = val;
+  state.voteContext = context;
+
+  if (context === 'main') {
+    document.getElementById('btn-high-main').className = `vote-btn high${val==='H'?' selected':''}`;
+    document.getElementById('btn-low-main').className = `vote-btn low${val==='L'?' selected':''}`;
+    document.getElementById('btn-submit-main').disabled = false;
+  } else {
+    document.getElementById('btn-high-breakout').className = `vote-btn high${val==='H'?' selected':''}`;
+    document.getElementById('btn-low-breakout').className = `vote-btn low${val==='L'?' selected':''}`;
+    document.getElementById('btn-submit-breakout').disabled = false;
+  }
+}
+
+function openConfirmModal(context) {
+  state.voteContext = context;
+  const val = state.selectedVote;
+  if (!val) return;
+  const label = val === 'H' ? 'HIGH' : 'LOW';
+  const isTeam = context === 'breakout';
+  document.getElementById('modal-title').textContent = `Submit ${isTeam ? 'Team' : 'Individual'} Answer: ${label}?`;
+  document.getElementById('modal-body').textContent =
+    `You are about to submit ${label} as your ${isTeam ? "team's" : 'individual'} answer. This cannot be changed.`;
+  document.getElementById('confirm-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('confirm-modal').classList.remove('open');
+}
+
+async function submitVote() {
+  closeModal();
+  const val = state.selectedVote;
+  const context = state.voteContext;
+  const round = state.currentRound;
+  if (!val || !round) return;
+
+  if (context === 'main') {
+    const res = await supa('ta_individual_answers', {
+      method: 'POST',
+      body: JSON.stringify({
+        session_id: state.session.id,
+        round_id: round.id,
+        participant_id: state.participant.id,
+        answer: val
+      })
+    });
+    if (res.ok) {
+      showMainSubmitted(val);
+      toast('Opinion submitted!', 'success');
+    } else {
+      toast('Error submitting. Try again.', 'error');
+    }
+  } else {
+    // Team answer — captain only
+    const res = await supa('ta_team_answers', {
+      method: 'POST',
+      prefer: 'resolution=merge-duplicates',
+      body: JSON.stringify({
+        session_id: state.session.id,
+        round_id: round.id,
+        team_id: state.participant.team_id,
+        answer: val,
+        submitted_by: state.participant.id
+      }),
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' }
+    });
+    if (res.ok || res.status === 201) {
+      showBreakoutSubmitted(val);
+      toast('Team answer submitted!', 'success');
+    } else {
+      toast('Error submitting. Try again.', 'error');
+    }
+  }
+}
+</script>
+</body>
+</html>
