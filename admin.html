@@ -105,8 +105,10 @@ tr:hover td{background:var(--sur2);}
 .tabs{display:flex;gap:2px;background:var(--sur2);border-radius:10px;padding:4px;margin-bottom:16px;width:fit-content;}
 .tab{padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--mut);transition:all .15s;}
 .tab.on{background:var(--sur);color:var(--txt);font-weight:600;}
-.mob-bar{display:none;width:100%;align-items:center;justify-content:space-between;background:var(--sur);border-bottom:1px solid var(--bdr);padding:14px 16px;position:sticky;top:0;left:0;z-index:999;box-sizing:border-box;}
-.mob-bar.force-show{display:flex;}
+.mob-bar{display:none;width:100%;align-items:center;justify-content:space-between;background:var(--sur);border-bottom:1px solid var(--bdr);padding:14px 16px;position:fixed;top:0;left:0;right:0;z-index:999;box-sizing:border-box;}
+.mob-bar.force-show{display:flex !important;}
+body.mob-active .main{padding-top:70px;}
+body.mob-active .side{top:60px;}
 .mob-bar .mb-logo{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--acc);}
 .hamburger{background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);font-size:22px;padding:8px 14px;cursor:pointer;line-height:1;}
 @media(max-width:768px){
@@ -365,8 +367,13 @@ let EV=null,SESS=null,TEAMS=[],PARTS=[],ROUNDS=[],CLR='#EF4444',POLL=null;
 function checkMobileBar(){
   const bar=document.querySelector('.mob-bar');
   if(!bar)return;
-  if(window.innerWidth<=768){bar.classList.add('force-show');}
-  else{bar.classList.remove('force-show');}
+  if(window.innerWidth<=768){
+    bar.classList.add('force-show');
+    document.body.classList.add('mob-active');
+  }else{
+    bar.classList.remove('force-show');
+    document.body.classList.remove('mob-active');
+  }
 }
 window.addEventListener('resize',checkMobileBar);
 
