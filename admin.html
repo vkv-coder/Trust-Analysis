@@ -105,7 +105,20 @@ tr:hover td{background:var(--sur2);}
 .tabs{display:flex;gap:2px;background:var(--sur2);border-radius:10px;padding:4px;margin-bottom:16px;width:fit-content;}
 .tab{padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--mut);transition:all .15s;}
 .tab.on{background:var(--sur);color:var(--txt);font-weight:600;}
-@media(max-width:768px){.side{display:none;}.main{margin-left:0;}.g2,.g3,.g4{grid-template-columns:1fr;}.cgrid{grid-template-columns:1fr 1fr;}}
+.mob-bar{display:none;}
+@media(max-width:768px){
+  .layout{display:block;}
+  .mob-bar{display:flex !important;align-items:center;justify-content:space-between;background:var(--sur);border-bottom:1px solid var(--bdr);padding:12px 16px;position:sticky;top:0;left:0;right:0;width:100%;z-index:30;}
+  .mob-bar .mb-logo{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--acc);}
+  .hamburger{background:none;border:1px solid var(--bdr);border-radius:8px;color:var(--txt);font-size:20px;padding:6px 12px;cursor:pointer;}
+  .side{display:none;position:fixed;width:240px;box-shadow:4px 0 20px rgba(0,0,0,0.5);}
+  .side.mob-open{display:flex;}
+  .side-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9;}
+  .side-overlay.show{display:block;}
+  .main{margin-left:0;padding:16px;}
+  .g2,.g3,.g4{grid-template-columns:1fr;}
+  .cgrid{grid-template-columns:1fr 1fr;}
+}
 </style>
 </head>
 <body>
@@ -124,7 +137,12 @@ tr:hover td{background:var(--sur2);}
 
 <!-- APP -->
 <div id="app" class="layout" style="display:none">
-  <div class="side">
+  <div class="mob-bar">
+    <div class="mb-logo">🎯 Trust Analysis</div>
+    <button class="hamburger" onclick="toggleMenu()">☰</button>
+  </div>
+  <div class="side-overlay" id="side-overlay" onclick="closeMenu()"></div>
+  <div class="side" id="sidebar">
     <div class="slogo"><div class="slogo-t">Trust Analysis</div><div class="slogo-s">Admin v5</div></div>
     <div class="ssel">
       <label>Active Event</label>
@@ -352,8 +370,18 @@ function login(){
   POLL=setInterval(pollSess,5000);
 }
 
+function toggleMenu(){
+  document.getElementById('sidebar').classList.toggle('mob-open');
+  document.getElementById('side-overlay').classList.toggle('show');
+}
+function closeMenu(){
+  document.getElementById('sidebar').classList.remove('mob-open');
+  document.getElementById('side-overlay').classList.remove('show');
+}
+
 // NAV
 function go(n){
+  closeMenu();
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.snav a').forEach(a=>a.classList.remove('on'));
   document.getElementById('pg-'+n).classList.add('on');
