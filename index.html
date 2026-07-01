@@ -297,7 +297,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   <div class="pbar">
     <div class="pdot" id="b-dot"></div>
     <div><div class="pnm" id="b-name"></div><div class="pteam" id="b-team"></div></div>
-    <div id="b-cap" class="cap-tag" style="display:none">CAPTAIN</div>
+
   </div>
   <div class="body">
     <div class="timer-card">
@@ -308,20 +308,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div><div class="r-lbl">Round</div><div class="r-no" id="bo-rno">1</div></div>
       <div id="bo-mult" style="display:none" class="mult-tag">×1</div>
     </div>
-    <div id="cap-vote-area" style="display:none">
-      <div class="vote-lbl">You are the Captain — submit your team's final answer</div>
+    <div id="team-vote-area">
+      <div class="vote-lbl">Discuss with your team — one member submits the final answer</div>
       <div class="vote-btns" style="margin:10px 0">
         <button class="vbtn H" id="vH-bo" onclick="selVote('H','bo')">H<span>HIGH</span></button>
         <button class="vbtn L" id="vL-bo" onclick="selVote('L','bo')">L<span>LOW</span></button>
       </div>
       <button class="btn btn-primary" id="btn-sub-bo" onclick="openModal('bo')" disabled>Submit Team Answer</button>
-    </div>
-    <div id="mem-wait-area" style="display:none">
-      <div class="wait-card">
-        <div style="font-size:32px">🗣️</div>
-        <div class="wait-title">Discuss with your team</div>
-        <div class="wait-sub" id="cap-nm-display">Your Captain will submit the team's answer</div>
-      </div>
     </div>
     <div class="sub-card" id="bo-subcard" style="display:none">
       <div class="sub-icon">✅</div>
@@ -472,7 +465,7 @@ function setupBars(){
   ['w-team','m-team','b-team','sc-team'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t?.name||'';});
   document.getElementById('wait-pbar').style.display='flex';
   document.getElementById('sc-ev-name').textContent=P.session.name;
-  if(p.is_captain)['m-cap','b-cap','w-cap'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='block';});
+
 }
 
 // POLL
@@ -504,22 +497,11 @@ async function route(){
     show('breakout');updBo(rnd);startTimer(rnd);
     const ta=await GET('ta_team_answers','round_id=eq.'+rnd.id+'&team_id=eq.'+P.participant.team_id+'&select=*');
     if(ta&&ta.length){showBoDone(ta[0].answer);return;}
-    if(P.participant.is_captain){
-      document.getElementById('cap-vote-area').style.display='block';
-      document.getElementById('mem-wait-area').style.display='none';
-    }else{
-      document.getElementById('cap-vote-area').style.display='none';
-      document.getElementById('mem-wait-area').style.display='block';
-      loadCapName();
-    }
+    // All team members see vote buttons — team decides among themselves who presses
+    document.getElementById('team-vote-area').style.display='block';
     return;
   }
   if(st==='scoring'&&rnd){show('scores');updScores(rnd);return;}
-}
-
-async function loadCapName(){
-  const caps=await GET('ta_participants','team_id=eq.'+P.participant.team_id+'&is_captain=eq.true&select=name');
-  if(caps&&caps[0])document.getElementById('cap-nm-display').textContent='Captain '+caps[0].name+' will submit your team\'s answer';
 }
 
 function updMain(r){
