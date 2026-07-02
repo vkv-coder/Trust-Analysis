@@ -198,6 +198,27 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 </div>
 
+<!-- SCREEN 3.5: TEAM ANNOUNCEMENT -->
+<div class="screen" id="s-announce">
+  <div class="hdr">
+    <div><div class="hdr-logo">🎯 Trust Analysis</div><div class="hdr-sub" id="ann-sess-name"></div></div>
+    <div class="badge" id="ann-badge">TEAMS</div>
+  </div>
+  <div class="pbar" id="ann-pbar" style="display:none">
+    <div class="pdot" id="ann-dot"></div>
+    <div><div class="pnm" id="ann-name"></div><div class="pteam" id="ann-team"></div></div>
+    <div id="ann-cap" class="cap-tag" style="display:none">CAPTAIN</div>
+  </div>
+  <div class="body">
+    <div class="wait-card" style="padding:16px 20px">
+      <div style="font-size:28px">📢</div>
+      <div class="wait-title">Teams Announced!</div>
+      <div class="wait-sub">Your facilitator has finalised the teams. Waiting for Breakout to begin...</div>
+    </div>
+    <div id="ann-teams-content"></div>
+  </div>
+</div>
+
 <!-- SCREEN 4: BREAKOUT -->
 <div class="screen" id="s-breakout">
   <div class="hdr">
@@ -353,7 +374,7 @@ async function loadNames(){
     const taken=p.is_present===true;
     const card=document.createElement('div');
     card.className='name-card'+(taken?' taken':'');
-    card.innerHTML=`<div class="av" style="background:${taken?'#33415522':c+'22'};color:${taken?'var(--muted)':c}">${p.name.charAt(0)}</div>
+    card.innerHTML=`<div class="av" style="background:var(--s2);color:var(--muted)">${p.name.charAt(0).toUpperCase()}</div>
       <div><div class="ni-name" style="${taken?'color:var(--muted)':''}">${p.name}</div></div>
       <div style="margin-left:auto;font-size:12px;color:var(--muted)">${taken?'✅ Joined':''}</div>`;
     if(!taken){card.onclick=()=>{
@@ -418,10 +439,20 @@ async function route(){
     return;
   }
   if(st==='registration'){
-    // Show waiting + team list
     show('wait');
     document.getElementById('wait-badge').textContent='PRESENT ✅';
     await loadTeamList();
+    return;
+  }
+  if(st==='announced'){
+    show('announce');
+    document.getElementById('ann-sess-name').textContent=P.session.name;
+    document.getElementById('ann-pbar').style.display='flex';
+    document.getElementById('ann-dot').style.background=P.team?.color||'#3B82F6';
+    document.getElementById('ann-name').textContent=P.participant.name;
+    document.getElementById('ann-team').textContent=P.team?.name||'';
+    if(P.isCapt) document.getElementById('ann-cap').style.display='block';
+    await loadAnnounceTeams();
     return;
   }
   if(st==='breakout'&&rnd){
@@ -474,6 +505,27 @@ async function loadTeamList(){
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         ${members.map(p=>`<span style="background:var(--s2);border:1px solid ${p.is_captain?tm.color:'var(--border)'};border-radius:20px;padding:3px 10px;font-size:12px">${p.is_captain?'👑 ':''}${p.name}</span>`).join('')}
+      </div>
+    </div>`;
+  });
+}
+
+async function loadAnnounceTeams(){
+  const teams=await GET('ta_teams','event_id=eq.'+P.session.event_id+'&order=created_at')||[];
+  const parts=await GET('ta_participants','event_id=eq.'+P.session.event_id+'&select=*,ta_teams(name,color)&order=name')||[];
+  const cont=document.getElementById('ann-teams-content');
+  cont.innerHTML='';
+  teams.forEach(tm=>{
+    const members=parts.filter(p=>p.team_id===tm.id);
+    cont.innerHTML+=`<div style="background:var(--surface);border:2px solid ${tm.color};border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div style="width:12px;height:12px;border-radius:50%;background:${tm.color}"></div>
+        <strong style="font-size:15px;color:${tm.color}">${tm.name}</strong>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${members.map(p=>`<div style="background:${p.id===P.participant.id?tm.color+'33':'var(--s2)'};border:1px solid ${p.is_captain?tm.color:'var(--border)'};border-radius:20px;padding:5px 12px;font-size:13px;font-weight:${p.id===P.participant.id?'700':'400'}">
+          ${p.is_captain?'👑 ':''}${p.name}${p.id===P.participant.id?' (You)':''}
+        </div>`).join('')}
       </div>
     </div>`;
   });
