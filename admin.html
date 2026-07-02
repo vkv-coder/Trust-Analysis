@@ -105,19 +105,17 @@ tr:hover td{background:var(--sur2);}
 .tabs{display:flex;gap:2px;background:var(--sur2);border-radius:10px;padding:4px;margin-bottom:16px;width:fit-content;}
 .tab{padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--mut);transition:all .15s;}
 .tab.on{background:var(--sur);color:var(--txt);font-weight:600;}
-.mob-bar{display:none;width:100%;align-items:center;justify-content:space-between;background:var(--sur);border-bottom:1px solid var(--bdr);padding:14px 16px;position:fixed;top:0;left:0;right:0;z-index:999;box-sizing:border-box;}
+.mob-bar{display:none;width:100%;align-items:center;justify-content:space-between;background:var(--sur);border-bottom:1px solid var(--bdr);padding:14px 16px;position:fixed;top:0;left:0;right:0;z-index:999;box-sizing:border-box;height:54px;}
 .mob-bar.force-show{display:flex !important;}
-body.mob-active .main{padding-top:70px;}
-body.mob-active .side{top:60px;}
 .mob-bar .mb-logo{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--acc);}
 .hamburger{background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);font-size:22px;padding:8px 14px;cursor:pointer;line-height:1;}
 @media(max-width:768px){
   .layout{display:block;}
-  .side{display:none;position:fixed;width:240px;box-shadow:4px 0 20px rgba(0,0,0,0.5);}
+  .side{display:none;position:fixed;top:54px;left:0;bottom:0;width:240px;box-shadow:4px 0 20px rgba(0,0,0,0.5);z-index:1000;}
   .side.mob-open{display:flex;}
-  .side-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9;}
+  .side-overlay{display:none;position:fixed;top:54px;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:998;}
   .side-overlay.show{display:block;}
-  .main{margin-left:0;padding:16px;}
+  .main{margin-left:0;padding:16px;padding-top:70px;}
   .g2,.g3,.g4{grid-template-columns:1fr;}
   .cgrid{grid-template-columns:1fr 1fr;}
 }
@@ -473,6 +471,8 @@ async function switchEvent(id){
   document.getElementById('ev-sel').value=id;
   TEAMS=await GET('ta_teams','event_id=eq.'+id+'&order=created_at')||[];
   PARTS=await GET('ta_participants','event_id=eq.'+id+'&select=*,ta_teams(name,color)&order=name')||[];
+  // Always populate dropdowns so second admin also sees them
+  fillDrops();
   // Load sessions for this event
   const sessions=await GET('ta_sessions','event_id=eq.'+id+'&order=created_at.desc&select=*')||[];
   const ssel=document.getElementById('sess-sel');
@@ -673,14 +673,22 @@ function renderParts(){
   document.getElementById('p-body').style.display='block';
   document.getElementById('p-count').textContent=PARTS.length;
   const l=document.getElementById('p-list');l.innerHTML='';
-  PARTS.forEach(p=>{
+  // Sort: present first, then others
+  const sorted=[...PARTS].sort((a,b)=>(b.is_present?1:0)-(a.is_present?1:0));
+  sorted.forEach(p=>{
     const t=p.ta_teams;
-    l.innerHTML+=`<div class="chip" style="border-color:${t?.color||'var(--bdr)'}">
-      ${p.is_captain?'👑 ':''}${p.name}
+    const present=p.is_present===true;
+    l.innerHTML+=`<div class="chip" style="border-color:${present?'var(--lo)':t?.color||'var(--bdr)'};background:${present?'rgba(34,197,94,0.08)':'var(--sur2)'}">
+      ${present?'✅ ':'⏳ '}${p.is_captain?'👑 ':''}${p.name}
       ${t?`<span style="color:${t.color};font-size:11px">(${t.name})</span>`:'<span style="color:var(--mut);font-size:11px">(no team)</span>'}
       <span class="xb" onclick="remPart('${p.id}','${p.name}')">×</span>
     </div>`;
   });
+  // Summary at bottom
+  const presentCount=PARTS.filter(p=>p.is_present).length;
+  l.innerHTML+=`<div style="width:100%;margin-top:8px;padding:8px 12px;background:var(--sur2);border-radius:8px;font-size:12px;color:var(--mut)">
+    ✅ ${presentCount} present &nbsp;|&nbsp; ⏳ ${PARTS.length-presentCount} not yet joined
+  </div>`;
 }
 
 // TEAMS
@@ -792,7 +800,8 @@ async function openBreakout(){
 async function revealScores(){
   if(!SESS)return;
   const r=await getCurRound();if(!r)return;
-  await calcScores(r);
+  const ok=await calcScores(r);
+  if(!ok)return; // Stop if not all teams submitted
   await PATCH('ta_rounds','id=eq.'+r.id,{status:'revealed'});
   await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'scoring'});
   SESS.status='scoring';
@@ -809,7 +818,12 @@ async function endSession(){
 
 async function calcScores(round){
   const tas=await GET('ta_team_answers','round_id=eq.'+round.id+'&select=*')||[];
-  if(!tas.length){toast('No team answers yet','er');return;}
+  // Only calculate if ALL teams have submitted
+  if(tas.length<TEAMS.length){
+    const missing=TEAMS.length-tas.length;
+    toast(missing+' team(s) have not submitted yet — cannot calculate scores','er');
+    return false;
+  }
   const h=tas.filter(a=>a.answer==='H').length;
   const l=tas.filter(a=>a.answer==='L').length;
   let hp=0,lp=0;
@@ -826,6 +840,7 @@ async function calcScores(round){
     const cum=(prev&&prev[0])?(prev[0].cumulative_points||0):0;
     await UPSERT('ta_scores',{session_id:SESS.id,round_id:round.id,team_id:tm.id,round_points:rpts,cumulative_points:cum+rpts,calculated_at:new Date().toISOString()});
   }
+  return true;
 }
 
 // DASHBOARD
