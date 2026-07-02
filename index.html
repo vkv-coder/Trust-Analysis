@@ -27,8 +27,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .pdot{width:10px;height:10px;border-radius:50%;}
 .pnm{font-size:13px;font-weight:600;flex:1;}
 .pteam{font-size:11px;color:var(--muted);}
-.cap-tag{background:var(--accent);color:#000;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;}
-
 /* PIN */
 .pin-hero{text-align:center;padding:28px 0 8px;}
 .pin-hero .ico{font-size:52px;display:block;margin-bottom:14px;}
@@ -43,7 +41,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .key.del{color:var(--muted);font-size:16px;}
 .key.zero{grid-column:2;}
 .pin-err{text-align:center;color:var(--red);font-size:13px;min-height:18px;}
-
 /* NAME LIST */
 .sec-label{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
 .name-list{display:flex;flex-direction:column;gap:8px;}
@@ -57,33 +54,28 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .ni-team{font-size:12px;color:var(--muted);margin-top:2px;}
 .ni-check{margin-left:auto;color:var(--accent);font-size:20px;opacity:0;}
 .name-card.sel .ni-check{opacity:1;}
-
 /* WAITING */
 .wait-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:36px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;}
 .spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .wait-title{font-size:17px;font-weight:600;}
 .wait-sub{font-size:13px;color:var(--muted);line-height:1.5;}
-
 /* ROUND BANNER */
 .r-banner{background:linear-gradient(135deg,var(--accent),#D97706);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
 .r-no{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#000;}
 .r-lbl{font-size:11px;font-weight:600;color:rgba(0,0,0,.6);text-transform:uppercase;letter-spacing:1px;}
 .mult-tag{background:#000;color:var(--accent);font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px;}
-
 /* CASE */
 .case-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;}
 .case-lbl{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
 .case-txt{font-size:14px;line-height:1.7;}
-
 /* MATRIX */
 .matrix-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;overflow-x:auto;}
 .matrix-card table{width:100%;border-collapse:collapse;font-size:12px;}
 .matrix-card th{background:var(--s2);padding:7px 10px;text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;}
 .matrix-card td{padding:7px 10px;border-bottom:1px solid var(--border);}
 .matrix-card tr:last-child td{border:none;}
-.w{color:var(--green);font-weight:700;} .l{color:var(--red);font-weight:700;}
-
+.w{color:var(--green);font-weight:700;}.l{color:var(--red);font-weight:700;}
 /* VOTE */
 .vote-lbl{font-size:13px;color:var(--muted);text-align:center;}
 .vote-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
@@ -94,21 +86,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .vbtn.H.sel{background:rgba(239,68,68,.22);border-color:var(--red);}
 .vbtn.L{background:rgba(34,197,94,.1);color:var(--green);border-color:rgba(34,197,94,.25);}
 .vbtn.L.sel{background:rgba(34,197,94,.22);border-color:var(--green);}
-
 /* BTN */
 .btn{width:100%;padding:15px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;}
 .btn:active{transform:scale(.98);}
 .btn-primary{background:var(--accent);color:#000;}
 .btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 .btn-outline{background:transparent;color:var(--text);border:2px solid var(--border);}
-
 /* TIMER */
 .timer-card{background:var(--surface);border:2px solid var(--accent);border-radius:var(--r);padding:18px;text-align:center;}
 .timer-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
 .timer-val{font-family:'Space Grotesk',sans-serif;font-size:48px;font-weight:700;color:var(--accent);letter-spacing:2px;}
 .timer-val.urgent{color:var(--red);animation:pulse 1s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
-
 /* SUBMITTED */
 .sub-card{background:rgba(34,197,94,.07);border:2px solid var(--green);border-radius:var(--r);padding:20px;text-align:center;}
 .sub-icon{font-size:34px;margin-bottom:6px;}
@@ -117,32 +106,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .atag{display:inline-block;padding:2px 10px;border-radius:6px;font-weight:700;font-size:13px;}
 .atag.H{background:rgba(239,68,68,.2);color:var(--red);}
 .atag.L{background:rgba(34,197,94,.2);color:var(--green);}
-
-/* SCOREBOARD */
-.score-list{display:flex;flex-direction:column;gap:8px;}
-.score-row{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;}
-.score-row.mine{border-color:var(--accent);background:rgba(245,158,11,.05);}
-.srank{font-size:20px;width:26px;text-align:center;}
-.sdot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
-.snm{flex:1;font-weight:600;font-size:14px;}
-.spts{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;}
-.spts.p{color:var(--green);}.spts.n{color:var(--red);}
-
-/* TEAM ANSWERS GRID */
-.ta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.ta-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
-.ta-nm{font-size:12px;color:var(--muted);margin-bottom:6px;}
-.ta-val{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;}
-.ta-val.H{color:var(--red);}.ta-val.L{color:var(--green);}
-
-/* MODAL */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;align-items:flex-end;justify-content:center;}
-.modal-bg.open{display:flex;}
-.modal{background:var(--surface);border-radius:24px 24px 0 0;padding:28px 22px;width:100%;max-width:480px;border-top:1px solid var(--border);}
-.modal-title{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;margin-bottom:10px;}
-.modal-body{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
-.modal-btns{display:flex;gap:10px;}
-
 /* SCORE TABLE */
 .sc-table{width:100%;border-collapse:collapse;font-size:12px;min-width:300px;}
 .sc-table th{background:var(--s2);padding:8px 10px;text-align:center;color:var(--muted);font-weight:700;font-size:11px;text-transform:uppercase;border:1px solid var(--border);}
@@ -155,7 +118,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .sc-table tfoot td{background:var(--s2);font-weight:700;font-size:13px;}
 .sc-table tfoot td.total-lbl{text-align:left;color:var(--accent);}
 .sc-table .my-team{background:rgba(245,158,11,0.07);}
-
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;align-items:flex-end;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border-radius:24px 24px 0 0;padding:28px 22px;width:100%;max-width:480px;border-top:1px solid var(--border);}
+.modal-title{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;margin-bottom:10px;}
+.modal-body{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
+.modal-btns{display:flex;gap:10px;}
 /* TOAST */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;z-index:100;transition:transform .3s;white-space:nowrap;max-width:90vw;}
 .toast.show{transform:translateX(-50%) translateY(0);}
@@ -201,7 +170,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   <div class="body">
     <div>
       <div class="sec-label">Tap your name</div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Select your name from the list below to confirm presence</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Select your name to confirm presence</p>
       <div class="name-list" id="name-list">
         <div class="wait-card"><div class="spinner"></div><div class="wait-sub">Loading...</div></div>
       </div>
@@ -222,17 +191,22 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   <div class="pbar" id="wait-pbar" style="display:none">
     <div class="pdot" id="w-dot"></div>
     <div><div class="pnm" id="w-name"></div><div class="pteam" id="w-team"></div></div>
-    <div id="w-cap" class="cap-tag" style="display:none">CAPTAIN</div>
   </div>
   <div class="body">
     <div class="wait-card">
       <div class="spinner"></div>
       <div class="wait-title">✅ Presence Confirmed</div>
-      <div class="wait-sub">Waiting for the facilitator to start the session. Keep this screen open.</div>
+      <div class="wait-sub">Waiting for the facilitator to start. Keep this screen open.</div>
     </div>
     <div id="score-section" style="display:none">
-      <div class="sec-label" style="margin-bottom:10px">Scoreboard</div>
-      <div class="score-list" id="wait-scores"></div>
+      <div class="sec-label" style="margin-bottom:10px">📊 Scoreboard</div>
+      <div style="overflow-x:auto">
+        <table class="sc-table" id="wait-score-table">
+          <thead><tr id="wait-sc-thead"></tr></thead>
+          <tbody id="wait-sc-tbody"></tbody>
+          <tfoot><tr id="wait-sc-tfoot"></tr></tfoot>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -246,7 +220,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   <div class="pbar">
     <div class="pdot" id="m-dot"></div>
     <div><div class="pnm" id="m-name"></div><div class="pteam" id="m-team"></div></div>
-    <div id="m-cap" class="cap-tag" style="display:none">CAPTAIN</div>
   </div>
   <div class="body">
     <div class="r-banner">
@@ -255,8 +228,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     </div>
     <div class="case-card">
       <div class="case-lbl">📋 Case Study</div>
-      <div class="case-txt" id="main-case">Loading...</div>
-    <div id="main-case-file" style="display:none;margin-top:8px"></div>
+      <div class="case-txt" id="main-case">Case study will appear here.</div>
+      <div id="main-case-file" style="display:none;margin-top:8px"></div>
     </div>
     <div class="matrix-card">
       <div class="sec-label" style="margin-bottom:10px">Points Matrix</div>
@@ -297,11 +270,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   <div class="pbar">
     <div class="pdot" id="b-dot"></div>
     <div><div class="pnm" id="b-name"></div><div class="pteam" id="b-team"></div></div>
-
   </div>
   <div class="body">
     <div class="timer-card">
-      <div class="timer-lbl">⏱ Time Remaining</div>
+      <div class="timer-lbl">⏱ Time Remaining (IST)</div>
       <div class="timer-val" id="timer-val">05:00</div>
     </div>
     <div class="r-banner">
@@ -322,6 +294,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="sub-detail">Team voted: <span id="bo-sub-ans" class="atag"></span></div>
       <div class="sub-detail" style="margin-top:6px">Waiting for scores to be revealed...</div>
     </div>
+    <!-- Scoreboard visible in breakout after previous rounds -->
+    <div id="bo-score-section" style="display:none">
+      <div class="sec-label" style="margin-bottom:10px">📊 Previous Rounds — Scoreboard</div>
+      <div style="overflow-x:auto">
+        <table class="sc-table" id="bo-score-table">
+          <thead><tr id="bo-sc-thead"></tr></thead>
+          <tbody id="bo-sc-tbody"></tbody>
+          <tfoot><tr id="bo-sc-tfoot"></tr></tfoot>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -336,10 +319,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div><div class="pnm" id="sc-name"></div><div class="pteam" id="sc-team"></div></div>
   </div>
   <div class="body">
-    <div class="sc-table-wrap">
+    <div>
       <div class="sec-label" style="margin-bottom:10px">🏆 Score Board — All Rounds</div>
       <div style="overflow-x:auto">
-        <table class="sc-table" id="sc-main-table">
+        <table class="sc-table">
           <thead><tr id="sc-thead"></tr></thead>
           <tbody id="sc-tbody"></tbody>
           <tfoot><tr id="sc-tfoot"></tr></tfoot>
@@ -373,7 +356,6 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
 const hdr=()=>({'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=representation'});
 const GET=(t,q='')=>fetch(`${SUPA_URL}/rest/v1/${t}?${q}`,{headers:hdr()}).then(r=>r.json());
-const POST=(t,b,pref='return=representation')=>fetch(`${SUPA_URL}/rest/v1/${t}`,{method:'POST',headers:{...hdr(),'Prefer':pref},body:JSON.stringify(b)});
 
 let P={pin:'',session:null,participant:null,team:null,round:null,vote:null,ctx:null,pollT:null,timerT:null};
 
@@ -384,19 +366,14 @@ function toast(msg,type='info'){const t=document.getElementById('toast');t.class
 function pk(k){if(P.pin.length>=4)return;P.pin+=k;updPin();if(P.pin.length===4)verPin();}
 function pd(){P.pin=P.pin.slice(0,-1);document.getElementById('pin-err').textContent='';updPin();}
 function updPin(){for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);d.textContent=i<P.pin.length?'●':'';d.className='pdot-box'+(i<P.pin.length?' filled':'');}}
+
 async function verPin(){
   document.getElementById('pin-err').textContent='';
-  const res=await GET('ta_sessions','pin=eq.'+P.pin+'&select=*,ta_events(id,name)');
+  const res=await GET('ta_sessions','pin=eq.'+P.pin+'&select=*');
   if(!res||!res.length){document.getElementById('pin-err').textContent='Wrong PIN. Try again.';P.pin='';updPin();return;}
   const session=res[0];
-  if(session.status==='setup'){
-    document.getElementById('pin-err').textContent='Session not started yet. Wait for facilitator.';
-    P.pin='';updPin();return;
-  }
-  if(session.status==='complete'){
-    document.getElementById('pin-err').textContent='This session has ended.';
-    P.pin='';updPin();return;
-  }
+  if(session.status==='setup'){document.getElementById('pin-err').textContent='Session not started yet. Wait for facilitator.';P.pin='';updPin();return;}
+  if(session.status==='complete'){document.getElementById('pin-err').textContent='This session has ended.';P.pin='';updPin();return;}
   P.session=session;
   loadNames();
 }
@@ -435,8 +412,7 @@ async function loadNames(){
 
 function resetNameList(){
   document.querySelectorAll('.name-card').forEach(c=>{
-    // Only show non-taken cards
-    if(!c.classList.contains('taken')) c.style.display='flex';
+    if(!c.classList.contains('taken'))c.style.display='flex';
     c.classList.remove('sel');
   });
   document.getElementById('not-you-link').style.display='none';
@@ -446,12 +422,7 @@ function resetNameList(){
 
 async function confirmName(){
   if(!P.participant)return;
-  // Mark present in DB — blocks this name for others
-  await fetch(`${SUPA_URL}/rest/v1/ta_participants?id=eq.${P.participant.id}`,{
-    method:'PATCH',
-    headers:hdr(),
-    body:JSON.stringify({is_present:true})
-  });
+  await fetch(`${SUPA_URL}/rest/v1/ta_participants?id=eq.${P.participant.id}`,{method:'PATCH',headers:hdr(),body:JSON.stringify({is_present:true})});
   setupBars();
   show('wait');
   document.getElementById('wait-ev-name').textContent=P.session.name;
@@ -465,7 +436,6 @@ function setupBars(){
   ['w-team','m-team','b-team','sc-team'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t?.name||'';});
   document.getElementById('wait-pbar').style.display='flex';
   document.getElementById('sc-ev-name').textContent=P.session.name;
-
 }
 
 // POLL
@@ -485,20 +455,25 @@ async function poll(){
 
 async function route(){
   const st=P.session.status;const rnd=P.round;
-  if(st==='setup'||st==='complete'){show('wait');if(st==='complete')document.getElementById('wait-badge').textContent='DONE';loadWaitScores();return;}
-  if(st==='presence'){show('wait');document.getElementById('wait-badge').textContent='PRESENT ✅';return;}
+  if(st==='setup'||st==='complete'){show('wait');if(st==='complete')document.getElementById('wait-badge').textContent='DONE';return;}
   if(st==='registration'&&rnd){
     const ex=await GET('ta_individual_answers','round_id=eq.'+rnd.id+'&participant_id=eq.'+P.participant.id+'&select=*');
     show('main');updMain(rnd);
     if(ex&&ex.length)showMainDone(ex[0].answer);
+    else{
+      document.getElementById('main-vote-area').style.display='block';
+      document.getElementById('main-subcard').style.display='none';
+    }
     return;
   }
   if(st==='breakout'&&rnd){
     show('breakout');updBo(rnd);startTimer(rnd);
+    // Load previous rounds scoreboard in breakout
+    loadBoScores();
     const ta=await GET('ta_team_answers','round_id=eq.'+rnd.id+'&team_id=eq.'+P.participant.team_id+'&select=*');
     if(ta&&ta.length){showBoDone(ta[0].answer);return;}
-    // All team members see vote buttons — team decides among themselves who presses
     document.getElementById('team-vote-area').style.display='block';
+    document.getElementById('bo-subcard').style.display='none';
     return;
   }
   if(st==='scoring'&&rnd){show('scores');updScores(rnd);return;}
@@ -507,48 +482,49 @@ async function route(){
 function updMain(r){
   document.getElementById('main-rno').textContent=r.round_number;
   document.getElementById('main-badge').textContent='R'+r.round_number;
-  document.getElementById('main-case').caseText=r.case_study||'';
+  const caseText=r.case_study||'';
   const caseUrl=r.case_study_url||'';
-  document.getElementById('main-case').textContent=caseText||(caseUrl?'':' Case study will appear here.');
+  document.getElementById('main-case').textContent=caseText||(caseUrl?'':'Case study will appear here.');
   const cfd=document.getElementById('main-case-file');
-  if(cfd){if(caseUrl){cfd.style.display='block';const isImg=/\.(jpg|jpeg|png)$/i.test(caseUrl);cfd.innerHTML=isImg?'<img src="'+caseUrl+'" style="width:100%;border-radius:8px;margin-top:8px"/>':'<a href="'+caseUrl+'" target="_blank" style="display:flex;align-items:center;gap:8px;background:rgba(245,158,11,0.1);border:1px solid var(--accent);border-radius:8px;padding:12px;color:var(--accent);text-decoration:none;font-weight:600;margin-top:8px">📄 Open Case Study PDF</a>';}else cfd.style.display='none';}
+  if(caseUrl){
+    cfd.style.display='block';
+    const isImg=/\.(jpg|jpeg|png)$/i.test(caseUrl);
+    cfd.innerHTML=isImg?`<img src="${caseUrl}" style="width:100%;border-radius:8px;margin-top:8px"/>`:`<a href="${caseUrl}" target="_blank" style="display:flex;align-items:center;gap:8px;background:rgba(245,158,11,0.1);border:1px solid var(--accent);border-radius:8px;padding:12px;color:var(--accent);text-decoration:none;font-weight:600;margin-top:8px">📄 Open Case Study PDF</a>`;
+  }else{cfd.style.display='none';}
   const m=document.getElementById('main-mult');
   if(r.multiplier>1){m.style.display='block';m.textContent='×'+r.multiplier;}else m.style.display='none';
 }
+
 function showMainDone(ans){
   document.getElementById('main-vote-area').style.display='none';
   document.getElementById('main-subcard').style.display='block';
   const el=document.getElementById('main-sub-ans');el.textContent=ans==='H'?'HIGH':'LOW';el.className='atag '+ans;
 }
+
 function updBo(r){
   document.getElementById('bo-rno').textContent=r.round_number;
   document.getElementById('bo-badge').textContent='R'+r.round_number;
   const m=document.getElementById('bo-mult');
   if(r.multiplier>1){m.style.display='block';m.textContent='×'+r.multiplier;}else m.style.display='none';
 }
+
 function showBoDone(ans){
-  document.getElementById('cap-vote-area').style.display='none';
-  document.getElementById('mem-wait-area').style.display='none';
+  // FIX: correct element IDs
+  document.getElementById('team-vote-area').style.display='none';
   document.getElementById('bo-subcard').style.display='block';
-  const el=document.getElementById('bo-sub-ans');el.textContent=ans==='H'?'HIGH':'LOW';el.className='atag '+ans;
+  const el=document.getElementById('bo-sub-ans');
+  el.textContent=ans==='H'?'HIGH':'LOW';
+  el.className='atag '+ans;
 }
 
-// TIMER
+// TIMER FIX — Supabase sends UTC without Z, JS parses as local IST, so we must treat it as UTC
 function startTimer(r){
   if(P.timerT)clearInterval(P.timerT);
-  const el = document.getElementById('timer-val');
-  const totalSecs = r.timer_seconds || 300;
+  const el=document.getElementById('timer-val');
+  const totalSecs=r.timer_seconds||300;
 
-  // Log everything for debug
-  console.log('=== TIMER DEBUG ===');
-  console.log('timer_started_at:', r.timer_started_at);
-  console.log('timer_seconds:', r.timer_seconds);
-  console.log('Date.now():', new Date().toISOString());
-
-  // If no start time — just count down from total
   if(!r.timer_started_at){
-    console.log('No timer_started_at — counting from full duration');
-    let rem = totalSecs;
+    let rem=totalSecs;
     function tickFull(){
       const m=Math.floor(rem/60).toString().padStart(2,'0');
       const s=(rem%60).toString().padStart(2,'0');
@@ -557,47 +533,20 @@ function startTimer(r){
       if(rem<=0){clearInterval(P.timerT);return;}
       rem--;
     }
-    tickFull();
-    P.timerT=setInterval(tickFull,1000);
-    return;
+    tickFull();P.timerT=setInterval(tickFull,1000);return;
   }
 
-  // Parse timestamp — try multiple formats
-  let startMs = NaN;
-  const raw = r.timer_started_at;
-  // Try as-is first
-  startMs = Date.parse(raw);
-  console.log('Parse attempt 1 (raw):', startMs, new Date(startMs).toISOString());
-  if(isNaN(startMs)){
-    // Try adding Z
-    startMs = Date.parse(raw+'Z');
-    console.log('Parse attempt 2 (+Z):', startMs);
+  // Supabase stores UTC but sends WITHOUT Z — so JS reads as local IST
+  // Fix: append +00:00 to force UTC parsing regardless of local timezone
+  let raw=r.timer_started_at.trim();
+  if(!raw.endsWith('Z')&&!raw.includes('+')&&!raw.includes('-',10)){
+    raw=raw+'Z'; // treat as UTC
   }
-  if(isNaN(startMs)){
-    // Try replacing space with T
-    startMs = Date.parse(raw.replace(' ','T')+'Z');
-    console.log('Parse attempt 3 (T+Z):', startMs);
-  }
+  const startMs=Date.parse(raw);
+  const elapsedSecs=isNaN(startMs)?0:Math.floor((Date.now()-startMs)/1000);
+  const remSecs=Math.max(0,totalSecs-elapsedSecs);
 
-  if(isNaN(startMs)){
-    console.log('Could not parse timestamp — counting from full');
-    let rem=totalSecs;
-    P.timerT=setInterval(()=>{
-      const m=Math.floor(rem/60).toString().padStart(2,'0');
-      const s=(rem%60).toString().padStart(2,'0');
-      el.textContent=m+':'+s;
-      el.className='timer-val'+(rem<=30?' urgent':'');
-      if(rem<=0)clearInterval(P.timerT);
-      rem--;
-    },1000);
-    return;
-  }
-
-  const elapsed = Math.floor((Date.now()-startMs)/1000);
-  const remSecs = Math.max(0, totalSecs-elapsed);
-  console.log('elapsed secs:', elapsed, 'remaining:', remSecs);
-
-  const endMs = Date.now()+(remSecs*1000);
+  const endMs=Date.now()+(remSecs*1000);
   function tick(){
     const rem=Math.max(0,Math.floor((endMs-Date.now())/1000));
     const m=Math.floor(rem/60).toString().padStart(2,'0');
@@ -606,91 +555,59 @@ function startTimer(r){
     el.className='timer-val'+(rem<=30?' urgent':'');
     if(rem<=0)clearInterval(P.timerT);
   }
-  tick();
-  P.timerT=setInterval(tick,1000);
+  tick();P.timerT=setInterval(tick,1000);
 }
 
-// SCORES SCREEN
-async function updScores(r){
-  document.getElementById('sc-badge').textContent='R'+r.round_number;
-  await buildScoreTable();
-}
+// SCOREBOARD — shared builder for all screens
+async function buildScoreTable(theadId,tbodyId,tfootId){
+  const allScores=await GET('ta_scores','session_id=eq.'+P.session.id+'&select=*,ta_teams(name,color),ta_rounds(round_number,multiplier)&order=ta_rounds(round_number)')||[];
+  const teams=await GET('ta_teams','event_id=eq.'+P.session.event_id+'&order=created_at')||[];
+  if(!teams.length||!allScores.length)return false;
 
-async function buildScoreTable(){
-  // Get all scores for this session with round info
-  const allScores = await GET('ta_scores',
-    'session_id=eq.'+P.session.id+
-    '&select=*,ta_teams(name,color),ta_rounds(round_number,multiplier)'+
-    '&order=ta_rounds(round_number)') || [];
-
-  // Get all teams
-  const teams = await GET('ta_teams','session_id=eq.'+P.session.id+'&order=created_at') || [];
-  if(!teams.length) return;
-
-  // Get unique round numbers sorted
-  const roundNos = [...new Set(allScores.map(s=>s.ta_rounds?.round_number))].filter(Boolean).sort((a,b)=>a-b);
-  const mults = {};
-  allScores.forEach(s=>{ if(s.ta_rounds) mults[s.ta_rounds.round_number]=s.ta_rounds.multiplier||1; });
-
-  // Build team->round->points map
-  const teamMap = {};
+  const roundNos=[...new Set(allScores.map(s=>s.ta_rounds?.round_number))].filter(Boolean).sort((a,b)=>a-b);
+  const mults={};allScores.forEach(s=>{if(s.ta_rounds)mults[s.ta_rounds.round_number]=s.ta_rounds.multiplier||1;});
+  const teamMap={};
   allScores.forEach(s=>{
-    if(!teamMap[s.team_id]) teamMap[s.team_id]={team:s.ta_teams,rounds:{},cum:0};
-    if(s.ta_rounds) teamMap[s.team_id].rounds[s.ta_rounds.round_number]=s.round_points;
+    if(!teamMap[s.team_id])teamMap[s.team_id]={team:s.ta_teams,rounds:{},cum:0};
+    if(s.ta_rounds)teamMap[s.team_id].rounds[s.ta_rounds.round_number]=s.round_points;
     teamMap[s.team_id].cum=s.cumulative_points||0;
   });
 
-  // THEAD
-  const thead = document.getElementById('sc-thead');
-  thead.innerHTML = '<th class="team-col">Team</th>';
-  roundNos.forEach(rn=>{
-    const mult = mults[rn]||1;
-    thead.innerHTML += `<th>R${rn}${mult>1?'<br><span style="color:var(--accent);font-size:10px">×'+mult+'</span>':''}</th>`;
-  });
-  thead.innerHTML += '<th style="color:var(--accent)">TOTAL</th>';
+  const thead=document.getElementById(theadId);
+  thead.innerHTML='<th class="team-col">Team</th>';
+  roundNos.forEach(rn=>{thead.innerHTML+=`<th>R${rn}${mults[rn]>1?'<br><span style="color:var(--accent);font-size:10px">×'+mults[rn]+'</span>':''}</th>`;});
+  thead.innerHTML+='<th style="color:var(--accent)">TOTAL</th>';
 
-  // TBODY
-  const tbody = document.getElementById('sc-tbody');
-  tbody.innerHTML = '';
-  const sorted = teams.map(t=>({...t,...(teamMap[t.id]||{rounds:{},cum:0,team:t})}))
-    .sort((a,b)=>(b.cum||0)-(a.cum||0));
-
+  const tbody=document.getElementById(tbodyId);
+  tbody.innerHTML='';
+  const sorted=teams.map(t=>({...t,...(teamMap[t.id]||{rounds:{},cum:0,team:t})})).sort((a,b)=>(b.cum||0)-(a.cum||0));
   sorted.forEach(t=>{
-    const isMe = P.participant && t.id === P.participant.team_id;
-    const teamData = teamMap[t.id]||{rounds:{},cum:0};
-    let row = `<tr class="${isMe?'my-team':''}">
-      <td class="team-name-cell">
-        <span style="display:inline-flex;align-items:center;gap:6px">
-          <span style="width:10px;height:10px;border-radius:50%;background:${t.color||'#3B82F6'};display:inline-block"></span>
-          ${t.name}${isMe?' 👤':''}
-        </span>
-      </td>`;
-    roundNos.forEach(rn=>{
-      const pts = teamData.rounds[rn];
-      if(pts===undefined){ row+=`<td class="pts-zero">—</td>`; }
-      else { row+=`<td class="${pts>0?'pts-pos':pts<0?'pts-neg':'pts-zero'}">${pts>0?'+':''}${pts}</td>`; }
-    });
-    const cum = teamData.cum||0;
-    row += `<td class="${cum>0?'pts-pos':cum<0?'pts-neg':'pts-zero'}" style="font-size:14px">${cum>0?'+':''}${cum}</td></tr>`;
-    tbody.innerHTML += row;
+    const isMe=P.participant&&t.id===P.participant.team_id;
+    const td=teamMap[t.id]||{rounds:{},cum:0};
+    let row=`<tr class="${isMe?'my-team':''}"><td class="team-name-cell"><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:${t.color||'#3B82F6'};display:inline-block"></span>${t.name}${isMe?' 👤':''}</span></td>`;
+    roundNos.forEach(rn=>{const pts=td.rounds[rn];row+=pts===undefined?'<td class="pts-zero">—</td>':`<td class="${pts>0?'pts-pos':pts<0?'pts-neg':'pts-zero'}">${pts>0?'+':''}${pts}</td>`;});
+    const cum=td.cum||0;
+    row+=`<td class="${cum>0?'pts-pos':cum<0?'pts-neg':'pts-zero'}" style="font-size:14px">${cum>0?'+':''}${cum}</td></tr>`;
+    tbody.innerHTML+=row;
   });
 
-  // TFOOT — Net totals row
-  const tfoot = document.getElementById('sc-tfoot');
-  tfoot.innerHTML = '<td class="total-lbl">Net Cash</td>';
-  roundNos.forEach(rn=>{
-    const total = Object.values(teamMap).reduce((sum,t)=>{
-      const pts=t.rounds[rn];return sum+(pts||0);
-    },0);
-    tfoot.innerHTML += `<td class="${total>0?'pts-pos':total<0?'pts-neg':'pts-zero'}">${total>0?'+':''}${total}</td>`;
-  });
-  const grandTotal = Object.values(teamMap).reduce((sum,t)=>sum+(t.cum||0),0);
-  tfoot.innerHTML += `<td class="${grandTotal>0?'pts-pos':grandTotal<0?'pts-neg':'pts-zero'}">${grandTotal>0?'+':''}${grandTotal}</td>`;
+  const tfoot=document.getElementById(tfootId);
+  tfoot.innerHTML='<td class="total-lbl">Net Cash</td>';
+  roundNos.forEach(rn=>{const tot=Object.values(teamMap).reduce((s,t)=>{const p=t.rounds[rn];return s+(p||0);},0);tfoot.innerHTML+=`<td class="${tot>0?'pts-pos':tot<0?'pts-neg':'pts-zero'}">${tot>0?'+':''}${tot}</td>`;});
+  const grand=Object.values(teamMap).reduce((s,t)=>s+(t.cum||0),0);
+  tfoot.innerHTML+=`<td class="${grand>0?'pts-pos':grand<0?'pts-neg':'pts-zero'}">${grand>0?'+':''}${grand}</td>`;
+  return true;
 }
 
-async function loadWaitScores(){
-  // Not shown during waiting — only after scores revealed
-  document.getElementById('score-section').style.display='none';
+async function updScores(r){
+  document.getElementById('sc-badge').textContent='R'+r.round_number;
+  await buildScoreTable('sc-thead','sc-tbody','sc-tfoot');
+}
+
+async function loadBoScores(){
+  // Show previous rounds scoreboard in breakout room
+  const ok=await buildScoreTable('bo-sc-thead','bo-sc-tbody','bo-sc-tfoot');
+  document.getElementById('bo-score-section').style.display=ok?'block':'none';
 }
 
 // VOTING
@@ -706,6 +623,7 @@ function selVote(v,ctx){
     document.getElementById('btn-sub-bo').disabled=false;
   }
 }
+
 function openModal(ctx){
   P.ctx=ctx;const v=P.vote;if(!v)return;
   const label=v==='H'?'HIGH':'LOW';const isTeam=ctx==='bo';
@@ -713,18 +631,44 @@ function openModal(ctx){
   document.getElementById('modal-body').textContent='You are about to submit '+label+' as your '+(isTeam?"team's":'individual')+' answer. This cannot be changed.';
   document.getElementById('modal').classList.add('open');
 }
+
 function closeModal(){document.getElementById('modal').classList.remove('open');}
+
 async function submitVote(){
-  closeModal();const v=P.vote;const ctx=P.ctx;const r=P.round;
+  closeModal();
+  const v=P.vote;const ctx=P.ctx;const r=P.round;
   if(!v||!r)return;
+
   if(ctx==='main'){
-    const res=await POST('ta_individual_answers',{session_id:P.session.id,round_id:r.id,participant_id:P.participant.id,answer:v},'resolution=merge-duplicates,return=representation');
-    if(res.ok||res.status===201){showMainDone(v);toast('Opinion submitted!','success');}
-    else toast('Error. Try again.','error');
+    // Individual answer
+    const res=await fetch(`${SUPA_URL}/rest/v1/ta_individual_answers`,{
+      method:'POST',
+      headers:{...hdr(),'Prefer':'resolution=merge-duplicates,return=representation'},
+      body:JSON.stringify({
+        session_id:P.session.id,
+        round_id:r.id,
+        participant_id:P.participant.id,
+        answer:v
+      })
+    });
+    if(res.ok){showMainDone(v);toast('Opinion submitted!','success');}
+    else{const err=await res.json();console.error('Submit error:',err);toast('Error: '+(err.message||'Try again'),'error');}
+
   }else{
-    const res=await fetch(`${SUPA_URL}/rest/v1/ta_team_answers`,{method:'POST',headers:{...hdr(),'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify({session_id:P.session.id,round_id:r.id,team_id:P.participant.team_id,answer:v,submitted_by:P.participant.id})});
-    if(res.ok||res.status===201){showBoDone(v);toast('Team answer submitted!','success');}
-    else toast('Error. Try again.','error');
+    // Team answer
+    const res=await fetch(`${SUPA_URL}/rest/v1/ta_team_answers`,{
+      method:'POST',
+      headers:{...hdr(),'Prefer':'resolution=merge-duplicates,return=representation'},
+      body:JSON.stringify({
+        session_id:P.session.id,
+        round_id:r.id,
+        team_id:P.participant.team_id,
+        answer:v,
+        submitted_by:P.participant.id
+      })
+    });
+    if(res.ok){showBoDone(v);toast('Team answer submitted!','success');}
+    else{const err=await res.json();console.error('Submit error:',err);toast('Error: '+(err.message||'Try again'),'error');}
   }
 }
 </script>
