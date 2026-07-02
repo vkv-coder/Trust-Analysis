@@ -354,9 +354,8 @@ async function loadNames(){
     const card=document.createElement('div');
     card.className='name-card'+(taken?' taken':'');
     card.innerHTML=`<div class="av" style="background:${taken?'#33415522':c+'22'};color:${taken?'var(--muted)':c}">${p.name.charAt(0)}</div>
-      <div><div class="ni-name" style="${taken?'color:var(--muted)':''}">${p.name}</div>
-      <div class="ni-team">${t?.name||'No team'}${p.is_captain?' 👑':''}</div></div>
-      <div style="margin-left:auto;font-size:12px;color:var(--muted)">${taken?'✅':''}  </div>`;
+      <div><div class="ni-name" style="${taken?'color:var(--muted)':''}">${p.name}</div></div>
+      <div style="margin-left:auto;font-size:12px;color:var(--muted)">${taken?'✅ Joined':''}</div>`;
     if(!taken){card.onclick=()=>{
       document.querySelectorAll('.name-card').forEach(c=>{c.style.display='none';});
       card.style.display='flex';card.classList.add('sel');
