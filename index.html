@@ -22,11 +22,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .hdr-logo{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:var(--accent);}
 .hdr-sub{font-size:11px;color:var(--muted);margin-top:1px;}
 .badge{background:var(--accent);color:#000;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
-.body{flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;}
+.body{flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;}
 .pbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 18px;display:flex;align-items:center;gap:10px;}
 .pdot{width:10px;height:10px;border-radius:50%;}
 .pnm{font-size:13px;font-weight:600;flex:1;}
 .pteam{font-size:11px;color:var(--muted);}
+.cap-tag{background:var(--accent);color:#000;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;}
 /* PIN */
 .pin-hero{text-align:center;padding:28px 0 8px;}
 .pin-hero .ico{font-size:52px;display:block;margin-bottom:14px;}
@@ -41,7 +42,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .key.del{color:var(--muted);font-size:16px;}
 .key.zero{grid-column:2;}
 .pin-err{text-align:center;color:var(--red);font-size:13px;min-height:18px;}
-/* NAME LIST */
+/* NAME */
 .sec-label{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
 .name-list{display:flex;flex-direction:column;gap:8px;}
 .name-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .15s;}
@@ -49,18 +50,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .name-card.sel{border-color:var(--accent);background:rgba(245,158,11,.07);}
 .name-card.taken{opacity:0.45;cursor:not-allowed;}
 .name-card.taken:active{transform:none;}
-.nav{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;}
+.av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;}
 .ni-name{font-size:15px;font-weight:600;}
 .ni-team{font-size:12px;color:var(--muted);margin-top:2px;}
-.ni-check{margin-left:auto;color:var(--accent);font-size:20px;opacity:0;}
-.name-card.sel .ni-check{opacity:1;}
-/* WAITING */
+/* WAIT */
 .wait-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:36px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;}
 .spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .wait-title{font-size:17px;font-weight:600;}
 .wait-sub{font-size:13px;color:var(--muted);line-height:1.5;}
-/* ROUND BANNER */
+/* ROUND */
 .r-banner{background:linear-gradient(135deg,var(--accent),#D97706);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
 .r-no{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#000;}
 .r-lbl{font-size:11px;font-weight:600;color:rgba(0,0,0,.6);text-transform:uppercase;letter-spacing:1px;}
@@ -77,8 +76,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .matrix-card tr:last-child td{border:none;}
 .w{color:var(--green);font-weight:700;}.l{color:var(--red);font-weight:700;}
 /* VOTE */
-.vote-lbl{font-size:13px;color:var(--muted);text-align:center;}
-.vote-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.vote-lbl{font-size:13px;color:var(--muted);text-align:center;margin-bottom:10px;}
+.vote-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
 .vbtn{border:3px solid transparent;border-radius:var(--r);padding:26px 16px;font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .15s;}
 .vbtn span{font-family:'Inter',sans-serif;font-size:12px;font-weight:500;}
 .vbtn:active{transform:scale(.97);}
@@ -106,18 +105,21 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .atag{display:inline-block;padding:2px 10px;border-radius:6px;font-weight:700;font-size:13px;}
 .atag.H{background:rgba(239,68,68,.2);color:var(--red);}
 .atag.L{background:rgba(34,197,94,.2);color:var(--green);}
+/* LIVE CAPTAIN ANSWER */
+.live-ans{background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:16px;text-align:center;}
+.live-ans-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.live-ans-val{font-family:'Space Grotesk',sans-serif;font-size:36px;font-weight:700;color:var(--muted);}
+.live-ans-val.H{color:var(--red);}
+.live-ans-val.L{color:var(--green);}
 /* SCORE TABLE */
-.sc-table{width:100%;border-collapse:collapse;font-size:12px;min-width:300px;}
+.sc-table{width:100%;border-collapse:collapse;font-size:12px;min-width:280px;}
 .sc-table th{background:var(--s2);padding:8px 10px;text-align:center;color:var(--muted);font-weight:700;font-size:11px;text-transform:uppercase;border:1px solid var(--border);}
-.sc-table th.team-col{text-align:left;}
+.sc-table th.tc{text-align:left;}
 .sc-table td{padding:8px 10px;border:1px solid var(--border);text-align:center;font-weight:600;}
-.sc-table td.team-name-cell{text-align:left;font-weight:700;}
-.sc-table .pts-pos{color:var(--green);}
-.sc-table .pts-neg{color:var(--red);}
-.sc-table .pts-zero{color:var(--muted);}
+.sc-table td.tnc{text-align:left;font-weight:700;}
+.pp{color:var(--green);}.pn{color:var(--red);}.pz{color:var(--muted);}
 .sc-table tfoot td{background:var(--s2);font-weight:700;font-size:13px;}
-.sc-table tfoot td.total-lbl{text-align:left;color:var(--accent);}
-.sc-table .my-team{background:rgba(245,158,11,0.07);}
+.sc-table .mt{background:rgba(245,158,11,0.07);}
 /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;align-items:flex-end;justify-content:center;}
 .modal-bg.open{display:flex;}
@@ -137,9 +139,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 <!-- SCREEN 1: PIN -->
 <div class="screen active" id="s-pin">
-  <div class="hdr">
-    <div><div class="hdr-logo">🎯 Trust Analysis</div><div class="hdr-sub">Group Decision Game</div></div>
-  </div>
+  <div class="hdr"><div><div class="hdr-logo">🎯 Trust Analysis</div><div class="hdr-sub">Group Decision Game</div></div></div>
   <div class="body">
     <div class="pin-hero">
       <span class="ico">🔐</span>
@@ -147,10 +147,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <p>Enter the 4-digit PIN given by your facilitator</p>
     </div>
     <div class="pin-dots">
-      <div class="pdot-box" id="pd0"></div>
-      <div class="pdot-box" id="pd1"></div>
-      <div class="pdot-box" id="pd2"></div>
-      <div class="pdot-box" id="pd3"></div>
+      <div class="pdot-box" id="pd0"></div><div class="pdot-box" id="pd1"></div>
+      <div class="pdot-box" id="pd2"></div><div class="pdot-box" id="pd3"></div>
     </div>
     <div class="pin-err" id="pin-err"></div>
     <div class="keypad">
@@ -164,18 +162,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 <!-- SCREEN 2: SELECT NAME -->
 <div class="screen" id="s-name">
-  <div class="hdr">
-    <div><div class="hdr-logo">🎯 Trust Analysis</div><div class="hdr-sub" id="ev-name-display">Loading...</div></div>
-  </div>
+  <div class="hdr"><div><div class="hdr-logo">🎯 Trust Analysis</div><div class="hdr-sub" id="ev-name-display">Loading...</div></div></div>
   <div class="body">
-    <div>
-      <div class="sec-label">Tap your name</div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Select your name to confirm presence</p>
-      <div class="name-list" id="name-list">
-        <div class="wait-card"><div class="spinner"></div><div class="wait-sub">Loading...</div></div>
-      </div>
-    </div>
-    <div id="not-you-link" style="display:none;text-align:center;margin-top:-8px">
+    <div class="sec-label">Tap your name</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Select your name to confirm presence</p>
+    <div class="name-list" id="name-list"><div class="wait-card"><div class="spinner"></div></div></div>
+    <div id="not-you-link" style="display:none;text-align:center">
       <span onclick="resetNameList()" style="font-size:13px;color:var(--accent);cursor:pointer;text-decoration:underline">Not you? Choose again</span>
     </div>
     <button class="btn btn-primary" id="btn-confirm-name" onclick="confirmName()" disabled>Confirm My Presence →</button>
@@ -196,25 +188,83 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="wait-card">
       <div class="spinner"></div>
       <div class="wait-title">✅ Presence Confirmed</div>
-      <div class="wait-sub">Waiting for the facilitator to start. Keep this screen open.</div>
+      <div class="wait-sub">Waiting for facilitator to start. Keep this screen open.</div>
     </div>
-    <div id="score-section" style="display:none">
-      <div class="sec-label" style="margin-bottom:10px">📊 Scoreboard</div>
+    <!-- Team list shown just before first breakout -->
+    <div id="team-list-section" style="display:none">
+      <div class="sec-label" style="margin-bottom:10px">📋 Final Team List</div>
+      <div id="team-list-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 4: BREAKOUT -->
+<div class="screen" id="s-breakout">
+  <div class="hdr">
+    <div><div class="hdr-logo">🎯 Breakout</div><div class="hdr-sub">Team Decision</div></div>
+    <div class="badge" id="bo-badge">R1</div>
+  </div>
+  <div class="pbar">
+    <div class="pdot" id="b-dot"></div>
+    <div><div class="pnm" id="b-name"></div><div class="pteam" id="b-team"></div></div>
+    <div id="b-cap" class="cap-tag" style="display:none">CAPTAIN</div>
+  </div>
+  <div class="body">
+    <div class="timer-card">
+      <div class="timer-lbl">⏱ Time Remaining</div>
+      <div class="timer-val" id="timer-val">05:00</div>
+    </div>
+    <div class="r-banner">
+      <div><div class="r-lbl">Round</div><div class="r-no" id="bo-rno">1</div></div>
+      <div id="bo-mult" style="display:none" class="mult-tag">×1</div>
+    </div>
+    <div class="case-card">
+      <div class="case-lbl">📋 Case Study</div>
+      <div class="case-txt" id="bo-case">Case study will appear here.</div>
+      <div id="bo-case-file" style="display:none;margin-top:8px"></div>
+    </div>
+    <!-- CAPTAIN: sees H/L buttons -->
+    <div id="captain-vote" style="display:none">
+      <div class="vote-lbl">You are the Captain — submit your team's final answer</div>
+      <div class="vote-btns">
+        <button class="vbtn H" id="vH-bo" onclick="selVote('H','bo')">H<span>HIGH</span></button>
+        <button class="vbtn L" id="vL-bo" onclick="selVote('L','bo')">L<span>LOW</span></button>
+      </div>
+      <button class="btn btn-primary" id="btn-sub-bo" onclick="openModal('bo')" disabled>Submit Team Answer</button>
+    </div>
+    <!-- MEMBER: sees captain's live selection -->
+    <div id="member-view" style="display:none">
+      <div class="live-ans">
+        <div class="live-ans-lbl">🟡 Captain's Current Selection</div>
+        <div class="live-ans-val" id="live-captain-ans">—</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px">Waiting for captain to submit team answer...</div>
+    </div>
+    <!-- SUBMITTED (both captain and member see this) -->
+    <div class="sub-card" id="bo-subcard" style="display:none">
+      <div class="sub-icon">✅</div>
+      <div class="sub-title">Team Answer Submitted</div>
+      <div class="sub-detail">Team voted: <span id="bo-sub-ans" class="atag"></span></div>
+      <div class="sub-detail" style="margin-top:6px">Waiting for all teams to submit...</div>
+    </div>
+    <!-- Scoreboard from previous rounds -->
+    <div id="bo-score-section" style="display:none">
+      <div class="sec-label" style="margin-bottom:8px">📊 Previous Rounds — Scoreboard</div>
       <div style="overflow-x:auto">
-        <table class="sc-table" id="wait-score-table">
-          <thead><tr id="wait-sc-thead"></tr></thead>
-          <tbody id="wait-sc-tbody"></tbody>
-          <tfoot><tr id="wait-sc-tfoot"></tr></tfoot>
+        <table class="sc-table">
+          <thead><tr id="bo-sc-th"></tr></thead>
+          <tbody id="bo-sc-tb"></tbody>
+          <tfoot><tr id="bo-sc-tf"></tr></tfoot>
         </table>
       </div>
     </div>
   </div>
 </div>
 
-<!-- SCREEN 4: MAIN ROOM (Phase 1) -->
+<!-- SCREEN 5: MAIN ROOM (Score Reveal) -->
 <div class="screen" id="s-main">
   <div class="hdr">
-    <div><div class="hdr-logo">🎯 Main Room</div><div class="hdr-sub">Individual Opinion</div></div>
+    <div><div class="hdr-logo">🎯 Main Room</div><div class="hdr-sub">Round Results</div></div>
     <div class="badge" id="main-badge">R1</div>
   </div>
   <div class="pbar">
@@ -226,112 +276,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div><div class="r-lbl">Round</div><div class="r-no" id="main-rno">1</div></div>
       <div id="main-mult" style="display:none" class="mult-tag">×1</div>
     </div>
-    <div class="case-card">
-      <div class="case-lbl">📋 Case Study</div>
-      <div class="case-txt" id="main-case">Case study will appear here.</div>
-      <div id="main-case-file" style="display:none;margin-top:8px"></div>
+    <div id="main-wait" class="wait-card">
+      <div class="spinner"></div>
+      <div class="wait-sub">Waiting for facilitator to reveal scores...</div>
     </div>
-    <div class="matrix-card">
-      <div class="sec-label" style="margin-bottom:10px">Points Matrix</div>
-      <table>
-        <thead><tr><th>Combination</th><th>HIGH gets</th><th>LOW gets</th></tr></thead>
-        <tbody>
-          <tr><td>4 HIGH</td><td class="l">−100 each</td><td>—</td></tr>
-          <tr><td>3H + 1L</td><td class="w">+100 each</td><td class="l">−300</td></tr>
-          <tr><td>2H + 2L</td><td class="l">−100 each</td><td class="l">−200 each</td></tr>
-          <tr><td>1H + 3L</td><td class="w">+300</td><td class="l">−100 each</td></tr>
-          <tr><td>4 LOW</td><td>—</td><td class="w">+100 each</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div id="main-vote-area">
-      <div class="vote-lbl">Your individual opinion (no points — for discussion reference)</div>
-      <div class="vote-btns" style="margin:10px 0">
-        <button class="vbtn H" id="vH-main" onclick="selVote('H','main')">H<span>HIGH</span></button>
-        <button class="vbtn L" id="vL-main" onclick="selVote('L','main')">L<span>LOW</span></button>
-      </div>
-      <button class="btn btn-primary" id="btn-sub-main" onclick="openModal('main')" disabled>Submit My Opinion</button>
-    </div>
-    <div class="sub-card" id="main-subcard" style="display:none">
-      <div class="sub-icon">✅</div>
-      <div class="sub-title">Opinion Submitted</div>
-      <div class="sub-detail">Your answer: <span id="main-sub-ans" class="atag"></span></div>
-      <div class="sub-detail" style="margin-top:6px">Waiting for Breakout to begin...</div>
-    </div>
-  </div>
-</div>
-
-<!-- SCREEN 5: BREAKOUT (Phase 2) -->
-<div class="screen" id="s-breakout">
-  <div class="hdr">
-    <div><div class="hdr-logo">🎯 Breakout</div><div class="hdr-sub">Team Decision</div></div>
-    <div class="badge" id="bo-badge">R1</div>
-  </div>
-  <div class="pbar">
-    <div class="pdot" id="b-dot"></div>
-    <div><div class="pnm" id="b-name"></div><div class="pteam" id="b-team"></div></div>
-  </div>
-  <div class="body">
-    <div class="timer-card">
-      <div class="timer-lbl">⏱ Time Remaining (IST)</div>
-      <div class="timer-val" id="timer-val">05:00</div>
-    </div>
-    <div class="r-banner">
-      <div><div class="r-lbl">Round</div><div class="r-no" id="bo-rno">1</div></div>
-      <div id="bo-mult" style="display:none" class="mult-tag">×1</div>
-    </div>
-    <div id="team-vote-area">
-      <div class="vote-lbl">Discuss with your team — one member submits the final answer</div>
-      <div class="vote-btns" style="margin:10px 0">
-        <button class="vbtn H" id="vH-bo" onclick="selVote('H','bo')">H<span>HIGH</span></button>
-        <button class="vbtn L" id="vL-bo" onclick="selVote('L','bo')">L<span>LOW</span></button>
-      </div>
-      <button class="btn btn-primary" id="btn-sub-bo" onclick="openModal('bo')" disabled>Submit Team Answer</button>
-    </div>
-    <div class="sub-card" id="bo-subcard" style="display:none">
-      <div class="sub-icon">✅</div>
-      <div class="sub-title">Team Answer Submitted</div>
-      <div class="sub-detail">Team voted: <span id="bo-sub-ans" class="atag"></span></div>
-      <div class="sub-detail" style="margin-top:6px">Waiting for scores to be revealed...</div>
-    </div>
-    <!-- Scoreboard visible in breakout after previous rounds -->
-    <div id="bo-score-section" style="display:none">
-      <div class="sec-label" style="margin-bottom:10px">📊 Previous Rounds — Scoreboard</div>
-      <div style="overflow-x:auto">
-        <table class="sc-table" id="bo-score-table">
-          <thead><tr id="bo-sc-thead"></tr></thead>
-          <tbody id="bo-sc-tbody"></tbody>
-          <tfoot><tr id="bo-sc-tfoot"></tr></tfoot>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- SCREEN 6: SCORES -->
-<div class="screen" id="s-scores">
-  <div class="hdr">
-    <div><div class="hdr-logo">🎯 Round Result</div><div class="hdr-sub" id="sc-ev-name"></div></div>
-    <div class="badge" id="sc-badge">R1</div>
-  </div>
-  <div class="pbar">
-    <div class="pdot" id="sc-dot"></div>
-    <div><div class="pnm" id="sc-name"></div><div class="pteam" id="sc-team"></div></div>
-  </div>
-  <div class="body">
-    <div>
-      <div class="sec-label" style="margin-bottom:10px">🏆 Score Board — All Rounds</div>
+    <div id="main-scores-section" style="display:none">
+      <div class="sec-label" style="margin-bottom:8px">🏆 Scoreboard — All Rounds</div>
       <div style="overflow-x:auto">
         <table class="sc-table">
-          <thead><tr id="sc-thead"></tr></thead>
-          <tbody id="sc-tbody"></tbody>
-          <tfoot><tr id="sc-tfoot"></tr></tfoot>
+          <thead><tr id="main-sc-th"></tr></thead>
+          <tbody id="main-sc-tb"></tbody>
+          <tfoot><tr id="main-sc-tf"></tr></tfoot>
         </table>
       </div>
     </div>
-    <div class="wait-card">
+    <div id="main-next-wait" class="wait-card" style="display:none">
       <div class="spinner"></div>
-      <div class="wait-sub">Waiting for next round...</div>
+      <div class="wait-sub">Waiting for next round to begin...</div>
     </div>
   </div>
 </div>
@@ -351,13 +312,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="toast" id="toast"></div>
 
 <script>
-const SUPA_URL='https://wrzpgultvahxbrgooibn.supabase.co';
-const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndyenBndWx0dmFoeGJyZ29vaWJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzc2MTcsImV4cCI6MjA5MzExMzYxN30.sZM4GQiwom34d7TjeK_Jc_n8KYoC8VhI48jfq71dwb8';
+const SURL='https://wrzpgultvahxbrgooibn.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndyenBndWx0dmFoeGJyZ29vaWJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzc2MTcsImV4cCI6MjA5MzExMzYxN30.sZM4GQiwom34d7TjeK_Jc_n8KYoC8VhI48jfq71dwb8';
+const H=()=>({'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':'application/json','Prefer':'return=representation'});
+const GET=(t,q='')=>fetch(`${SURL}/rest/v1/${t}?${q}`,{headers:H()}).then(r=>r.json());
 
-const hdr=()=>({'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=representation'});
-const GET=(t,q='')=>fetch(`${SUPA_URL}/rest/v1/${t}?${q}`,{headers:hdr()}).then(r=>r.json());
-
-let P={pin:'',session:null,participant:null,team:null,round:null,vote:null,ctx:null,pollT:null,timerT:null};
+let P={pin:'',session:null,participant:null,team:null,round:null,vote:null,ctx:null,pollT:null,timerT:null,isCapt:false};
 
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('s-'+id).classList.add('active');}
 function toast(msg,type='info'){const t=document.getElementById('toast');t.className='toast '+(type==='success'?'ok':type==='error'?'err':'info');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
@@ -368,14 +328,16 @@ function pd(){P.pin=P.pin.slice(0,-1);document.getElementById('pin-err').textCon
 function updPin(){for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);d.textContent=i<P.pin.length?'●':'';d.className='pdot-box'+(i<P.pin.length?' filled':'');}}
 
 async function verPin(){
-  document.getElementById('pin-err').textContent='';
-  const res=await GET('ta_sessions','pin=eq.'+P.pin+'&select=*');
-  if(!res||!res.length){document.getElementById('pin-err').textContent='Wrong PIN. Try again.';P.pin='';updPin();return;}
-  const session=res[0];
-  if(session.status==='setup'){document.getElementById('pin-err').textContent='Session not started yet. Wait for facilitator.';P.pin='';updPin();return;}
-  if(session.status==='complete'){document.getElementById('pin-err').textContent='This session has ended.';P.pin='';updPin();return;}
-  P.session=session;
-  loadNames();
+  document.getElementById('pin-err').textContent='Checking...';
+  try{
+    const res=await GET('ta_sessions','pin=eq.'+P.pin+'&select=*');
+    if(!res||!res.length){document.getElementById('pin-err').textContent='Wrong PIN. Try again.';P.pin='';updPin();return;}
+    const s=res[0];
+    if(s.status==='setup'){document.getElementById('pin-err').textContent='Session not started yet. Wait for facilitator.';P.pin='';updPin();return;}
+    if(s.status==='complete'){document.getElementById('pin-err').textContent='This session has ended.';P.pin='';updPin();return;}
+    P.session=s;
+    loadNames();
+  }catch(e){document.getElementById('pin-err').textContent='Connection error. Try again.';P.pin='';updPin();}
 }
 
 // NAMES
@@ -384,37 +346,30 @@ async function loadNames(){
   show('name');
   const parts=await GET('ta_participants','event_id=eq.'+P.session.event_id+'&select=*,ta_teams(name,color)&order=name');
   const list=document.getElementById('name-list');
-  if(!parts||!parts.length){list.innerHTML='<div class="wait-card"><div class="wait-sub">No participants found. Contact facilitator.</div></div>';return;}
+  if(!parts||!parts.length){list.innerHTML='<div class="wait-card"><div class="wait-sub">No participants found.</div></div>';return;}
   list.innerHTML='';
   parts.forEach(p=>{
     const t=p.ta_teams;const c=t?.color||'#3B82F6';
     const taken=p.is_present===true;
     const card=document.createElement('div');
     card.className='name-card'+(taken?' taken':'');
-    card.innerHTML=`<div class="nav" style="background:${taken?'#33415522':c+'22'};color:${taken?'var(--muted)':c}">${p.name.charAt(0)}</div>
+    card.innerHTML=`<div class="av" style="background:${taken?'#33415522':c+'22'};color:${taken?'var(--muted)':c}">${p.name.charAt(0)}</div>
       <div><div class="ni-name" style="${taken?'color:var(--muted)':''}">${p.name}</div>
-      <div class="ni-team">${t?.name||''}${p.is_captain?' 👑':''}</div></div>
-      <div style="margin-left:auto;font-size:12px;color:var(--muted)">${taken?'✅ Joined':''}</div>`;
-    if(!taken){
-      card.onclick=()=>{
-        document.querySelectorAll('.name-card').forEach(c=>{c.style.display='none';});
-        card.style.display='flex';
-        card.classList.add('sel');
-        P.participant=p;P.team=t;
-        document.getElementById('btn-confirm-name').disabled=false;
-        const notYou=document.getElementById('not-you-link');
-        if(notYou)notYou.style.display='block';
-      };
-    }
+      <div class="ni-team">${t?.name||'No team'}${p.is_captain?' 👑':''}</div></div>
+      <div style="margin-left:auto;font-size:12px;color:var(--muted)">${taken?'✅':''}  </div>`;
+    if(!taken){card.onclick=()=>{
+      document.querySelectorAll('.name-card').forEach(c=>{c.style.display='none';});
+      card.style.display='flex';card.classList.add('sel');
+      P.participant=p;P.team=t;
+      document.getElementById('btn-confirm-name').disabled=false;
+      document.getElementById('not-you-link').style.display='block';
+    };}
     list.appendChild(card);
   });
 }
 
 function resetNameList(){
-  document.querySelectorAll('.name-card').forEach(c=>{
-    if(!c.classList.contains('taken'))c.style.display='flex';
-    c.classList.remove('sel');
-  });
+  document.querySelectorAll('.name-card').forEach(c=>{if(!c.classList.contains('taken'))c.style.display='flex';c.classList.remove('sel');});
   document.getElementById('not-you-link').style.display='none';
   document.getElementById('btn-confirm-name').disabled=true;
   P.participant=null;P.team=null;
@@ -422,7 +377,7 @@ function resetNameList(){
 
 async function confirmName(){
   if(!P.participant)return;
-  await fetch(`${SUPA_URL}/rest/v1/ta_participants?id=eq.${P.participant.id}`,{method:'PATCH',headers:hdr(),body:JSON.stringify({is_present:true})});
+  await fetch(`${SURL}/rest/v1/ta_participants?id=eq.${P.participant.id}`,{method:'PATCH',headers:H(),body:JSON.stringify({is_present:true})});
   setupBars();
   show('wait');
   document.getElementById('wait-ev-name').textContent=P.session.name;
@@ -431,74 +386,116 @@ async function confirmName(){
 
 function setupBars(){
   const p=P.participant;const t=P.team;const c=t?.color||'#3B82F6';
-  ['w-dot','m-dot','b-dot','sc-dot'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.background=c;});
-  ['w-name','m-name','b-name','sc-name'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=p.name;});
-  ['w-team','m-team','b-team','sc-team'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t?.name||'';});
+  ['w-dot','m-dot','b-dot'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.background=c;});
+  ['w-name','m-name','b-name'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=p.name;});
+  ['w-team','m-team','b-team'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t?.name||'';});
   document.getElementById('wait-pbar').style.display='flex';
-  document.getElementById('sc-ev-name').textContent=P.session.name;
 }
 
 // POLL
 function startPoll(){if(P.pollT)clearInterval(P.pollT);P.pollT=setInterval(poll,3000);poll();}
+
 async function poll(){
   try{
-    const ev=await GET('ta_sessions','id=eq.'+P.session.id+'&select=*');
-    if(!ev||!ev[0])return;
-    P.session=ev[0];
+    const sv=await GET('ta_sessions','id=eq.'+P.session.id+'&select=*');
+    if(!sv||!sv[0])return;
+    P.session=sv[0];
     if(P.session.current_round>0){
       const rr=await GET('ta_rounds','session_id=eq.'+P.session.id+'&round_number=eq.'+P.session.current_round+'&select=*');
       if(rr&&rr[0])P.round=rr[0];
     }
+    // Refresh captain status from DB (admin may have changed it)
+    const fresh=await GET('ta_participants','id=eq.'+P.participant.id+'&select=is_captain');
+    if(fresh&&fresh[0])P.isCapt=fresh[0].is_captain===true;
     route();
   }catch(e){console.error(e);}
 }
 
 async function route(){
   const st=P.session.status;const rnd=P.round;
-  if(st==='setup'||st==='complete'){show('wait');if(st==='complete')document.getElementById('wait-badge').textContent='DONE';return;}
-  if(st==='registration'&&rnd){
-    const ex=await GET('ta_individual_answers','round_id=eq.'+rnd.id+'&participant_id=eq.'+P.participant.id+'&select=*');
-    show('main');updMain(rnd);
-    if(ex&&ex.length)showMainDone(ex[0].answer);
-    else{
-      document.getElementById('main-vote-area').style.display='block';
-      document.getElementById('main-subcard').style.display='none';
-    }
+  if(st==='setup'||st==='complete'){
+    show('wait');
+    if(st==='complete')document.getElementById('wait-badge').textContent='DONE';
+    return;
+  }
+  if(st==='registration'){
+    // Show waiting + team list
+    show('wait');
+    document.getElementById('wait-badge').textContent='PRESENT ✅';
+    await loadTeamList();
     return;
   }
   if(st==='breakout'&&rnd){
-    show('breakout');updBo(rnd);startTimer(rnd);
-    // Load previous rounds scoreboard in breakout
-    loadBoScores();
+    show('breakout');
+    updBo(rnd);
+    startTimer(rnd);
+    await loadBoScores();
+    // Check if team already submitted
     const ta=await GET('ta_team_answers','round_id=eq.'+rnd.id+'&team_id=eq.'+P.participant.team_id+'&select=*');
     if(ta&&ta.length){showBoDone(ta[0].answer);return;}
-    document.getElementById('team-vote-area').style.display='block';
-    document.getElementById('bo-subcard').style.display='none';
+    // Show captain or member view
+    if(P.isCapt){
+      document.getElementById('captain-vote').style.display='block';
+      document.getElementById('member-view').style.display='none';
+    }else{
+      document.getElementById('captain-vote').style.display='none';
+      document.getElementById('member-view').style.display='block';
+      // Poll captain's live selection
+      pollCaptainAnswer(rnd);
+    }
     return;
   }
-  if(st==='scoring'&&rnd){show('scores');updScores(rnd);return;}
+  if(st==='scoring'&&rnd){
+    show('main');
+    updMain(rnd);
+    document.getElementById('main-wait').style.display='none';
+    document.getElementById('main-scores-section').style.display='block';
+    document.getElementById('main-next-wait').style.display='block';
+    await buildScoreTable('main-sc-th','main-sc-tb','main-sc-tf');
+    return;
+  }
 }
 
-function updMain(r){
-  document.getElementById('main-rno').textContent=r.round_number;
-  document.getElementById('main-badge').textContent='R'+r.round_number;
-  const caseText=r.case_study||'';
-  const caseUrl=r.case_study_url||'';
-  document.getElementById('main-case').textContent=caseText||(caseUrl?'':'Case study will appear here.');
-  const cfd=document.getElementById('main-case-file');
-  if(caseUrl){
-    cfd.style.display='block';
-    const isImg=/\.(jpg|jpeg|png)$/i.test(caseUrl);
-    cfd.innerHTML=isImg?`<img src="${caseUrl}" style="width:100%;border-radius:8px;margin-top:8px"/>`:`<a href="${caseUrl}" target="_blank" style="display:flex;align-items:center;gap:8px;background:rgba(245,158,11,0.1);border:1px solid var(--accent);border-radius:8px;padding:12px;color:var(--accent);text-decoration:none;font-weight:600;margin-top:8px">📄 Open Case Study PDF</a>`;
-  }else{cfd.style.display='none';}
-  const m=document.getElementById('main-mult');
-  if(r.multiplier>1){m.style.display='block';m.textContent='×'+r.multiplier;}else m.style.display='none';
+// TEAM LIST (shown in waiting screen before breakout)
+async function loadTeamList(){
+  const teams=await GET('ta_teams','event_id=eq.'+P.session.event_id+'&order=created_at')||[];
+  const parts=await GET('ta_participants','event_id=eq.'+P.session.event_id+'&select=*,ta_teams(name,color)&is_present=eq.true&order=name')||[];
+  const sec=document.getElementById('team-list-section');
+  const cont=document.getElementById('team-list-content');
+  if(!teams.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  cont.innerHTML='';
+  teams.forEach(tm=>{
+    const members=parts.filter(p=>p.team_id===tm.id);
+    if(!members.length)return;
+    cont.innerHTML+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="width:10px;height:10px;border-radius:50%;background:${tm.color}"></div>
+        <strong style="font-size:14px">${tm.name}</strong>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${members.map(p=>`<span style="background:var(--s2);border:1px solid ${p.is_captain?tm.color:'var(--border)'};border-radius:20px;padding:3px 10px;font-size:12px">${p.is_captain?'👑 ':''}${p.name}</span>`).join('')}
+      </div>
+    </div>`;
+  });
 }
 
-function showMainDone(ans){
-  document.getElementById('main-vote-area').style.display='none';
-  document.getElementById('main-subcard').style.display='block';
-  const el=document.getElementById('main-sub-ans');el.textContent=ans==='H'?'HIGH':'LOW';el.className='atag '+ans;
+// CAPTAIN LIVE ANSWER POLL (for non-captain members)
+let captPollT=null;
+async function pollCaptainAnswer(rnd){
+  if(captPollT)clearInterval(captPollT);
+  captPollT=setInterval(async()=>{
+    // Get captain's individual answer as proxy for live selection
+    const caps=await GET('ta_participants','team_id=eq.'+P.participant.team_id+'&is_captain=eq.true&select=id');
+    if(!caps||!caps.length)return;
+    // Check if team answer submitted
+    const ta=await GET('ta_team_answers','round_id=eq.'+rnd.id+'&team_id=eq.'+P.participant.team_id+'&select=answer');
+    if(ta&&ta.length){
+      clearInterval(captPollT);
+      showBoDone(ta[0].answer);
+      return;
+    }
+  },3000);
 }
 
 function updBo(r){
@@ -506,129 +503,103 @@ function updBo(r){
   document.getElementById('bo-badge').textContent='R'+r.round_number;
   const m=document.getElementById('bo-mult');
   if(r.multiplier>1){m.style.display='block';m.textContent='×'+r.multiplier;}else m.style.display='none';
+  // Case study
+  const ct=r.case_study||'';const cu=r.case_study_url||'';
+  document.getElementById('bo-case').textContent=ct||(cu?'':'Case study will appear here.');
+  const cf=document.getElementById('bo-case-file');
+  if(cu){cf.style.display='block';const isImg=/\.(jpg|jpeg|png)$/i.test(cu);
+    cf.innerHTML=isImg?`<img src="${cu}" style="width:100%;border-radius:8px;margin-top:8px"/>`:`<a href="${cu}" target="_blank" style="display:flex;align-items:center;gap:8px;background:rgba(245,158,11,0.1);border:1px solid var(--accent);border-radius:8px;padding:12px;color:var(--accent);text-decoration:none;font-weight:600;margin-top:8px">📄 Open Case Study PDF</a>`;
+  }else cf.style.display='none';
+  // Captain badge
+  if(P.isCapt)document.getElementById('b-cap').style.display='block';
+  else document.getElementById('b-cap').style.display='none';
+}
+
+function updMain(r){
+  document.getElementById('main-rno').textContent=r.round_number;
+  document.getElementById('main-badge').textContent='R'+r.round_number;
+  const m=document.getElementById('main-mult');
+  if(r.multiplier>1){m.style.display='block';m.textContent='×'+r.multiplier;}else m.style.display='none';
 }
 
 function showBoDone(ans){
-  // FIX: correct element IDs
-  document.getElementById('team-vote-area').style.display='none';
+  document.getElementById('captain-vote').style.display='none';
+  document.getElementById('member-view').style.display='none';
   document.getElementById('bo-subcard').style.display='block';
   const el=document.getElementById('bo-sub-ans');
-  el.textContent=ans==='H'?'HIGH':'LOW';
-  el.className='atag '+ans;
+  el.textContent=ans==='H'?'HIGH':'LOW';el.className='atag '+ans;
+  if(captPollT)clearInterval(captPollT);
 }
 
-// TIMER FIX — Supabase sends UTC without Z, JS parses as local IST, so we must treat it as UTC
+// TIMER — UTC fix
 function startTimer(r){
   if(P.timerT)clearInterval(P.timerT);
   const el=document.getElementById('timer-val');
   const totalSecs=r.timer_seconds||300;
-
   if(!r.timer_started_at){
     let rem=totalSecs;
-    function tickFull(){
-      const m=Math.floor(rem/60).toString().padStart(2,'0');
-      const s=(rem%60).toString().padStart(2,'0');
-      el.textContent=m+':'+s;
-      el.className='timer-val'+(rem<=30?' urgent':'');
-      if(rem<=0){clearInterval(P.timerT);return;}
-      rem--;
-    }
-    tickFull();P.timerT=setInterval(tickFull,1000);return;
+    const t=()=>{const m=Math.floor(rem/60).toString().padStart(2,'0');const s=(rem%60).toString().padStart(2,'0');el.textContent=m+':'+s;el.className='timer-val'+(rem<=30?' urgent':'');if(rem<=0){clearInterval(P.timerT);return;}rem--;};
+    t();P.timerT=setInterval(t,1000);return;
   }
-
-  // Supabase stores UTC but sends WITHOUT Z — so JS reads as local IST
-  // Fix: append +00:00 to force UTC parsing regardless of local timezone
+  // Supabase sends UTC without Z — force UTC by appending Z
   let raw=r.timer_started_at.trim();
-  if(!raw.endsWith('Z')&&!raw.includes('+')&&!raw.includes('-',10)){
-    raw=raw+'Z'; // treat as UTC
-  }
+  if(!raw.endsWith('Z')&&!raw.includes('+')&&!raw.includes('-',10))raw+='Z';
   const startMs=Date.parse(raw);
-  const elapsedSecs=isNaN(startMs)?0:Math.floor((Date.now()-startMs)/1000);
-  const remSecs=Math.max(0,totalSecs-elapsedSecs);
-
+  const elapsed=isNaN(startMs)?0:Math.floor((Date.now()-startMs)/1000);
+  const remSecs=Math.max(0,totalSecs-elapsed);
   const endMs=Date.now()+(remSecs*1000);
-  function tick(){
-    const rem=Math.max(0,Math.floor((endMs-Date.now())/1000));
-    const m=Math.floor(rem/60).toString().padStart(2,'0');
-    const s=(rem%60).toString().padStart(2,'0');
-    el.textContent=m+':'+s;
-    el.className='timer-val'+(rem<=30?' urgent':'');
-    if(rem<=0)clearInterval(P.timerT);
-  }
-  tick();P.timerT=setInterval(tick,1000);
+  const t=()=>{const rem=Math.max(0,Math.floor((endMs-Date.now())/1000));const m=Math.floor(rem/60).toString().padStart(2,'0');const s=(rem%60).toString().padStart(2,'0');el.textContent=m+':'+s;el.className='timer-val'+(rem<=30?' urgent':'');if(rem<=0)clearInterval(P.timerT);};
+  t();P.timerT=setInterval(t,1000);
 }
 
-// SCOREBOARD — shared builder for all screens
-async function buildScoreTable(theadId,tbodyId,tfootId){
-  const allScores=await GET('ta_scores','session_id=eq.'+P.session.id+'&select=*,ta_teams(name,color),ta_rounds(round_number,multiplier)&order=ta_rounds(round_number)')||[];
+// SCOREBOARD
+async function buildScoreTable(thId,tbId,tfId){
+  const allSc=await GET('ta_scores','session_id=eq.'+P.session.id+'&select=*,ta_teams(name,color),ta_rounds(round_number,multiplier)&order=ta_rounds(round_number)')||[];
   const teams=await GET('ta_teams','event_id=eq.'+P.session.event_id+'&order=created_at')||[];
-  if(!teams.length||!allScores.length)return false;
-
-  const roundNos=[...new Set(allScores.map(s=>s.ta_rounds?.round_number))].filter(Boolean).sort((a,b)=>a-b);
-  const mults={};allScores.forEach(s=>{if(s.ta_rounds)mults[s.ta_rounds.round_number]=s.ta_rounds.multiplier||1;});
-  const teamMap={};
-  allScores.forEach(s=>{
-    if(!teamMap[s.team_id])teamMap[s.team_id]={team:s.ta_teams,rounds:{},cum:0};
-    if(s.ta_rounds)teamMap[s.team_id].rounds[s.ta_rounds.round_number]=s.round_points;
-    teamMap[s.team_id].cum=s.cumulative_points||0;
-  });
-
-  const thead=document.getElementById(theadId);
-  thead.innerHTML='<th class="team-col">Team</th>';
-  roundNos.forEach(rn=>{thead.innerHTML+=`<th>R${rn}${mults[rn]>1?'<br><span style="color:var(--accent);font-size:10px">×'+mults[rn]+'</span>':''}</th>`;});
-  thead.innerHTML+='<th style="color:var(--accent)">TOTAL</th>';
-
-  const tbody=document.getElementById(tbodyId);
-  tbody.innerHTML='';
-  const sorted=teams.map(t=>({...t,...(teamMap[t.id]||{rounds:{},cum:0,team:t})})).sort((a,b)=>(b.cum||0)-(a.cum||0));
+  if(!teams.length||!allSc.length)return false;
+  const rns=[...new Set(allSc.map(s=>s.ta_rounds?.round_number))].filter(Boolean).sort((a,b)=>a-b);
+  const mults={};allSc.forEach(s=>{if(s.ta_rounds)mults[s.ta_rounds.round_number]=s.ta_rounds.multiplier||1;});
+  const tm={};allSc.forEach(s=>{if(!tm[s.team_id])tm[s.team_id]={team:s.ta_teams,r:{},c:0};if(s.ta_rounds)tm[s.team_id].r[s.ta_rounds.round_number]=s.round_points;tm[s.team_id].c=s.cumulative_points||0;});
+  const th=document.getElementById(thId);th.innerHTML='<th class="tc">Team</th>';
+  rns.forEach(n=>{th.innerHTML+=`<th>R${n}${mults[n]>1?'<br><span style="color:var(--accent);font-size:10px">×'+mults[n]+'</span>':''}</th>`;});
+  th.innerHTML+='<th style="color:var(--accent)">TOTAL</th>';
+  const tb=document.getElementById(tbId);tb.innerHTML='';
+  const sorted=teams.map(t=>({...t,...(tm[t.id]||{r:{},c:0,team:t})})).sort((a,b)=>(b.c||0)-(a.c||0));
   sorted.forEach(t=>{
     const isMe=P.participant&&t.id===P.participant.team_id;
-    const td=teamMap[t.id]||{rounds:{},cum:0};
-    let row=`<tr class="${isMe?'my-team':''}"><td class="team-name-cell"><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:${t.color||'#3B82F6'};display:inline-block"></span>${t.name}${isMe?' 👤':''}</span></td>`;
-    roundNos.forEach(rn=>{const pts=td.rounds[rn];row+=pts===undefined?'<td class="pts-zero">—</td>':`<td class="${pts>0?'pts-pos':pts<0?'pts-neg':'pts-zero'}">${pts>0?'+':''}${pts}</td>`;});
-    const cum=td.cum||0;
-    row+=`<td class="${cum>0?'pts-pos':cum<0?'pts-neg':'pts-zero'}" style="font-size:14px">${cum>0?'+':''}${cum}</td></tr>`;
-    tbody.innerHTML+=row;
+    const td=tm[t.id]||{r:{},c:0};
+    let row=`<tr class="${isMe?'mt':''}"><td class="tnc"><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${t.color||'#3B82F6'};display:inline-block"></span>${t.name}${isMe?' 👤':''}</span></td>`;
+    rns.forEach(n=>{const p=td.r[n];row+=p===undefined?'<td class="pz">—</td>':`<td class="${p>0?'pp':p<0?'pn':'pz'}">${p>0?'+':''}${p}</td>`;});
+    const c=td.c||0;row+=`<td class="${c>0?'pp':c<0?'pn':'pz'}" style="font-size:14px">${c>0?'+':''}${c}</td></tr>`;
+    tb.innerHTML+=row;
   });
-
-  const tfoot=document.getElementById(tfootId);
-  tfoot.innerHTML='<td class="total-lbl">Net Cash</td>';
-  roundNos.forEach(rn=>{const tot=Object.values(teamMap).reduce((s,t)=>{const p=t.rounds[rn];return s+(p||0);},0);tfoot.innerHTML+=`<td class="${tot>0?'pts-pos':tot<0?'pts-neg':'pts-zero'}">${tot>0?'+':''}${tot}</td>`;});
-  const grand=Object.values(teamMap).reduce((s,t)=>s+(t.cum||0),0);
-  tfoot.innerHTML+=`<td class="${grand>0?'pts-pos':grand<0?'pts-neg':'pts-zero'}">${grand>0?'+':''}${grand}</td>`;
+  const tf=document.getElementById(tfId);tf.innerHTML='<td style="color:var(--accent);font-weight:700">Net Cash</td>';
+  rns.forEach(n=>{const tot=Object.values(tm).reduce((s,t)=>s+(t.r[n]||0),0);tf.innerHTML+=`<td class="${tot>0?'pp':tot<0?'pn':'pz'}">${tot>0?'+':''}${tot}</td>`;});
+  const grand=Object.values(tm).reduce((s,t)=>s+(t.c||0),0);
+  tf.innerHTML+=`<td class="${grand>0?'pp':grand<0?'pn':'pz'}">${grand>0?'+':''}${grand}</td>`;
   return true;
 }
 
-async function updScores(r){
-  document.getElementById('sc-badge').textContent='R'+r.round_number;
-  await buildScoreTable('sc-thead','sc-tbody','sc-tfoot');
-}
-
 async function loadBoScores(){
-  // Show previous rounds scoreboard in breakout room
-  const ok=await buildScoreTable('bo-sc-thead','bo-sc-tbody','bo-sc-tfoot');
+  const ok=await buildScoreTable('bo-sc-th','bo-sc-tb','bo-sc-tf');
   document.getElementById('bo-score-section').style.display=ok?'block':'none';
 }
 
 // VOTING
 function selVote(v,ctx){
   P.vote=v;P.ctx=ctx;
-  if(ctx==='main'){
-    document.getElementById('vH-main').className='vbtn H'+(v==='H'?' sel':'');
-    document.getElementById('vL-main').className='vbtn L'+(v==='L'?' sel':'');
-    document.getElementById('btn-sub-main').disabled=false;
-  }else{
-    document.getElementById('vH-bo').className='vbtn H'+(v==='H'?' sel':'');
-    document.getElementById('vL-bo').className='vbtn L'+(v==='L'?' sel':'');
-    document.getElementById('btn-sub-bo').disabled=false;
-  }
+  document.getElementById('vH-bo').className='vbtn H'+(v==='H'?' sel':'');
+  document.getElementById('vL-bo').className='vbtn L'+(v==='L'?' sel':'');
+  document.getElementById('btn-sub-bo').disabled=false;
+  // Show live selection for captain (others poll this)
+  const la=document.getElementById('live-captain-ans');
+  if(la){la.textContent=v==='H'?'HIGH':'LOW';la.className='live-ans-val '+v;}
 }
 
 function openModal(ctx){
   P.ctx=ctx;const v=P.vote;if(!v)return;
-  const label=v==='H'?'HIGH':'LOW';const isTeam=ctx==='bo';
-  document.getElementById('modal-title').textContent='Submit '+(isTeam?'Team':'Individual')+' Answer: '+label+'?';
-  document.getElementById('modal-body').textContent='You are about to submit '+label+' as your '+(isTeam?"team's":'individual')+' answer. This cannot be changed.';
+  document.getElementById('modal-title').textContent='Submit Team Answer: '+(v==='H'?'HIGH':'LOW')+'?';
+  document.getElementById('modal-body').textContent='Once submitted this cannot be changed. Your team\'s final answer will be '+(v==='H'?'HIGH':'LOW')+'.';
   document.getElementById('modal').classList.add('open');
 }
 
@@ -636,40 +607,15 @@ function closeModal(){document.getElementById('modal').classList.remove('open');
 
 async function submitVote(){
   closeModal();
-  const v=P.vote;const ctx=P.ctx;const r=P.round;
+  const v=P.vote;const r=P.round;
   if(!v||!r)return;
-
-  if(ctx==='main'){
-    // Individual answer
-    const res=await fetch(`${SUPA_URL}/rest/v1/ta_individual_answers`,{
-      method:'POST',
-      headers:{...hdr(),'Prefer':'resolution=merge-duplicates,return=representation'},
-      body:JSON.stringify({
-        session_id:P.session.id,
-        round_id:r.id,
-        participant_id:P.participant.id,
-        answer:v
-      })
-    });
-    if(res.ok){showMainDone(v);toast('Opinion submitted!','success');}
-    else{const err=await res.json();console.error('Submit error:',err);toast('Error: '+(err.message||'Try again'),'error');}
-
-  }else{
-    // Team answer
-    const res=await fetch(`${SUPA_URL}/rest/v1/ta_team_answers`,{
-      method:'POST',
-      headers:{...hdr(),'Prefer':'resolution=merge-duplicates,return=representation'},
-      body:JSON.stringify({
-        session_id:P.session.id,
-        round_id:r.id,
-        team_id:P.participant.team_id,
-        answer:v,
-        submitted_by:P.participant.id
-      })
-    });
-    if(res.ok){showBoDone(v);toast('Team answer submitted!','success');}
-    else{const err=await res.json();console.error('Submit error:',err);toast('Error: '+(err.message||'Try again'),'error');}
-  }
+  const res=await fetch(`${SURL}/rest/v1/ta_team_answers`,{
+    method:'POST',
+    headers:{...H(),'Prefer':'resolution=merge-duplicates,return=representation'},
+    body:JSON.stringify({session_id:P.session.id,round_id:r.id,team_id:P.participant.team_id,answer:v,submitted_by:P.participant.id})
+  });
+  if(res.ok){showBoDone(v);toast('Team answer submitted!','success');}
+  else{const err=await res.json();console.error('Submit error:',err);toast('Error: '+(err.message||'Try again'),'error');}
 }
 </script>
 </body>
