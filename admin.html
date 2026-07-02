@@ -98,6 +98,19 @@ tr:hover td{background:var(--sur2);}
 .toast.er{border-color:var(--hi);color:var(--hi);}
 .toast.in{border-color:var(--acc);color:var(--acc);}
 .noev{text-align:center;padding:40px;color:var(--mut);font-size:14px;}
+/* PRESENCE MATRIX */
+.pmatrix{display:grid;gap:10px;margin-top:10px;}
+.pmatrix-col{background:var(--sur2);border-radius:10px;padding:12px;}
+.pmatrix-team{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bdr);}
+.pmatrix-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.pmatrix-name{font-weight:700;font-size:14px;flex:1;}
+.pmatrix-count{font-size:11px;color:var(--mut);}
+.pmember{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;margin-bottom:4px;font-size:13px;}
+.pmember.present{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);}
+.pmember.absent{background:var(--sur);border:1px solid var(--bdr);color:var(--mut);}
+.pmember-name{font-weight:500;flex:1;}
+.pmember-status{font-size:12px;}
+.move-sel{background:var(--sur2);border:1px solid var(--bdr);border-radius:6px;color:var(--txt);padding:3px 6px;font-size:11px;font-family:'Inter',sans-serif;margin-left:6px;}
 .frow{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;}
 .fg{flex:1;min-width:130px;}
 .fg label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px;}
@@ -218,8 +231,8 @@ tr:hover td{background:var(--sur2);}
           </div>
         </div>
         <div class="sc">
-          <div class="sct">Participant Presence</div>
-          <div class="pchips" id="d-presence"><span style="color:var(--mut);font-size:13px">No session active</span></div>
+          <div class="sct">Participant Presence — Team Matrix</div>
+          <div id="d-presence-matrix"><span style="color:var(--mut);font-size:13px">No session active</span></div>
         </div>
         <div class="sc">
           <div class="sct">Individual Opinions — Current Round</div>
@@ -938,18 +951,28 @@ async function refreshDash(){
   }
   else if(st==='complete'){document.getElementById('ctrl-setup').style.display='none';}
 
+  // Show presence matrix — during registration use is_present flag, during rounds use answers
+  {
+    let pids=new Set();
+    if(SESS.current_round>0){
+      const rnd=await getCurRound();
+      if(rnd){
+        const ops=await GET('ta_individual_answers','round_id=eq.'+rnd.id+'&select=participant_id')||[];
+        pids=new Set(ops.map(o=>o.participant_id));
+      }
+    } else {
+      // Registration phase — use is_present flag
+      const freshParts=await GET('ta_participants','event_id=eq.'+EV.id+'&is_present=eq.true&select=id')||[];
+      freshParts.forEach(p=>pids.add(p.id));
+    }
+    document.getElementById('d-present').textContent=pids.size;
+    renderPresenceMatrix(pids);
+  }
   if(SESS.current_round>0){
     const rnd=await getCurRound();
     if(rnd){
       const ops=await GET('ta_individual_answers','round_id=eq.'+rnd.id+'&select=participant_id')||[];
       const pids=new Set(ops.map(o=>o.participant_id));
-      document.getElementById('d-present').textContent=pids.size;
-      const pg=document.getElementById('d-presence');
-      pg.innerHTML='';
-      PARTS.forEach(p=>{
-        const on=pids.has(p.id);
-        pg.innerHTML+=`<div class="pchip ${on?'yes':'no'}">${on?'✅':'⏳'} ${p.name}</div>`;
-      });
       // Show team answer count in breakout
       if(SESS.status==='breakout'){
         const tas=await GET('ta_team_answers','round_id=eq.'+rnd.id+'&select=team_id,answer,ta_teams(name,color)')||[];
@@ -964,6 +987,80 @@ async function refreshDash(){
       }
     }
   }
+}
+
+async function renderPresenceMatrix(presentIds){
+  const el=document.getElementById('d-presence-matrix');
+  if(!el)return;
+  if(!TEAMS.length){el.innerHTML='<span style="color:var(--mut);font-size:13px">No teams created yet</span>';return;}
+
+  // Grid columns = number of teams
+  el.innerHTML='';
+  el.style.display='grid';
+  el.style.gridTemplateColumns=`repeat(${Math.min(TEAMS.length,4)},1fr)`;
+  el.style.gap='10px';
+
+  TEAMS.forEach(tm=>{
+    const members=PARTS.filter(p=>p.team_id===tm.id);
+    const presentCount=members.filter(p=>presentIds.has(p.id)).length;
+    let html=`<div class="pmatrix-col">
+      <div class="pmatrix-team">
+        <div class="pmatrix-dot" style="background:${tm.color}"></div>
+        <div class="pmatrix-name">${tm.name}</div>
+        <div class="pmatrix-count">${presentCount}/${members.length}</div>
+      </div>`;
+    members.forEach(p=>{
+      const present=presentIds.has(p.id);
+      // Move to team dropdown options
+      const otherTeams=TEAMS.filter(t=>t.id!==tm.id);
+      const moveOpts=otherTeams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+      html+=`<div class="pmember ${present?'present':'absent'}">
+        <span class="pmember-status">${present?'✅':'⏳'}</span>
+        <span class="pmember-name" style="margin-left:6px">${p.is_captain?'👑 ':''}${p.name}</span>
+        <select class="move-sel" onchange="moveMember('${p.id}',this.value,this)" title="Move to team">
+          <option value="">Move→</option>
+          ${moveOpts}
+        </select>
+      </div>`;
+    });
+    // Unassigned members
+    const unassigned=PARTS.filter(p=>!p.team_id);
+    if(unassigned.length&&tm===TEAMS[0]){
+      unassigned.forEach(p=>{
+        const present=presentIds.has(p.id);
+        const allTeams=TEAMS.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+        html+=`<div class="pmember ${present?'present':'absent'}" style="border-style:dashed">
+          <span class="pmember-status">${present?'✅':'⏳'}</span>
+          <span class="pmember-name" style="margin-left:6px;color:var(--mut)">${p.name} (no team)</span>
+          <select class="move-sel" onchange="moveMember('${p.id}',this.value,this)" title="Assign to team">
+            <option value="">Assign→</option>
+            ${allTeams}
+          </select>
+        </div>`;
+      });
+    }
+    html+='</div>';
+    el.innerHTML+=html;
+  });
+}
+
+async function moveMember(participantId, newTeamId, selectEl){
+  if(!newTeamId)return;
+  selectEl.value=''; // reset dropdown
+  await PATCH('ta_participants','id=eq.'+participantId,{team_id:newTeamId});
+  PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
+  // Re-render matrix with current present IDs
+  const rnd=await getCurRound();
+  let pids=new Set();
+  if(rnd){
+    const ops=await GET('ta_individual_answers','round_id=eq.'+rnd.id+'&select=participant_id')||[];
+    pids=new Set(ops.map(o=>o.participant_id));
+  } else {
+    // During registration use is_present flag
+    PARTS.filter(p=>p.is_present).forEach(p=>pids.add(p.id));
+  }
+  renderPresenceMatrix(pids);
+  toast('Moved!','ok');
 }
 
 async function pollSess(){
