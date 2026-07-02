@@ -1015,7 +1015,6 @@ async function renderPresenceMatrix(presentIds){
   if(!el)return;
   if(!TEAMS.length){el.innerHTML='<span style="color:var(--mut);font-size:13px">No teams created yet</span>';return;}
 
-  // Grid columns = number of teams
   el.innerHTML='';
   el.style.display='grid';
   el.style.gridTemplateColumns=`repeat(${Math.min(TEAMS.length,4)},1fr)`;
@@ -1032,28 +1031,31 @@ async function renderPresenceMatrix(presentIds){
       </div>`;
     members.forEach(p=>{
       const present=presentIds.has(p.id);
-      // Move to team dropdown options
+      const isCap=p.is_captain===true;
       const otherTeams=TEAMS.filter(t=>t.id!==tm.id);
       const moveOpts=otherTeams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
-      html+=`<div class="pmember ${present?'present':'absent'}">
+      html+=`<div class="pmember ${present?'present':'absent'}" style="${isCap?'border-color:var(--acc);border-width:2px':''}">
         <span class="pmember-status">${present?'✅':'⏳'}</span>
-        <span class="pmember-name" style="margin-left:6px">${p.is_captain?'👑 ':''}${p.name}</span>
+        <span class="pmember-name" style="margin-left:6px">${p.name}</span>
+        <button onclick="toggleCaptain('${p.id}','${tm.id}',${isCap})"
+          style="background:${isCap?'var(--acc)':'var(--sur2)'};color:${isCap?'#000':'var(--mut)'};border:1px solid ${isCap?'var(--acc)':'var(--bdr)'};border-radius:6px;padding:2px 7px;font-size:12px;cursor:pointer;margin-left:4px"
+          title="${isCap?'Remove captain':'Make captain'}">👑</button>
         <select class="move-sel" onchange="moveMember('${p.id}',this.value,this)" title="Move to team">
           <option value="">Move→</option>
           ${moveOpts}
         </select>
       </div>`;
     });
-    // Unassigned members
-    const unassigned=PARTS.filter(p=>!p.team_id);
-    if(unassigned.length&&tm===TEAMS[0]){
+    // Unassigned members shown in first team column
+    if(tm===TEAMS[0]){
+      const unassigned=PARTS.filter(p=>!p.team_id);
       unassigned.forEach(p=>{
         const present=presentIds.has(p.id);
         const allTeams=TEAMS.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
         html+=`<div class="pmember ${present?'present':'absent'}" style="border-style:dashed">
           <span class="pmember-status">${present?'✅':'⏳'}</span>
           <span class="pmember-name" style="margin-left:6px;color:var(--mut)">${p.name} (no team)</span>
-          <select class="move-sel" onchange="moveMember('${p.id}',this.value,this)" title="Assign to team">
+          <select class="move-sel" onchange="moveMember('${p.id}',this.value,this)">
             <option value="">Assign→</option>
             ${allTeams}
           </select>
@@ -1063,6 +1065,32 @@ async function renderPresenceMatrix(presentIds){
     html+='</div>';
     el.innerHTML+=html;
   });
+}
+
+async function toggleCaptain(participantId, teamId, isCaptainNow){
+  // If already captain — remove captainship
+  if(isCaptainNow){
+    await PATCH('ta_participants','id=eq.'+participantId,{is_captain:false});
+    toast('Captain removed','in');
+  } else {
+    // Remove captain from others in same team first
+    await PATCH('ta_participants','team_id=eq.'+teamId+'&is_captain=eq.true',{is_captain:false});
+    // Set new captain
+    await PATCH('ta_participants','id=eq.'+participantId,{is_captain:true});
+    toast('👑 Captain assigned!','ok');
+  }
+  // Refresh
+  PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
+  const rnd=await getCurRound();
+  let pids=new Set();
+  if(rnd){
+    const ops=await GET('ta_individual_answers','round_id=eq.'+rnd.id+'&select=participant_id')||[];
+    pids=new Set(ops.map(o=>o.participant_id));
+  } else {
+    const fp=await GET('ta_participants','event_id=eq.'+EV.id+'&is_present=eq.true&select=id')||[];
+    fp.forEach(p=>pids.add(p.id));
+  }
+  renderPresenceMatrix(pids);
 }
 
 async function moveMember(participantId, newTeamId, selectEl){
