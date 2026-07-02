@@ -191,11 +191,29 @@ tr:hover td{background:var(--sur2);}
           <div class="sct">Game Control</div>
           <div id="d-nosess" style="color:var(--mut);font-size:13px;padding:10px 0">← Create a Session first (Session tab)</div>
           <div id="d-ctrl" style="display:none">
-            <div class="cgrid">
-              <button class="cbtn c1" onclick="openMain()"><span class="ci">▶️</span>Open Main Room</button>
-              <button class="cbtn c2" onclick="openBreakout()"><span class="ci">🔀</span>Start Breakout</button>
-              <button class="cbtn c3" onclick="revealScores()"><span class="ci">📊</span>Reveal Scores</button>
-              <button class="cbtn c4" onclick="endSession()"><span class="ci">⏹️</span>End Session</button>
+            <!-- SETUP: Open Registration -->
+            <div id="ctrl-setup" style="display:none">
+              <button class="cbtn c1" style="width:100%" onclick="openRegistration()"><span class="ci">📋</span>Open Registration</button>
+            </div>
+            <!-- REGISTRATION: Start Breakout -->
+            <div id="ctrl-registration" style="display:none">
+              <p style="font-size:12px;color:var(--mut);margin-bottom:10px">Check presence below, reshuffle teams if needed, get captain from each team — then start.</p>
+              <button class="cbtn c2" style="width:100%" onclick="openBreakout()"><span class="ci">🔀</span>Start Breakout (Round <span id="ctrl-rno">1</span>)</button>
+            </div>
+            <!-- BREAKOUT: Open Main Room (Score Reveal) -->
+            <div id="ctrl-breakout" style="display:none">
+              <div style="font-size:12px;color:var(--mut);margin-bottom:8px" id="ctrl-teams-status">Waiting for team answers...</div>
+              <button class="cbtn c3" style="width:100%" onclick="revealScores()"><span class="ci">📊</span>Reveal Scores (Main Room)</button>
+            </div>
+            <!-- SCORING: End Round or Skip or End Session -->
+            <div id="ctrl-scoring" style="display:none">
+              <div class="cgrid">
+                <button class="cbtn c1" onclick="endRound()"><span class="ci">➡️</span>Next Round</button>
+                <button class="cbtn c4" onclick="skipAndEnd()"><span class="ci">⏭️</span>Skip & End</button>
+              </div>
+              <div id="ctrl-end-session" style="display:none;margin-top:10px">
+                <button class="cbtn c4" style="width:100%" onclick="endSession()"><span class="ci">⏹️</span>End Session</button>
+              </div>
             </div>
           </div>
         </div>
@@ -775,25 +793,27 @@ async function getCurRound(){
   return(r&&r[0])?r[0]:null;
 }
 
-async function openMain(){
+async function openRegistration(){
   if(!SESS){toast('No session loaded','er');return;}
-  const next=(SESS.current_round||0)+1;
-  if(next>SESS.total_rounds){toast('All rounds done!','in');return;}
-  const r=await GET('ta_rounds','session_id=eq.'+SESS.id+'&round_number=eq.'+next+'&select=*');
-  if(r&&r[0])await PATCH('ta_rounds','id=eq.'+r[0].id,{status:'registration_open'});
-  await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'registration',current_round:next});
-  SESS.current_round=next;SESS.status='registration';
-  toast('Round '+next+' — Main Room open!','ok');refreshDash();
+  await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'registration',current_round:0});
+  SESS.status='registration';SESS.current_round=0;
+  toast('Registration open — participants can now mark presence','ok');
+  refreshDash();
 }
 
 async function openBreakout(){
-  if(!SESS)return;
-  const r=await getCurRound();if(!r){toast('No active round','er');return;}
-  const now=new Date().toISOString();
-  await PATCH('ta_rounds','id=eq.'+r.id,{status:'breakout_open',timer_started_at:now});
-  await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'breakout'});
-  SESS.status='breakout';
-  toast('Breakout started! '+r.timer_seconds+'s timer running','ok');
+  if(!SESS){toast('No session','er');return;}
+  // Advance to next round
+  const next=(SESS.current_round||0)+1;
+  if(next>SESS.total_rounds){toast('All rounds completed!','in');return;}
+  // Update round status with fresh timer
+  const r=await GET('ta_rounds','session_id=eq.'+SESS.id+'&round_number=eq.'+next+'&select=*');
+  if(r&&r[0]){
+    await PATCH('ta_rounds','id=eq.'+r[0].id,{status:'breakout_open',timer_started_at:new Date().toISOString()});
+  }
+  await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'breakout',current_round:next});
+  SESS.status='breakout';SESS.current_round=next;
+  toast('Round '+next+' Breakout started!','ok');
   refreshDash();
 }
 
@@ -801,16 +821,41 @@ async function revealScores(){
   if(!SESS)return;
   const r=await getCurRound();if(!r)return;
   const ok=await calcScores(r);
-  if(!ok)return; // Stop if not all teams submitted
+  if(!ok)return;
   await PATCH('ta_rounds','id=eq.'+r.id,{status:'revealed'});
   await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'scoring'});
   SESS.status='scoring';
-  toast('Scores revealed!','ok');refreshDash();loadScores();
+  toast('Scores revealed to all!','ok');refreshDash();loadScores();
+}
+
+async function endRound(){
+  if(!SESS)return;
+  // Check if last round
+  if(SESS.current_round>=SESS.total_rounds){
+    toast('All rounds done! Click End Session.','in');
+    document.getElementById('ctrl-end-session').style.display='block';
+    return;
+  }
+  // Go back to registration status for next round setup
+  await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'registration'});
+  SESS.status='registration';
+  toast('Round ended. Set next round case/multiplier then start Breakout.','ok');
+  refreshDash();
+}
+
+async function skipAndEnd(){
+  if(!SESS)return;
+  if(!confirm('Skip remaining rounds and end session?'))return;
+  await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'scoring'});
+  SESS.status='scoring';
+  document.getElementById('ctrl-end-session').style.display='block';
+  toast('Remaining rounds skipped. Click End Session when ready.','in');
+  refreshDash();
 }
 
 async function endSession(){
   if(!SESS)return;
-  if(!confirm('End this session?'))return;
+  if(!confirm('Are you sure you want to end this session? This cannot be undone.'))return;
   await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'complete'});
   SESS.status='complete';
   toast('Session ended','in');refreshDash();
@@ -873,6 +918,26 @@ async function refreshDash(){
   const b=document.getElementById('d-status');
   b.className='sb s-'+SESS.status;b.textContent=SESS.status;
 
+  // Show correct control buttons based on status
+  ['ctrl-setup','ctrl-registration','ctrl-breakout','ctrl-scoring'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display='none';
+  });
+  const st=SESS.status;
+  if(st==='setup'){document.getElementById('ctrl-setup').style.display='block';}
+  else if(st==='registration'){
+    document.getElementById('ctrl-registration').style.display='block';
+    const rno=document.getElementById('ctrl-rno');
+    if(rno)rno.textContent=(SESS.current_round||0)+1;
+  }
+  else if(st==='breakout'){document.getElementById('ctrl-breakout').style.display='block';}
+  else if(st==='scoring'){
+    document.getElementById('ctrl-scoring').style.display='block';
+    if(SESS.current_round>=SESS.total_rounds){
+      document.getElementById('ctrl-end-session').style.display='block';
+    }
+  }
+  else if(st==='complete'){document.getElementById('ctrl-setup').style.display='none';}
+
   if(SESS.current_round>0){
     const rnd=await getCurRound();
     if(rnd){
@@ -885,13 +950,18 @@ async function refreshDash(){
         const on=pids.has(p.id);
         pg.innerHTML+=`<div class="pchip ${on?'yes':'no'}">${on?'✅':'⏳'} ${p.name}</div>`;
       });
-      const full=await GET('ta_individual_answers','round_id=eq.'+rnd.id+'&select=*,ta_participants(name,ta_teams(name,color))')||[];
-      const tb=document.getElementById('d-ops');tb.innerHTML='';
-      full.forEach(r=>{
-        const p=r.ta_participants;const t=p?.ta_teams;
-        tb.innerHTML+=`<tr><td>${p?.name||'—'}</td><td style="color:${t?.color||'#3B82F6'}">${t?.name||'—'}</td>
-        <td><strong style="color:${r.answer==='H'?'var(--hi)':'var(--lo)'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td></tr>`;
-      });
+      // Show team answer count in breakout
+      if(SESS.status==='breakout'){
+        const tas=await GET('ta_team_answers','round_id=eq.'+rnd.id+'&select=team_id,answer,ta_teams(name,color)')||[];
+        const statusEl=document.getElementById('ctrl-teams-status');
+        if(statusEl){
+          const submitted=tas.length;const total=TEAMS.length;
+          let html=`<strong>${submitted}/${total} teams submitted</strong><br>`;
+          tas.forEach(ta=>{html+=`<span style="color:${ta.ta_teams?.color||'#3B82F6'}">${ta.ta_teams?.name||'?'}</span>: <strong style="color:${ta.answer==='H'?'var(--hi)':'var(--lo)'}">${ta.answer==='H'?'HIGH':'LOW'}</strong> &nbsp;`;});
+          if(total>submitted){const pending=TEAMS.filter(t=>!tas.find(ta=>ta.team_id===t.id));html+='<br>Pending: '+pending.map(t=>`<span style="color:${t.color}">${t.name}</span>`).join(', ');}
+          statusEl.innerHTML=html;
+        }
+      }
     }
   }
 }
