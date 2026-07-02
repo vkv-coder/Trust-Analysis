@@ -208,10 +208,18 @@ tr:hover td{background:var(--sur2);}
             <div id="ctrl-setup" style="display:none">
               <button class="cbtn c1" style="width:100%" onclick="openRegistration()"><span class="ci">📋</span>Open Registration</button>
             </div>
-            <!-- REGISTRATION: Start Breakout -->
+            <!-- REGISTRATION: Announce + Start Breakout -->
             <div id="ctrl-registration" style="display:none">
-              <p style="font-size:12px;color:var(--mut);margin-bottom:10px">Check presence below, reshuffle teams if needed, get captain from each team — then start.</p>
-              <button class="cbtn c2" style="width:100%" onclick="openBreakout()"><span class="ci">🔀</span>Start Breakout (Round <span id="ctrl-rno">1</span>)</button>
+              <p style="font-size:12px;color:var(--mut);margin-bottom:10px">1. Check presence, reshuffle if needed, mark captains.<br>2. Announce teams so participants can see. 3. Start Breakout.</p>
+              <div class="cgrid">
+                <button class="cbtn c1" onclick="announceTeams()"><span class="ci">📢</span>Announce Teams & Captains</button>
+                <button class="cbtn c2" onclick="openBreakout()"><span class="ci">🔀</span>Start Breakout Round <span id="ctrl-rno">1</span></button>
+              </div>
+            </div>
+            <!-- ANNOUNCED: waiting to start breakout -->
+            <div id="ctrl-announced" style="display:none">
+              <p style="font-size:12px;color:var(--lo);margin-bottom:10px">✅ Teams announced to all participants!</p>
+              <button class="cbtn c2" style="width:100%" onclick="openBreakout()"><span class="ci">🔀</span>Start Breakout Round <span id="ctrl-rno2">1</span></button>
             </div>
             <!-- BREAKOUT: Open Main Room (Score Reveal) -->
             <div id="ctrl-breakout" style="display:none">
@@ -806,6 +814,14 @@ async function getCurRound(){
   return(r&&r[0])?r[0]:null;
 }
 
+async function announceTeams(){
+  if(!SESS){toast('No session','er');return;}
+  await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'announced'});
+  SESS.status='announced';
+  toast('Teams announced to all participants!','ok');
+  refreshDash();
+}
+
 async function openRegistration(){
   if(!SESS){toast('No session loaded','er');return;}
   await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'registration',current_round:0});
@@ -932,7 +948,7 @@ async function refreshDash(){
   b.className='sb s-'+SESS.status;b.textContent=SESS.status;
 
   // Show correct control buttons based on status
-  ['ctrl-setup','ctrl-registration','ctrl-breakout','ctrl-scoring'].forEach(id=>{
+  ['ctrl-setup','ctrl-registration','ctrl-announced','ctrl-breakout','ctrl-scoring'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.style.display='none';
   });
   const st=SESS.status;
@@ -941,6 +957,11 @@ async function refreshDash(){
     document.getElementById('ctrl-registration').style.display='block';
     const rno=document.getElementById('ctrl-rno');
     if(rno)rno.textContent=(SESS.current_round||0)+1;
+  }
+  else if(st==='announced'){
+    document.getElementById('ctrl-announced').style.display='block';
+    const rno2=document.getElementById('ctrl-rno2');
+    if(rno2)rno2.textContent=(SESS.current_round||0)+1;
   }
   else if(st==='breakout'){document.getElementById('ctrl-breakout').style.display='block';}
   else if(st==='scoring'){
