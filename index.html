@@ -225,6 +225,47 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 </div>
 
+<!-- SCREEN 3.7: GENERAL ROUND (individual opinions, everyone answers) -->
+<div class="screen" id="s-general">
+  <div class="hdr">
+    <div><div class="hdr-logo">🎯 General Round</div><div class="hdr-sub">Your Own Opinion</div></div>
+    <div class="badge" id="gr-badge">R1</div>
+  </div>
+  <div class="pbar">
+    <div class="pdot" id="g-dot"></div>
+    <div><div class="pnm" id="g-name"></div><div class="pteam" id="g-team"></div></div>
+  </div>
+  <div class="body">
+    <div class="timer-card">
+      <div class="timer-lbl">⏱ Time Remaining</div>
+      <div class="timer-val" id="gr-timer-val">05:00</div>
+    </div>
+    <div class="r-banner">
+      <div><div class="r-lbl">Round</div><div class="r-no" id="gr-rno">1</div></div>
+      <div id="gr-mult" style="display:none" class="mult-tag">×1</div>
+    </div>
+    <div class="case-card">
+      <div class="case-lbl">📋 Case Study</div>
+      <div class="case-txt" id="gr-case">Case study will appear here.</div>
+      <div id="gr-case-file" style="display:none;margin-top:8px"></div>
+    </div>
+    <div id="gr-vote">
+      <div class="vote-lbl">This is your own personal opinion — not visible to teammates</div>
+      <div class="vote-btns">
+        <button class="vbtn H" id="vH-gr" onclick="selVote('H','gr')">H<span>HIGH</span></button>
+        <button class="vbtn L" id="vL-gr" onclick="selVote('L','gr')">L<span>LOW</span></button>
+      </div>
+      <button class="btn btn-primary" id="btn-sub-gr" onclick="openModal('gr')" disabled>Submit My Opinion</button>
+    </div>
+    <div class="sub-card" id="gr-subcard" style="display:none">
+      <div class="sub-icon" id="gr-sub-icon">✅</div>
+      <div class="sub-title" id="gr-sub-title">Opinion Submitted</div>
+      <div class="sub-detail">You answered: <span id="gr-sub-ans" class="atag"></span></div>
+      <div class="sub-detail" style="margin-top:6px">Waiting for the facilitator to open Breakout...</div>
+    </div>
+  </div>
+</div>
+
 <!-- SCREEN 4: BREAKOUT -->
 <div class="screen" id="s-breakout">
   <div class="hdr">
@@ -308,6 +349,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="wait-sub">Waiting for facilitator to reveal scores...</div>
     </div>
     <div id="main-scores-section" style="display:none">
+      <div id="my-history-section" style="margin-bottom:16px;display:none">
+        <div class="sec-label" style="margin-bottom:8px">📝 My Opinions — All Rounds</div>
+        <div style="overflow-x:auto">
+          <table class="sc-table">
+            <thead><tr id="my-hist-th"></tr></thead>
+            <tbody><tr id="my-hist-tb"></tr></tbody>
+          </table>
+        </div>
+      </div>
       <div class="sec-label" style="margin-bottom:8px">🏆 Scoreboard — All Rounds</div>
       <div style="overflow-x:auto">
         <table class="sc-table">
@@ -434,9 +484,9 @@ async function confirmName(){
 
 function setupBars(){
   const p=P.participant;const t=P.team;const c=t?.color||'#3B82F6';
-  ['w-dot','m-dot','b-dot'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.background=c;});
-  ['w-name','m-name','b-name'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=p.name;});
-  ['w-team','m-team','b-team'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t?.name||'';});
+  ['w-dot','m-dot','b-dot','g-dot'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.background=c;});
+  ['w-name','m-name','b-name','g-name'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=p.name;});
+  ['w-team','m-team','b-team','g-team'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t?.name||'';});
   document.getElementById('wait-pbar').style.display='flex';
 }
 
@@ -483,10 +533,24 @@ async function route(){
     await loadAnnounceTeams();
     return;
   }
+  if(st==='general'&&rnd){
+    show('general');
+    document.getElementById('gr-badge').textContent='R'+rnd.round_number;
+    document.getElementById('gr-rno').textContent=rnd.round_number;
+    const gm=document.getElementById('gr-mult');
+    if(rnd.multiplier>1){gm.style.display='block';gm.textContent='×'+rnd.multiplier;}else gm.style.display='none';
+    await updGrCase(rnd);
+    startTimer(rnd,'gr-timer-val',()=>autoSubmitGeneral(rnd));
+    const ia=await GET('ta_individual_answers','round_id=eq.'+rnd.id+'&participant_id=eq.'+P.participant.id+'&select=*');
+    if(ia&&ia.length){showGrDone(ia[0].answer,ia[0].auto_submitted);return;}
+    document.getElementById('gr-vote').style.display='block';
+    document.getElementById('gr-subcard').style.display='none';
+    return;
+  }
   if(st==='breakout'&&rnd){
     show('breakout');
     await updBo(rnd);
-    startTimer(rnd);
+    startTimer(rnd,'timer-val',()=>autoSubmitBreakout(rnd));
     await loadBoScores();
     // Check if team already submitted
     const ta=await GET('ta_team_answers','round_id=eq.'+rnd.id+'&team_id=eq.'+P.participant.team_id+'&select=*');
@@ -509,6 +573,7 @@ async function route(){
     document.getElementById('main-wait').style.display='none';
     document.getElementById('main-scores-section').style.display='block';
     document.getElementById('main-next-wait').style.display='block';
+    await buildMyAnswerHistory();
     await buildScoreTable('main-sc-th','main-sc-tb','main-sc-tf');
     return;
   }
@@ -629,14 +694,67 @@ function showBoDone(ans){
   if(captPollT)clearInterval(captPollT);
 }
 
-// TIMER — UTC fix
-function startTimer(r){
+// GENERAL ROUND (individual opinions)
+async function updGrCase(r){
+  const theCase=await resolveCaseForTeam(r.id,P.team?P.team.id:null);
+  const ct=theCase?(theCase.case_text||''):'';
+  const cu=theCase?(theCase.case_file_url||''):'';
+  document.getElementById('gr-case').textContent=ct||(cu?'':'Case study will appear here.');
+  const cf=document.getElementById('gr-case-file');
+  if(cu){cf.style.display='block';const isImg=/\.(jpg|jpeg|png)$/i.test(cu);
+    cf.innerHTML=isImg?`<img src="${cu}" style="width:100%;border-radius:8px;margin-top:8px"/>`:`<a href="${cu}" target="_blank" style="display:flex;align-items:center;gap:8px;background:rgba(245,158,11,0.1);border:1px solid var(--accent);border-radius:8px;padding:12px;color:var(--accent);text-decoration:none;font-weight:600;margin-top:8px">📄 Open Case Study PDF</a>`;
+  }else cf.style.display='none';
+}
+
+function showGrDone(ans,auto){
+  document.getElementById('gr-vote').style.display='none';
+  document.getElementById('gr-subcard').style.display='block';
+  const el=document.getElementById('gr-sub-ans');
+  el.textContent=ans==='H'?'HIGH':'LOW';el.className='atag '+ans;
+  document.getElementById('gr-sub-icon').textContent=auto?'⏰':'✅';
+  document.getElementById('gr-sub-title').textContent=auto?"Time's Up — Auto-Submitted":'Opinion Submitted';
+}
+
+// TIMER AUTO-SUBMIT — fires once if the responsible person hasn't submitted
+// by the time their own countdown hits 0. No cross-device watching by design.
+async function autoSubmitGeneral(rnd){
+  try{
+    const existing=await GET('ta_individual_answers','round_id=eq.'+rnd.id+'&participant_id=eq.'+P.participant.id+'&select=id');
+    if(existing&&existing.length)return; // already submitted manually just in time
+    await fetch(`${SURL}/rest/v1/ta_individual_answers`,{
+      method:'POST',
+      headers:{...H(),'Prefer':'resolution=merge-duplicates,return=representation'},
+      body:JSON.stringify({session_id:P.session.id,round_id:rnd.id,participant_id:P.participant.id,answer:'H',auto_submitted:true})
+    });
+    showGrDone('H',true);
+  }catch(e){console.error('Auto-submit (general) failed:',e);}
+}
+
+async function autoSubmitBreakout(rnd){
+  if(!P.isCapt)return; // only the captain's own phone submits the team answer
+  try{
+    const existing=await GET('ta_team_answers','round_id=eq.'+rnd.id+'&team_id=eq.'+P.participant.team_id+'&select=id');
+    if(existing&&existing.length)return;
+    await fetch(`${SURL}/rest/v1/ta_team_answers`,{
+      method:'POST',
+      headers:{...H(),'Prefer':'resolution=merge-duplicates,return=representation'},
+      body:JSON.stringify({session_id:P.session.id,round_id:rnd.id,team_id:P.participant.team_id,answer:'H',submitted_by:P.participant.id,auto_submitted:true})
+    });
+    showBoDone('H');
+  }catch(e){console.error('Auto-submit (breakout) failed:',e);}
+}
+
+// TIMER — UTC fix. targetElId defaults to the breakout timer for backward
+// compatibility; onExpire (if given) fires exactly once when the countdown hits 0.
+function startTimer(r,targetElId,onExpire){
   if(P.timerT)clearInterval(P.timerT);
-  const el=document.getElementById('timer-val');
+  P.expiredFired=false;
+  const el=document.getElementById(targetElId||'timer-val');
   const totalSecs=r.timer_seconds||300;
+  const fireExpire=()=>{if(P.expiredFired)return;P.expiredFired=true;if(onExpire)onExpire();};
   if(!r.timer_started_at){
     let rem=totalSecs;
-    const t=()=>{const m=Math.floor(rem/60).toString().padStart(2,'0');const s=(rem%60).toString().padStart(2,'0');el.textContent=m+':'+s;el.className='timer-val'+(rem<=30?' urgent':'');if(rem<=0){clearInterval(P.timerT);return;}rem--;};
+    const t=()=>{const m=Math.floor(rem/60).toString().padStart(2,'0');const s=(rem%60).toString().padStart(2,'0');el.textContent=m+':'+s;el.className='timer-val'+(rem<=30?' urgent':'');if(rem<=0){clearInterval(P.timerT);fireExpire();return;}rem--;};
     t();P.timerT=setInterval(t,1000);return;
   }
   // Supabase sends UTC without Z — force UTC by appending Z
@@ -646,7 +764,7 @@ function startTimer(r){
   const elapsed=isNaN(startMs)?0:Math.floor((Date.now()-startMs)/1000);
   const remSecs=Math.max(0,totalSecs-elapsed);
   const endMs=Date.now()+(remSecs*1000);
-  const t=()=>{const rem=Math.max(0,Math.floor((endMs-Date.now())/1000));const m=Math.floor(rem/60).toString().padStart(2,'0');const s=(rem%60).toString().padStart(2,'0');el.textContent=m+':'+s;el.className='timer-val'+(rem<=30?' urgent':'');if(rem<=0)clearInterval(P.timerT);};
+  const t=()=>{const rem=Math.max(0,Math.floor((endMs-Date.now())/1000));const m=Math.floor(rem/60).toString().padStart(2,'0');const s=(rem%60).toString().padStart(2,'0');el.textContent=m+':'+s;el.className='timer-val'+(rem<=30?' urgent':'');if(rem<=0){clearInterval(P.timerT);fireExpire();}};
   t();P.timerT=setInterval(t,1000);
 }
 
@@ -655,19 +773,28 @@ async function buildScoreTable(thId,tbId,tfId){
   const allSc=await GET('ta_scores','session_id=eq.'+P.session.id+'&select=*,ta_teams(name,color),ta_rounds(round_number,multiplier)&order=ta_rounds(round_number)')||[];
   const teams=await GET('ta_teams','event_id=eq.'+P.session.event_id+'&order=created_at')||[];
   if(!teams.length||!allSc.length)return false;
+  const roundIds=[...new Set(allSc.map(s=>s.round_id))];
+  const teamAnswers=roundIds.length?(await GET('ta_team_answers','round_id=in.('+roundIds.join(',')+')&select=round_id,team_id,answer')||[]):[];
   const rns=[...new Set(allSc.map(s=>s.ta_rounds?.round_number))].filter(Boolean).sort((a,b)=>a-b);
   const mults={};allSc.forEach(s=>{if(s.ta_rounds)mults[s.ta_rounds.round_number]=s.ta_rounds.multiplier||1;});
-  const tm={};allSc.forEach(s=>{if(!tm[s.team_id])tm[s.team_id]={team:s.ta_teams,r:{},c:0};if(s.ta_rounds)tm[s.team_id].r[s.ta_rounds.round_number]=s.round_points;tm[s.team_id].c=s.cumulative_points||0;});
+  const tm={};allSc.forEach(s=>{if(!tm[s.team_id])tm[s.team_id]={team:s.ta_teams,r:{},ans:{},c:0};if(s.ta_rounds)tm[s.team_id].r[s.ta_rounds.round_number]=s.round_points;tm[s.team_id].c=s.cumulative_points||0;});
+  teamAnswers.forEach(ta=>{
+    const sc=allSc.find(s=>s.round_id===ta.round_id&&s.team_id===ta.team_id);
+    if(sc&&sc.ta_rounds&&tm[ta.team_id])tm[ta.team_id].ans[sc.ta_rounds.round_number]=ta.answer;
+  });
   const th=document.getElementById(thId);th.innerHTML='<th class="tc">Team</th>';
   rns.forEach(n=>{th.innerHTML+=`<th>R${n}${mults[n]>1?'<br><span style="color:var(--accent);font-size:10px">×'+mults[n]+'</span>':''}</th>`;});
   th.innerHTML+='<th style="color:var(--accent)">TOTAL</th>';
   const tb=document.getElementById(tbId);tb.innerHTML='';
-  const sorted=teams.map(t=>({...t,...(tm[t.id]||{r:{},c:0,team:t})})).sort((a,b)=>(b.c||0)-(a.c||0));
+  const sorted=teams.map(t=>({...t,...(tm[t.id]||{r:{},ans:{},c:0,team:t})})).sort((a,b)=>(b.c||0)-(a.c||0));
   sorted.forEach(t=>{
     const isMe=P.participant&&t.id===P.participant.team_id;
-    const td=tm[t.id]||{r:{},c:0};
+    const td=tm[t.id]||{r:{},ans:{},c:0};
     let row=`<tr class="${isMe?'mt':''}"><td class="tnc"><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${t.color||'#3B82F6'};display:inline-block"></span>${t.name}${isMe?' 👤':''}</span></td>`;
-    rns.forEach(n=>{const p=td.r[n];row+=p===undefined?'<td class="pz">—</td>':`<td class="${p>0?'pp':p<0?'pn':'pz'}">${p>0?'+':''}${p}</td>`;});
+    rns.forEach(n=>{
+      const p=td.r[n];const a=td.ans[n];
+      row+=p===undefined?'<td class="pz">—</td>':`<td class="${p>0?'pp':p<0?'pn':'pz'}">${a?a+' ':''}${p>0?'+':''}${p}</td>`;
+    });
     const c=td.c||0;row+=`<td class="${c>0?'pp':c<0?'pn':'pz'}" style="font-size:14px">${c>0?'+':''}${c}</td></tr>`;
     tb.innerHTML+=row;
   });
@@ -678,6 +805,22 @@ async function buildScoreTable(thId,tbId,tfId){
   return true;
 }
 
+// Participant's own individual-opinion history (never shows other members' opinions)
+async function buildMyAnswerHistory(){
+  const sec=document.getElementById('my-history-section');
+  const mine=await GET('ta_individual_answers','session_id=eq.'+P.session.id+'&participant_id=eq.'+P.participant.id+'&select=*,ta_rounds(round_number)&order=ta_rounds(round_number)')||[];
+  if(!mine.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  const th=document.getElementById('my-hist-th');th.innerHTML='<th class="tc">My Opinion</th>';
+  const tb=document.getElementById('my-hist-tb');tb.innerHTML='<td class="tnc">Round</td>';
+  mine.sort((a,b)=>(a.ta_rounds?.round_number||0)-(b.ta_rounds?.round_number||0));
+  mine.forEach(m=>{
+    const n=m.ta_rounds?.round_number;
+    th.innerHTML+=`<th>R${n}</th>`;
+    tb.innerHTML+=`<td class="${m.answer==='H'?'pn':'pp'}">${m.answer}${m.auto_submitted?' ⏰':''}</td>`;
+  });
+}
+
 async function loadBoScores(){
   const ok=await buildScoreTable('bo-sc-th','bo-sc-tb','bo-sc-tf');
   document.getElementById('bo-score-section').style.display=ok?'block':'none';
@@ -686,18 +829,19 @@ async function loadBoScores(){
 // VOTING
 function selVote(v,ctx){
   P.vote=v;P.ctx=ctx;
-  document.getElementById('vH-bo').className='vbtn H'+(v==='H'?' sel':'');
-  document.getElementById('vL-bo').className='vbtn L'+(v==='L'?' sel':'');
-  document.getElementById('btn-sub-bo').disabled=false;
-  // Show live selection for captain (others poll this)
+  document.getElementById('vH-'+ctx).className='vbtn H'+(v==='H'?' sel':'');
+  document.getElementById('vL-'+ctx).className='vbtn L'+(v==='L'?' sel':'');
+  document.getElementById('btn-sub-'+ctx).disabled=false;
+  // Show live selection for captain (others poll this) — breakout only
   const la=document.getElementById('live-captain-ans');
-  if(la){la.textContent=v==='H'?'HIGH':'LOW';la.className='live-ans-val '+v;}
+  if(ctx==='bo'&&la){la.textContent=v==='H'?'HIGH':'LOW';la.className='live-ans-val '+v;}
 }
 
 function openModal(ctx){
   P.ctx=ctx;const v=P.vote;if(!v)return;
-  document.getElementById('modal-title').textContent='Submit Team Answer: '+(v==='H'?'HIGH':'LOW')+'?';
-  document.getElementById('modal-body').textContent='Once submitted this cannot be changed. Your team\'s final answer will be '+(v==='H'?'HIGH':'LOW')+'.';
+  const label=ctx==='gr'?'your opinion':"your team's final answer";
+  document.getElementById('modal-title').textContent='Submit '+(v==='H'?'HIGH':'LOW')+'?';
+  document.getElementById('modal-body').textContent='Once submitted this cannot be changed. '+label.charAt(0).toUpperCase()+label.slice(1)+' will be '+(v==='H'?'HIGH':'LOW')+'.';
   document.getElementById('modal').classList.add('open');
 }
 
@@ -705,12 +849,22 @@ function closeModal(){document.getElementById('modal').classList.remove('open');
 
 async function submitVote(){
   closeModal();
-  const v=P.vote;const r=P.round;
+  const v=P.vote;const r=P.round;const ctx=P.ctx;
   if(!v||!r)return;
+  if(ctx==='gr'){
+    const res=await fetch(`${SURL}/rest/v1/ta_individual_answers`,{
+      method:'POST',
+      headers:{...H(),'Prefer':'resolution=merge-duplicates,return=representation'},
+      body:JSON.stringify({session_id:P.session.id,round_id:r.id,participant_id:P.participant.id,answer:v,auto_submitted:false})
+    });
+    if(res.ok){showGrDone(v,false);toast('Opinion submitted!','success');}
+    else{const err=await res.json();console.error('Submit error:',err);toast('Error: '+(err.message||'Try again'),'error');}
+    return;
+  }
   const res=await fetch(`${SURL}/rest/v1/ta_team_answers`,{
     method:'POST',
     headers:{...H(),'Prefer':'resolution=merge-duplicates,return=representation'},
-    body:JSON.stringify({session_id:P.session.id,round_id:r.id,team_id:P.participant.team_id,answer:v,submitted_by:P.participant.id})
+    body:JSON.stringify({session_id:P.session.id,round_id:r.id,team_id:P.participant.team_id,answer:v,submitted_by:P.participant.id,auto_submitted:false})
   });
   if(res.ok){showBoDone(v);toast('Team answer submitted!','success');}
   else{const err=await res.json();console.error('Submit error:',err);toast('Error: '+(err.message||'Try again'),'error');}

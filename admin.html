@@ -208,18 +208,23 @@ tr:hover td{background:var(--sur2);}
             <div id="ctrl-setup" style="display:none">
               <button class="cbtn c1" style="width:100%" onclick="openRegistration()"><span class="ci">📋</span>Open Registration</button>
             </div>
-            <!-- REGISTRATION: Announce + Start Breakout -->
+            <!-- REGISTRATION: Announce + Start General Round -->
             <div id="ctrl-registration" style="display:none">
-              <p style="font-size:12px;color:var(--mut);margin-bottom:10px">1. Check presence, reshuffle if needed, mark captains.<br>2. Announce teams so participants can see. 3. Start Breakout.</p>
+              <p style="font-size:12px;color:var(--mut);margin-bottom:10px">1. Check presence, reshuffle if needed.<br>2. Announce teams so participants can see &amp; elect captains. 3. Start General Round.</p>
               <div class="cgrid">
                 <button class="cbtn c1" onclick="announceTeams()"><span class="ci">📢</span>Announce Teams & Captains</button>
-                <button class="cbtn c2" onclick="openBreakout()"><span class="ci">🔀</span>Start Breakout Round <span id="ctrl-rno">1</span></button>
+                <button class="cbtn c2" onclick="openGeneralRound()"><span class="ci">🗳️</span>Start General Round <span id="ctrl-rno">1</span></button>
               </div>
             </div>
-            <!-- ANNOUNCED: waiting to start breakout -->
+            <!-- ANNOUNCED: waiting to start general round (captains being elected) -->
             <div id="ctrl-announced" style="display:none">
               <p style="font-size:12px;color:var(--lo);margin-bottom:10px">✅ Teams announced to all participants!</p>
-              <button class="cbtn c2" style="width:100%" onclick="openBreakout()"><span class="ci">🔀</span>Start Breakout Round <span id="ctrl-rno2">1</span></button>
+              <button class="cbtn c2" style="width:100%" onclick="openGeneralRound()"><span class="ci">🗳️</span>Start General Round <span id="ctrl-rno2">1</span></button>
+            </div>
+            <!-- GENERAL: everyone submits their own individual opinion -->
+            <div id="ctrl-general" style="display:none">
+              <div style="font-size:12px;color:var(--mut);margin-bottom:8px" id="ctrl-general-status">Waiting for individual opinions...</div>
+              <button class="cbtn c2" style="width:100%" onclick="openBreakout()"><span class="ci">🔀</span>Open Breakout (Captains Submit) →</button>
             </div>
             <!-- BREAKOUT: Open Main Room (Score Reveal) -->
             <div id="ctrl-breakout" style="display:none">
@@ -929,20 +934,32 @@ async function openRegistration(){
   refreshDash();
 }
 
-async function openBreakout(){
+async function openGeneralRound(){
   if(!SESS){toast('No session','er');return;}
   if(TEAMS.length<2||TEAMS.length%2!==0){toast('Teams must be an even number (2, 4, 6, 8...) — currently '+TEAMS.length,'er');return;}
   // Advance to next round
   const next=(SESS.current_round||0)+1;
   if(next>SESS.total_rounds){toast('All rounds completed!','in');return;}
-  // Update round status with fresh timer
+  // Open the round for individual opinions, with a fresh timer
   const r=await GET('ta_rounds','session_id=eq.'+SESS.id+'&round_number=eq.'+next+'&select=*');
   if(r&&r[0]){
-    await PATCH('ta_rounds','id=eq.'+r[0].id,{status:'breakout_open',timer_started_at:new Date().toISOString()});
+    await PATCH('ta_rounds','id=eq.'+r[0].id,{status:'general_open',timer_started_at:new Date().toISOString()});
   }
-  await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'breakout',current_round:next});
-  SESS.status='breakout';SESS.current_round=next;
-  toast('Round '+next+' Breakout started!','ok');
+  await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'general',current_round:next});
+  SESS.status='general';SESS.current_round=next;
+  toast('Round '+next+' General Round started — participants submit their opinions!','ok');
+  refreshDash();
+}
+
+async function openBreakout(){
+  if(!SESS){toast('No session','er');return;}
+  const r=await getCurRound();
+  if(!r){toast('No current round found','er');return;}
+  // Same round, move from general opinions to the captain's official breakout answer
+  await PATCH('ta_rounds','id=eq.'+r.id,{status:'breakout_open',timer_started_at:new Date().toISOString()});
+  await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'breakout'});
+  SESS.status='breakout';
+  toast('Breakout started — captains submit the team answer now!','ok');
   refreshDash();
 }
 
@@ -1063,7 +1080,7 @@ async function refreshDash(){
   b.className='sb s-'+SESS.status;b.textContent=SESS.status;
 
   // Show correct control buttons based on status
-  ['ctrl-setup','ctrl-registration','ctrl-announced','ctrl-breakout','ctrl-scoring'].forEach(id=>{
+  ['ctrl-setup','ctrl-registration','ctrl-announced','ctrl-general','ctrl-breakout','ctrl-scoring'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.style.display='none';
   });
   const st=SESS.status;
@@ -1078,6 +1095,7 @@ async function refreshDash(){
     const rno2=document.getElementById('ctrl-rno2');
     if(rno2)rno2.textContent=(SESS.current_round||0)+1;
   }
+  else if(st==='general'){document.getElementById('ctrl-general').style.display='block';}
   else if(st==='breakout'){document.getElementById('ctrl-breakout').style.display='block';}
   else if(st==='scoring'){
     document.getElementById('ctrl-scoring').style.display='block';
@@ -1112,6 +1130,12 @@ async function refreshDash(){
     if(rnd){
       const ops=await GET('ta_individual_answers','round_id=eq.'+rnd.id+'&select=participant_id')||[];
       const pids=new Set(ops.map(o=>o.participant_id));
+      // Show individual-opinion submission count in the general round
+      if(SESS.status==='general'){
+        const presentCount=PARTS.filter(p=>p.is_present).length;
+        const statusEl=document.getElementById('ctrl-general-status');
+        if(statusEl)statusEl.innerHTML=`<strong>${pids.size}/${presentCount} participants submitted their opinion</strong>`;
+      }
       // Show team answer count in breakout
       if(SESS.status==='breakout'){
         const tas=await GET('ta_team_answers','round_id=eq.'+rnd.id+'&select=team_id,answer,ta_teams(name,color)')||[];
