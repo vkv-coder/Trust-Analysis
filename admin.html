@@ -878,27 +878,54 @@ function renderTeams(){
   renderAssignMatrix();
 }
 
+let ASSIGN_SEL=new Set();
+
 function renderAssignMatrix(){
   const el=document.getElementById('assign-matrix');
   if(!el)return;
   if(!PARTS.length){el.innerHTML='<span style="color:var(--mut);font-size:13px">No participants yet — add some in the Participants tab.</span>';return;}
   if(!TEAMS.length){el.innerHTML='<span style="color:var(--mut);font-size:13px">No teams yet — create one first.</span>';return;}
-  let html='<div style="display:flex;flex-direction:column;gap:6px;">';
+  const validIds=new Set(PARTS.map(p=>p.id));
+  ASSIGN_SEL.forEach(id=>{if(!validIds.has(id))ASSIGN_SEL.delete(id);});
+
+  let html='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;padding:8px 10px;background:var(--sur2);border-radius:8px;">';
+  html+='<span style="font-size:12px;color:var(--mut);">'+ASSIGN_SEL.size+' ticked — tap a colour to assign them:</span>';
+  TEAMS.forEach(tm=>{
+    html+='<div class="clr" style="background:'+tm.color+';width:26px;height:26px;cursor:pointer;" title="Assign ticked players to '+tm.name+'" onclick="bulkAssignToTeam(\''+tm.id+'\')"></div>';
+  });
+  if(ASSIGN_SEL.size)html+='<button class="btn bd bsm" onclick="clearAssignSel()">Clear</button>';
+  html+='</div>';
+
+  html+='<div style="display:flex;flex-direction:column;gap:6px;">';
   PARTS.forEach(p=>{
+    const checked=ASSIGN_SEL.has(p.id);
     html+='<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--sur2);border-radius:8px;">';
+    html+='<input type="checkbox" '+(checked?'checked':'')+' onchange="toggleAssignSel(\''+p.id+'\')" style="width:18px;height:18px;flex-shrink:0;cursor:pointer;">';
     html+='<div style="flex:1;font-size:13px;min-width:120px;">'+(p.is_captain?'👑 ':'')+p.name
       +(p.ta_teams?' <span style="color:'+p.ta_teams.color+';font-size:11px">('+p.ta_teams.name+')</span>'
         :'<span style="color:var(--mut);font-size:11px"> (no team)</span>')+'</div>';
-    html+='<div style="display:flex;gap:6px;flex-shrink:0;">';
-    TEAMS.forEach(tm=>{
-      const on=p.team_id===tm.id;
-      html+='<div class="clr'+(on?' on':'')+'" style="background:'+tm.color+';width:22px;height:22px;" title="Assign to '+tm.name+'" onclick="assignToTeam(\''+p.id+'\',\''+tm.id+'\')"></div>';
-    });
-    html+='<div style="width:22px;height:22px;border-radius:50%;border:1px dashed var(--bdr);color:var(--mut);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Remove from team" onclick="assignToTeam(\''+p.id+'\',null)">×</div>';
-    html+='</div></div>';
+    html+='<div style="width:22px;height:22px;border-radius:50%;border:1px dashed var(--bdr);color:var(--mut);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;" title="Remove from team" onclick="assignToTeam(\''+p.id+'\',null)">×</div>';
+    html+='</div>';
   });
   html+='</div>';
   el.innerHTML=html;
+}
+
+function toggleAssignSel(id){
+  if(ASSIGN_SEL.has(id))ASSIGN_SEL.delete(id);else ASSIGN_SEL.add(id);
+  renderAssignMatrix();
+}
+
+function clearAssignSel(){ASSIGN_SEL.clear();renderAssignMatrix();}
+
+async function bulkAssignToTeam(teamId){
+  if(!ASSIGN_SEL.size){toast('Tick some players first','er');return;}
+  const ids=[...ASSIGN_SEL];
+  await PATCH('ta_participants','id=in.('+ids.join(',')+')',{team_id:teamId});
+  ASSIGN_SEL.clear();
+  PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
+  renderTeams();
+  toast(ids.length+' player(s) assigned!','ok');
 }
 
 async function assignToTeam(participantId,teamId){
