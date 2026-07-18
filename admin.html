@@ -864,7 +864,7 @@ function renderTeams(){
   document.getElementById('t-body').style.display='block';
   const l=document.getElementById('t-list');l.innerHTML='';
   TEAMS.forEach(tm=>{
-    const members=PARTS.filter(p=>p.team_id===tm.id);
+    const members=PARTS.filter(p=>p.team_id===tm.id&&p.is_present);
     l.innerHTML+=`<div class="sc">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <div style="width:12px;height:12px;border-radius:50%;background:${tm.color}"></div>
@@ -883,9 +883,10 @@ let ASSIGN_SEL=new Set();
 function renderAssignMatrix(){
   const el=document.getElementById('assign-matrix');
   if(!el)return;
-  if(!PARTS.length){el.innerHTML='<span style="color:var(--mut);font-size:13px">No participants yet — add some in the Participants tab.</span>';return;}
+  const presentParts=PARTS.filter(p=>p.is_present);
   if(!TEAMS.length){el.innerHTML='<span style="color:var(--mut);font-size:13px">No teams yet — create one first.</span>';return;}
-  const validIds=new Set(PARTS.map(p=>p.id));
+  if(!presentParts.length){el.innerHTML='<span style="color:var(--mut);font-size:13px">No participants have marked presence yet.</span>';return;}
+  const validIds=new Set(presentParts.map(p=>p.id));
   ASSIGN_SEL.forEach(id=>{if(!validIds.has(id))ASSIGN_SEL.delete(id);});
 
   let html='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;padding:8px 10px;background:var(--sur2);border-radius:8px;">';
@@ -897,7 +898,7 @@ function renderAssignMatrix(){
   html+='</div>';
 
   html+='<div style="display:flex;flex-direction:column;gap:6px;">';
-  PARTS.forEach(p=>{
+  presentParts.forEach(p=>{
     const checked=ASSIGN_SEL.has(p.id);
     html+='<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--sur2);border-radius:8px;">';
     html+='<input type="checkbox" '+(checked?'checked':'')+' onchange="toggleAssignSel(\''+p.id+'\')" style="width:18px;height:18px;flex-shrink:0;cursor:pointer;">';
