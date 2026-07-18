@@ -619,7 +619,35 @@ async function showRounds(id,name){
   document.getElementById('rounds-sess-name').textContent=name;
   document.getElementById('rounds-wrap').style.display='block';
   ROUNDS=await GET('ta_rounds','session_id=eq.'+id+'&order=round_number')||[];
+  await loadRoundCases();
   renderRounds();
+}
+
+// ROUND CASES (multi-case per round: "All Teams" or specific team group)
+let ROUND_CASES={}; // round_id -> [{id,case_text,case_file_url,applies_to_all,team_ids:[...]}]
+
+async function loadRoundCases(){
+  ROUND_CASES={};
+  if(!ROUNDS.length)return;
+  const rids=ROUNDS.map(r=>r.id);
+  const cases=await GET('ta_round_cases','round_id=in.('+rids.join(',')+')&order=created_at')||[];
+  const caseIds=cases.map(c=>c.id);
+  let links=[];
+  if(caseIds.length) links=await GET('ta_round_case_teams','case_id=in.('+caseIds.join(',')+')')||[];
+  cases.forEach(c=>{
+    c.team_ids=links.filter(l=>l.case_id===c.id).map(l=>l.team_id);
+    if(!ROUND_CASES[c.round_id])ROUND_CASES[c.round_id]=[];
+    ROUND_CASES[c.round_id].push(c);
+  });
+  // One-time migration: a round with legacy case_study/case_study_url but no
+  // ta_round_cases row yet gets that data copied in as an "All Teams" case.
+  for(const r of ROUNDS){
+    if(!ROUND_CASES[r.id] && (r.case_study||r.case_study_url)){
+      const res=await POST('ta_round_cases',{round_id:r.id,case_text:r.case_study||'',case_file_url:r.case_study_url||null,applies_to_all:true});
+      const created=Array.isArray(res.d)?res.d[0]:res.d;
+      if(created){created.team_ids=[];ROUND_CASES[r.id]=[created];}
+    }
+  }
 }
 
 // ROUNDS
@@ -627,6 +655,7 @@ function renderRounds(){
   const l=document.getElementById('r-list');l.innerHTML='';
   ROUNDS.forEach(r=>{
     const cur=SESS&&SESS.current_round===r.round_number;
+    const cases=ROUND_CASES[r.id]||[];
     l.innerHTML+=`<div class="rrow ${cur?'cur':''}">
       <div class="rnum">${r.round_number}</div>
       <div class="rbody">
@@ -635,17 +664,28 @@ function renderRounds(){
           ${r.multiplier>1?`<span style="background:var(--acc);color:#000;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700">×${r.multiplier}</span>`:''}
           ${cur?'<span style="color:var(--acc);font-size:12px;font-weight:600">CURRENT</span>':''}
         </div>
-        <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px">Case Study Text</label>
-        <textarea id="cs-${r.id}" rows="2" placeholder="Type case study text here...">${r.case_study||''}</textarea>
-        <div style="margin-top:6px;padding:10px;background:var(--sur);border-radius:8px;border:1px solid var(--bdr)">
-          <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:6px">📎 Upload Case File (PDF or Image)</label>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input type="file" id="fu-${r.id}" accept=".pdf,.jpg,.jpeg,.png" style="font-size:12px;color:var(--txt);background:var(--sur2);border:1px solid var(--bdr);border-radius:6px;padding:6px;margin:0;width:auto;display:inline;flex:1"/>
-            <button class="btn ba bsm" onclick="uploadCaseFile('${r.id}',${r.round_number})">⬆ Upload</button>
+
+        <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:6px">📋 Case Studies (${cases.length})</label>
+        <div id="rc-list-${r.id}">${renderRoundCasesListHtml(r.id)}</div>
+
+        <div style="margin-top:8px;padding:10px;background:var(--sur);border-radius:8px;border:1px solid var(--bdr)">
+          <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:6px">+ Add a Case</label>
+          <textarea id="rc-text-${r.id}" rows="2" placeholder="Case study text..."></textarea>
+          <div style="margin-top:6px;">
+            <input type="file" id="rc-file-${r.id}" accept=".pdf,.jpg,.jpeg,.png" style="font-size:12px;color:var(--txt);background:var(--sur2);border:1px solid var(--bdr);border-radius:6px;padding:6px;margin:0;width:100%;"/>
           </div>
-          <div id="fu-msg-${r.id}" style="font-size:12px;margin-top:6px;min-height:14px"></div>
-          <div id="fu-file-${r.id}" style="margin-top:6px;">${r.case_study_url?'<div style="font-size:12px;color:var(--lo);font-weight:600;">✅ File saved — <a href="'+r.case_study_url+'" target="_blank" style="color:var(--acc)">View uploaded file</a></div>':''}</div>
+          <div style="margin-top:8px;">
+            <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:6px;">
+              <input type="checkbox" id="rc-all-${r.id}" checked onchange="toggleAllTeamsCase('${r.id}')"/> Applies to All Teams
+            </label>
+            <div id="rc-teams-${r.id}" style="display:none;flex-wrap:wrap;gap:8px;">
+              ${TEAMS.map(t=>`<label style="font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" class="rc-team-cb-${r.id}" value="${t.id}"/> <span style="color:${t.color}">${t.name}</span></label>`).join('')}
+            </div>
+          </div>
+          <div id="rc-msg-${r.id}" style="font-size:12px;margin-top:6px;min-height:14px"></div>
+          <button class="btn ba bsm" style="margin-top:6px" onclick="addRoundCase('${r.id}')">+ Add Case</button>
         </div>
+
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
           <div><label style="font-size:12px;color:var(--mut);display:block;margin-bottom:3px">Multiplier</label>
             <select id="ml-${r.id}" style="width:80px;margin-bottom:0">
@@ -658,54 +698,87 @@ function renderRounds(){
           <div><label style="font-size:12px;color:var(--mut);display:block;margin-bottom:3px">Timer (sec)</label>
             <input type="number" id="tm-${r.id}" value="${r.timer_seconds||300}" style="width:90px;margin-bottom:0"/></div>
         </div>
-        <button class="btn bo bsm" style="margin-top:8px" onclick="saveRound('${r.id}',${r.round_number})">💾 Save</button>
+        <button class="btn bo bsm" style="margin-top:8px" onclick="saveRound('${r.id}',${r.round_number})">💾 Save Multiplier/Timer</button>
       </div></div>`;
   });
 }
 
-async function saveRound(id,num){
-  const cs=document.getElementById('cs-'+id).value.trim();
-  const ml=parseInt(document.getElementById('ml-'+id).value);
-  const tm=parseInt(document.getElementById('tm-'+id).value)||300;
-  await PATCH('ta_rounds','id=eq.'+id,{case_study:cs,multiplier:ml,timer_seconds:tm});
-  toast('Round '+num+' saved','ok');
-  ROUNDS=await GET('ta_rounds','session_id=eq.'+SESS.id+'&order=round_number')||[];
-  renderRounds();
+function renderRoundCasesListHtml(roundId){
+  const cases=ROUND_CASES[roundId]||[];
+  if(!cases.length)return'<div style="font-size:12px;color:var(--mut);margin-bottom:8px;">No cases added yet.</div>';
+  return cases.map(c=>{
+    const teamBadges=c.applies_to_all
+      ?'<span class="sb s-scoring">All Teams</span>'
+      :(TEAMS.filter(t=>c.team_ids.includes(t.id)).map(t=>`<span style="background:${t.color};color:#000;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;">${t.name}</span>`).join(' ')||'<span style="color:var(--mut);font-size:11px;">No teams assigned</span>');
+    return `<div style="background:var(--sur2);border-radius:8px;padding:10px;margin-bottom:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div style="flex:1;font-size:13px;">${c.case_text||'<span style="color:var(--mut)">(no text)</span>'}</div>
+        <button class="btn bd bsm" onclick="deleteRoundCase('${c.id}','${roundId}')">Del</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center;">
+        ${teamBadges}
+        ${c.case_file_url?'<a href="'+c.case_file_url+'" target="_blank" style="color:var(--acc);font-size:12px;">📄 View file</a>':''}
+      </div>
+    </div>`;
+  }).join('');
 }
 
-async function uploadCaseFile(roundId, num){
-  const fileInput = document.getElementById('fu-'+roundId);
-  const file = fileInput.files[0];
-  if(!file){toast('Select a file first','er');return;}
-  const msgEl = document.getElementById('fu-msg-'+roundId);
-  msgEl.textContent='Uploading...';msgEl.style.color='var(--acc)';
+function toggleAllTeamsCase(roundId){
+  const all=document.getElementById('rc-all-'+roundId).checked;
+  document.getElementById('rc-teams-'+roundId).style.display=all?'none':'flex';
+}
 
-  // Upload to Supabase Storage
-  const fileName = 'round_'+num+'_'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-  const r = await fetch('https://wrzpgultvahxbrgooibn.supabase.co/storage/v1/object/trust-analysis/'+fileName,{
-    method:'POST',
-    headers:{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':file.type,'x-upsert':'true'},
-    body:file
-  });
-  if(!r.ok){
-    const err=await r.json();
-    msgEl.textContent='Upload failed: '+(err.message||r.status);
-    msgEl.style.color='var(--hi)';
-    console.error('Upload error:',err);
-    return;
+async function addRoundCase(roundId){
+  const text=document.getElementById('rc-text-'+roundId).value.trim();
+  const fileInput=document.getElementById('rc-file-'+roundId);
+  const file=fileInput.files[0];
+  const appliesAll=document.getElementById('rc-all-'+roundId).checked;
+  const teamIds=appliesAll?[]:[...document.querySelectorAll('.rc-team-cb-'+roundId+':checked')].map(cb=>cb.value);
+  const msgEl=document.getElementById('rc-msg-'+roundId);
+  if(!text&&!file){msgEl.style.color='var(--hi)';msgEl.textContent='Enter case text or choose a file';return;}
+  if(!appliesAll&&!teamIds.length){msgEl.style.color='var(--hi)';msgEl.textContent='Select at least one team, or check "Applies to All Teams"';return;}
+  msgEl.style.color='var(--acc)';msgEl.textContent='Saving...';
+  let fileUrl=null;
+  if(file){
+    const fileName='case_'+roundId+'_'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    const r=await fetch('https://wrzpgultvahxbrgooibn.supabase.co/storage/v1/object/trust-analysis/'+fileName,{
+      method:'POST',headers:{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':file.type,'x-upsert':'true'},body:file
+    });
+    if(!r.ok){const err=await r.json();msgEl.style.color='var(--hi)';msgEl.textContent='Upload failed: '+(err.message||r.status);return;}
+    fileUrl='https://wrzpgultvahxbrgooibn.supabase.co/storage/v1/object/public/trust-analysis/'+fileName;
   }
-  // Get public URL
-  const publicUrl='https://wrzpgultvahxbrgooibn.supabase.co/storage/v1/object/public/trust-analysis/'+fileName;
-  // Save URL to round
-  await PATCH('ta_rounds','id=eq.'+roundId,{case_study_url:publicUrl});
-  msgEl.textContent='';
-  // Update the persistent green confirmation in place — no full re-render, so
-  // other rounds' unsaved text/scroll position aren't disturbed.
-  const fileEl=document.getElementById('fu-file-'+roundId);
-  if(fileEl)fileEl.innerHTML='<div style="font-size:12px;color:var(--lo);font-weight:600;">✅ File saved — <a href="'+publicUrl+'" target="_blank" style="color:var(--acc)">View uploaded file</a></div>';
-  const rr=ROUNDS.find(x=>x.id===roundId);
-  if(rr)rr.case_study_url=publicUrl;
-  toast('Case file uploaded for Round '+num,'ok');
+  const res=await POST('ta_round_cases',{round_id:roundId,case_text:text,case_file_url:fileUrl,applies_to_all:appliesAll});
+  const created=Array.isArray(res.d)?res.d[0]:res.d;
+  if(!created||!created.id){msgEl.style.color='var(--hi)';msgEl.textContent='Error saving case';return;}
+  if(!appliesAll){
+    for(const tid of teamIds){await POST('ta_round_case_teams',{case_id:created.id,team_id:tid});}
+  }
+  created.team_ids=teamIds;
+  if(!ROUND_CASES[roundId])ROUND_CASES[roundId]=[];
+  ROUND_CASES[roundId].push(created);
+  document.getElementById('rc-list-'+roundId).innerHTML=renderRoundCasesListHtml(roundId);
+  document.getElementById('rc-text-'+roundId).value='';
+  fileInput.value='';
+  msgEl.style.color='var(--lo)';msgEl.textContent='✅ Case added';
+  toast('Case added','ok');
+}
+
+async function deleteRoundCase(caseId,roundId){
+  if(!confirm('Delete this case?'))return;
+  await DEL('ta_round_case_teams','case_id=eq.'+caseId);
+  await DEL('ta_round_cases','id=eq.'+caseId);
+  ROUND_CASES[roundId]=(ROUND_CASES[roundId]||[]).filter(c=>c.id!==caseId);
+  document.getElementById('rc-list-'+roundId).innerHTML=renderRoundCasesListHtml(roundId);
+  toast('Case deleted','in');
+}
+
+async function saveRound(id,num){
+  const ml=parseInt(document.getElementById('ml-'+id).value);
+  const tm=parseInt(document.getElementById('tm-'+id).value)||300;
+  await PATCH('ta_rounds','id=eq.'+id,{multiplier:ml,timer_seconds:tm});
+  const rr=ROUNDS.find(x=>x.id===id);
+  if(rr){rr.multiplier=ml;rr.timer_seconds=tm;}
+  toast('Round '+num+' saved','ok');
 }
 
 // PARTICIPANTS

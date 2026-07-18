@@ -485,7 +485,7 @@ async function route(){
   }
   if(st==='breakout'&&rnd){
     show('breakout');
-    updBo(rnd);
+    await updBo(rnd);
     startTimer(rnd);
     await loadBoScores();
     // Check if team already submitted
@@ -577,13 +577,32 @@ async function pollCaptainAnswer(rnd){
   },3000);
 }
 
-function updBo(r){
+// Resolve which case study applies to a given team for a round:
+// a case specifically assigned to this team wins; otherwise fall back to
+// the round's "Applies to All Teams" case, if any.
+async function resolveCaseForTeam(roundId,teamId){
+  const cases=await GET('ta_round_cases','round_id=eq.'+roundId+'&select=*')||[];
+  if(!cases.length)return null;
+  if(teamId){
+    const caseIds=cases.map(c=>c.id);
+    const links=await GET('ta_round_case_teams','case_id=in.('+caseIds.join(',')+')&team_id=eq.'+teamId+'&select=case_id')||[];
+    if(links.length){
+      const specific=cases.find(c=>c.id===links[0].case_id);
+      if(specific)return specific;
+    }
+  }
+  return cases.find(c=>c.applies_to_all)||null;
+}
+
+async function updBo(r){
   document.getElementById('bo-rno').textContent=r.round_number;
   document.getElementById('bo-badge').textContent='R'+r.round_number;
   const m=document.getElementById('bo-mult');
   if(r.multiplier>1){m.style.display='block';m.textContent='×'+r.multiplier;}else m.style.display='none';
-  // Case study
-  const ct=r.case_study||'';const cu=r.case_study_url||'';
+  // Case study — resolve the one assigned to this participant's team
+  const theCase=await resolveCaseForTeam(r.id,P.team?P.team.id:null);
+  const ct=theCase?(theCase.case_text||''):'';
+  const cu=theCase?(theCase.case_file_url||''):'';
   document.getElementById('bo-case').textContent=ct||(cu?'':'Case study will appear here.');
   const cf=document.getElementById('bo-case-file');
   if(cu){cf.style.display='block';const isImg=/\.(jpg|jpeg|png)$/i.test(cu);
