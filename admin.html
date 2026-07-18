@@ -294,34 +294,26 @@ tr:hover td{background:var(--sur2);}
       <div class="ph"><h2>Teams</h2></div>
       <div id="t-noev" class="noev">← Select an Organisation first</div>
       <div id="t-body" style="display:none">
-        <div class="g2">
-          <div class="sc">
-            <div class="sct">Create Team</div>
-            <div class="fg"><label>Team Name</label><input id="t-name" placeholder="e.g. Red, Alpha..."/></div>
-            <div class="fg"><label>Colour</label>
-              <div class="clrs" id="clrs">
-                <div class="clr on" style="background:#EF4444" data-c="#EF4444" onclick="pickC(this)"></div>
-                <div class="clr" style="background:#3B82F6" data-c="#3B82F6" onclick="pickC(this)"></div>
-                <div class="clr" style="background:#EAB308" data-c="#EAB308" onclick="pickC(this)"></div>
-                <div class="clr" style="background:#22C55E" data-c="#22C55E" onclick="pickC(this)"></div>
-                <div class="clr" style="background:#8B5CF6" data-c="#8B5CF6" onclick="pickC(this)"></div>
-                <div class="clr" style="background:#F97316" data-c="#F97316" onclick="pickC(this)"></div>
-                <div class="clr" style="background:#06B6D4" data-c="#06B6D4" onclick="pickC(this)"></div>
-                <div class="clr" style="background:#EC4899" data-c="#EC4899" onclick="pickC(this)"></div>
-              </div>
+        <div class="sc">
+          <div class="sct">Create Team</div>
+          <div class="fg"><label>Team Name</label><input id="t-name" placeholder="e.g. Red, Alpha..."/></div>
+          <div class="fg"><label>Colour</label>
+            <div class="clrs" id="clrs">
+              <div class="clr on" style="background:#EF4444" data-c="#EF4444" onclick="pickC(this)"></div>
+              <div class="clr" style="background:#3B82F6" data-c="#3B82F6" onclick="pickC(this)"></div>
+              <div class="clr" style="background:#EAB308" data-c="#EAB308" onclick="pickC(this)"></div>
+              <div class="clr" style="background:#22C55E" data-c="#22C55E" onclick="pickC(this)"></div>
+              <div class="clr" style="background:#8B5CF6" data-c="#8B5CF6" onclick="pickC(this)"></div>
+              <div class="clr" style="background:#F97316" data-c="#F97316" onclick="pickC(this)"></div>
+              <div class="clr" style="background:#06B6D4" data-c="#06B6D4" onclick="pickC(this)"></div>
+              <div class="clr" style="background:#EC4899" data-c="#EC4899" onclick="pickC(this)"></div>
             </div>
-            <button class="btn ba" style="margin-top:10px" onclick="addTeam()">+ Add Team</button>
           </div>
-          <div class="sc">
-            <div class="sct">Assign / Move Participant</div>
-            <div class="fg"><label>Participant</label><select id="a-part" style="margin-bottom:8px"></select></div>
-            <div class="fg"><label>Team</label><select id="a-team" style="margin-bottom:8px"></select></div>
-            <label style="font-size:13px;display:flex;align-items:center;gap:6px;margin-bottom:10px;cursor:pointer">
-              <input type="checkbox" id="a-cap"/> 👑 Make Captain
-            </label>
-            <button class="btn ba bsm" onclick="assignPart()">Assign / Move</button>
-            <button class="btn bo bsm" onclick="unassignPart()" style="margin-left:6px">Remove from Team</button>
-          </div>
+          <button class="btn ba" style="margin-top:10px" onclick="addTeam()">+ Add Team</button>
+        </div>
+        <div class="sc">
+          <div class="sct">Assign to Team — tap a colour dot to assign or move a participant</div>
+          <div id="assign-matrix" style="overflow-x:auto;"></div>
         </div>
         <div id="t-list"></div>
       </div>
@@ -532,7 +524,7 @@ async function switchEvent(id){
   TEAMS=await GET('ta_teams','event_id=eq.'+id+'&order=created_at')||[];
   PARTS=await GET('ta_participants','event_id=eq.'+id+'&select=*,ta_teams(name,color)&order=name')||[];
   // Always populate dropdowns so second admin also sees them
-  fillDrops();
+  
   // Load sessions for this event
   const sessions=await GET('ta_sessions','event_id=eq.'+id+'&order=created_at.desc&select=*')||[];
   const ssel=document.getElementById('sess-sel');
@@ -652,7 +644,7 @@ function renderRounds(){
             <button class="btn ba bsm" onclick="uploadCaseFile('${r.id}',${r.round_number})">⬆ Upload</button>
           </div>
           <div id="fu-msg-${r.id}" style="font-size:12px;margin-top:6px;min-height:14px"></div>
-          ${r.case_study_url?'<div style="margin-top:6px;font-size:12px;color:var(--lo)">✅ File: <a href="'+r.case_study_url+'" target="_blank" style="color:var(--acc)">View uploaded file</a></div>':''}
+          <div id="fu-file-${r.id}" style="margin-top:6px;">${r.case_study_url?'<div style="font-size:12px;color:var(--lo);font-weight:600;">✅ File saved — <a href="'+r.case_study_url+'" target="_blank" style="color:var(--acc)">View uploaded file</a></div>':''}</div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
           <div><label style="font-size:12px;color:var(--mut);display:block;margin-bottom:3px">Multiplier</label>
@@ -706,11 +698,14 @@ async function uploadCaseFile(roundId, num){
   const publicUrl='https://wrzpgultvahxbrgooibn.supabase.co/storage/v1/object/public/trust-analysis/'+fileName;
   // Save URL to round
   await PATCH('ta_rounds','id=eq.'+roundId,{case_study_url:publicUrl});
-  msgEl.textContent='✅ Uploaded! '+file.name;
-  msgEl.style.color='var(--lo)';
+  msgEl.textContent='';
+  // Update the persistent green confirmation in place — no full re-render, so
+  // other rounds' unsaved text/scroll position aren't disturbed.
+  const fileEl=document.getElementById('fu-file-'+roundId);
+  if(fileEl)fileEl.innerHTML='<div style="font-size:12px;color:var(--lo);font-weight:600;">✅ File saved — <a href="'+publicUrl+'" target="_blank" style="color:var(--acc)">View uploaded file</a></div>';
+  const rr=ROUNDS.find(x=>x.id===roundId);
+  if(rr)rr.case_study_url=publicUrl;
   toast('Case file uploaded for Round '+num,'ok');
-  ROUNDS=await GET('ta_rounds','session_id=eq.'+SESS.id+'&order=round_number')||[];
-  renderRounds();
 }
 
 // PARTICIPANTS
@@ -722,14 +717,14 @@ async function addPart(){
   if(!res.ok){toast('Error adding','er');return;}
   document.getElementById('p-name').value='';
   PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
-  renderParts();fillDrops();toast(name+' added','ok');
+  renderParts();toast(name+' added','ok');
 }
 
 async function remPart(id,name){
   if(!confirm('Remove '+name+'?'))return;
   await DEL('ta_participants','id=eq.'+id);
   PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
-  renderParts();renderTeams();fillDrops();toast(name+' removed','in');
+  renderParts();renderTeams();toast(name+' removed','in');
 }
 
 function renderParts(){
@@ -767,32 +762,13 @@ async function addTeam(){
   if(!res.ok){toast('Error adding team','er');return;}
   document.getElementById('t-name').value='';
   TEAMS=await GET('ta_teams','event_id=eq.'+EV.id+'&order=created_at')||[];
-  renderTeams();fillDrops();toast('Team '+name+' added','ok');
-}
-
-async function assignPart(){
-  const pid=document.getElementById('a-part').value;
-  const tid=document.getElementById('a-team').value;
-  const cap=document.getElementById('a-cap').checked;
-  if(!pid||!tid){toast('Select participant and team','er');return;}
-  await PATCH('ta_participants','id=eq.'+pid,{team_id:tid,is_captain:cap});
-  document.getElementById('a-cap').checked=false;
-  PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
-  renderTeams();fillDrops();toast('Done!','ok');
-}
-
-async function unassignPart(){
-  const pid=document.getElementById('a-part').value;
-  if(!pid){toast('Select participant first','er');return;}
-  await PATCH('ta_participants','id=eq.'+pid,{team_id:null,is_captain:false});
-  PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
-  renderTeams();fillDrops();toast('Removed from team','in');
+  renderTeams();toast('Team '+name+' added','ok');
 }
 
 async function remFromTeam(pid){
   await PATCH('ta_participants','id=eq.'+pid,{team_id:null,is_captain:false});
   PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
-  renderTeams();fillDrops();toast('Removed','in');
+  renderTeams();toast('Removed','in');
 }
 
 async function remTeam(id,name){
@@ -801,7 +777,7 @@ async function remTeam(id,name){
   await DEL('ta_teams','id=eq.'+id);
   TEAMS=await GET('ta_teams','event_id=eq.'+EV.id+'&order=created_at')||[];
   PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
-  renderTeams();fillDrops();toast(name+' removed','in');
+  renderTeams();toast(name+' removed','in');
 }
 
 function renderTeams(){
@@ -821,17 +797,40 @@ function renderTeams(){
       <div class="chips">${members.map(p=>`<div class="chip">${p.is_captain?'👑 ':''}${p.name}<span class="xb" onclick="remFromTeam('${p.id}')">×</span></div>`).join('')||'<span style="font-size:12px;color:var(--mut)">No members</span>'}</div>
     </div>`;
   });
+  renderAssignMatrix();
 }
 
-function fillDrops(){
-  const ps=document.getElementById('a-part');
-  const ts=document.getElementById('a-team');
-  if(!ps||!ts)return;
-  ps.innerHTML='<option value="">Select participant</option>';
-  ts.innerHTML='<option value="">Select team</option>';
-  PARTS.forEach(p=>{ps.innerHTML+=`<option value="${p.id}">${p.name}${p.ta_teams?' ('+p.ta_teams.name+')':' (no team)'}</option>`;});
-  TEAMS.forEach(t=>{ts.innerHTML+=`<option value="${t.id}">${t.name}</option>`;});
+function renderAssignMatrix(){
+  const el=document.getElementById('assign-matrix');
+  if(!el)return;
+  if(!PARTS.length){el.innerHTML='<span style="color:var(--mut);font-size:13px">No participants yet — add some in the Participants tab.</span>';return;}
+  if(!TEAMS.length){el.innerHTML='<span style="color:var(--mut);font-size:13px">No teams yet — create one first.</span>';return;}
+  let html='<div style="display:flex;flex-direction:column;gap:6px;">';
+  PARTS.forEach(p=>{
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--sur2);border-radius:8px;">';
+    html+='<div style="flex:1;font-size:13px;min-width:120px;">'+(p.is_captain?'👑 ':'')+p.name
+      +(p.ta_teams?' <span style="color:'+p.ta_teams.color+';font-size:11px">('+p.ta_teams.name+')</span>'
+        :'<span style="color:var(--mut);font-size:11px"> (no team)</span>')+'</div>';
+    html+='<div style="display:flex;gap:6px;flex-shrink:0;">';
+    TEAMS.forEach(tm=>{
+      const on=p.team_id===tm.id;
+      html+='<div class="clr'+(on?' on':'')+'" style="background:'+tm.color+';width:22px;height:22px;" title="Assign to '+tm.name+'" onclick="assignToTeam(\''+p.id+'\',\''+tm.id+'\')"></div>';
+    });
+    html+='<div style="width:22px;height:22px;border-radius:50%;border:1px dashed var(--bdr);color:var(--mut);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Remove from team" onclick="assignToTeam(\''+p.id+'\',null)">×</div>';
+    html+='</div></div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
 }
+
+async function assignToTeam(participantId,teamId){
+  if(teamId)await PATCH('ta_participants','id=eq.'+participantId,{team_id:teamId});
+  else await PATCH('ta_participants','id=eq.'+participantId,{team_id:null,is_captain:false});
+  PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
+  renderTeams();
+  toast('Updated!','ok');
+}
+
 
 // GAME CONTROL
 async function getCurRound(){
