@@ -387,7 +387,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="modal-body" id="modal-body">Once submitted, cannot be changed.</div>
     <div class="modal-btns">
       <button class="btn btn-outline" style="flex:1" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" style="flex:1" onclick="submitVote()">Submit</button>
+      <button class="btn btn-primary" style="flex:1" id="modal-submit-btn" onclick="advanceConfirm()">Submit</button>
     </div>
   </div>
 </div>
@@ -895,13 +895,38 @@ function selVote(v,ctx){
 
 function openModal(ctx){
   P.ctx=ctx;const v=P.vote;if(!v)return;
-  const label=ctx==='gr'?'your opinion':"your team's final answer";
-  document.getElementById('modal-title').textContent='Submit '+(v==='H'?'HIGH':'LOW')+'?';
-  document.getElementById('modal-body').textContent='Once submitted this cannot be changed. '+label.charAt(0).toUpperCase()+label.slice(1)+' will be '+(v==='H'?'HIGH':'LOW')+'.';
+  P.confirmStage=1;
+  renderConfirmStage();
   document.getElementById('modal').classList.add('open');
 }
 
-function closeModal(){document.getElementById('modal').classList.remove('open');}
+// Two-step "are you sure" — stage 1 states the choice, stage 2 re-confirms it's final.
+function renderConfirmStage(){
+  const v=P.vote;const ctx=P.ctx;
+  const label=ctx==='gr'?'your opinion':"your team's final answer";
+  const btn=document.getElementById('modal-submit-btn');
+  if(P.confirmStage===1){
+    document.getElementById('modal-title').textContent='Submit '+(v==='H'?'HIGH':'LOW')+'?';
+    document.getElementById('modal-body').textContent='Once submitted this cannot be changed. '+label.charAt(0).toUpperCase()+label.slice(1)+' will be '+(v==='H'?'HIGH':'LOW')+'.';
+    btn.textContent='Yes, Continue';
+  }else{
+    document.getElementById('modal-title').textContent='Are you absolutely sure?';
+    document.getElementById('modal-body').textContent='This is final — '+label+' will be locked in as '+(v==='H'?'HIGH':'LOW')+'.';
+    btn.textContent='Yes, Submit';
+  }
+}
+
+function advanceConfirm(){
+  if(P.confirmStage===1){
+    P.confirmStage=2;
+    renderConfirmStage();
+    return;
+  }
+  closeModal();
+  submitVote();
+}
+
+function closeModal(){document.getElementById('modal').classList.remove('open');P.confirmStage=null;}
 
 async function submitVote(){
   closeModal();
