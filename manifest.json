@@ -1,6 +1,6 @@
 {
-  "name": "Trust Analysis",
-  "short_name": "Trust Analysis",
+  "name": "Game of Trust",
+  "short_name": "Game of Trust",
   "description": "Group Decision & Trust Building Game",
   "start_url": "/trust-analysis/",
   "display": "standalone",

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Trust Analysis Admin v5</title>
+<title>Game of Trust Admin v5</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
 :root{--bg:#0F172A;--sur:#1E293B;--sur2:#273548;--bdr:#334155;--acc:#F59E0B;--hi:#EF4444;--lo:#22C55E;--txt:#F1F5F9;--mut:#94A3B8;}
@@ -140,7 +140,7 @@ tr:hover td{background:var(--sur2);}
 <div id="login" class="wrap">
   <div class="lcard">
     <div style="font-size:44px;margin-bottom:12px">🎯</div>
-    <h1>Trust Analysis</h1>
+    <h1>Game of Trust</h1>
     <p>Admin Panel</p>
     <input type="password" id="pw" placeholder="Admin password" onkeydown="if(event.key==='Enter')login()" style="width:100%;background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);padding:12px;font-size:15px;margin-bottom:12px;display:block;outline:none;"/>
     <button class="btn ba bfull" onclick="login()">Login →</button>
@@ -151,24 +151,24 @@ tr:hover td{background:var(--sur2);}
 <!-- APP -->
 <div id="app" class="layout" style="display:none">
   <div class="mob-bar">
-    <div class="mb-logo">🎯 Trust Analysis</div>
+    <div class="mb-logo">🎯 Game of Trust</div>
     <button class="hamburger" onclick="toggleMenu()">☰</button>
   </div>
   <div class="side-overlay" id="side-overlay" onclick="closeMenu()"></div>
   <div class="side" id="sidebar">
-    <div class="slogo"><div class="slogo-t">Trust Analysis</div><div class="slogo-s">Admin v5</div></div>
+    <div class="slogo"><div class="slogo-t">Game of Trust</div><div class="slogo-s">Admin v5</div></div>
     <div class="ssel">
-      <label>Active Event</label>
+      <label>Active Organisation</label>
       <select id="ev-sel" onchange="switchEvent(this.value)" style="margin-bottom:6px"></select>
       <label>Active Session</label>
       <select id="sess-sel" onchange="switchSession(this.value)" style="margin-bottom:0"></select>
     </div>
     <div class="snav">
       <a onclick="go('dash')" id="n-dash" class="on">📊 Dashboard</a>
-      <a onclick="go('events')" id="n-events">🏢 Events</a>
+      <a onclick="go('events')" id="n-events">🏢 Organisation</a>
+      <a onclick="go('session')" id="n-session">🎮 Session</a>
       <a onclick="go('parts')" id="n-parts">👤 Participants</a>
       <a onclick="go('teams')" id="n-teams">👥 Teams</a>
-      <a onclick="go('session')" id="n-session">🎮 Session</a>
       <a onclick="go('scores')" id="n-scores">🏆 Scores</a>
       <a onclick="go('resps')" id="n-resps">📋 Responses</a>
     </div>
@@ -179,7 +179,7 @@ tr:hover td{background:var(--sur2);}
     <!-- DASHBOARD -->
     <div class="pg on" id="pg-dash">
       <div class="ph"><h2>Dashboard</h2><span class="sb s-setup" id="d-status">setup</span></div>
-      <div id="d-noev" class="noev">← Create or select an Event to begin</div>
+      <div id="d-noev" class="noev">← Create or select an Organisation to begin</div>
       <div id="d-body" style="display:none">
         <div class="g4" style="margin-bottom:14px">
           <div class="stat"><div class="stl">Teams</div><div class="stv" id="d-teams">0</div></div>
@@ -188,9 +188,9 @@ tr:hover td{background:var(--sur2);}
           <div class="stat"><div class="stl">Round</div><div class="stv" id="d-round">—</div></div>
         </div>
         <div class="sc">
-          <div class="sct">Event & Session Info</div>
+          <div class="sct">Organisation & Session Info</div>
           <div style="font-size:13px;display:flex;gap:16px;flex-wrap:wrap;align-items:center">
-            <span><span style="color:var(--mut)">Event: </span><strong id="d-evname">—</strong></span>
+            <span><span style="color:var(--mut)">Organisation: </span><strong id="d-evname">—</strong></span>
             <span><span style="color:var(--mut)">Session: </span><strong id="d-sessname">—</strong></span>
             <span><span style="color:var(--mut)">PIN: </span><strong style="font-size:18px;color:var(--acc);font-family:'Space Grotesk',sans-serif" id="d-pin">—</strong></span>
             <span style="display:flex;align-items:center;gap:6px">
@@ -250,21 +250,21 @@ tr:hover td{background:var(--sur2);}
       </div>
     </div>
 
-    <!-- EVENTS -->
+    <!-- ORGANISATIONS -->
     <div class="pg" id="pg-events">
-      <div class="ph"><h2>Events</h2></div>
+      <div class="ph"><h2>Organisations</h2></div>
       <div class="sc">
-        <div class="sct">Create New Event</div>
+        <div class="sct">Create New Organisation</div>
         <div style="display:flex;gap:10px;align-items:flex-end">
-          <div style="flex:1"><label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px">Company / Event Name</label>
+          <div style="flex:1"><label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px">Organisation Name</label>
             <input id="e-name" placeholder="e.g. Tata Motors" style="margin-bottom:0"/></div>
           <button class="btn ba" onclick="makeEvent()">+ Create</button>
         </div>
         <div id="e-msg" style="font-size:13px;margin-top:8px;min-height:16px"></div>
       </div>
       <div class="sc">
-        <div class="sct">All Events</div>
-        <table><thead><tr><th>Event Name</th><th>Sessions</th><th>Created</th><th>Action</th></tr></thead>
+        <div class="sct">All Organisations</div>
+        <table><thead><tr><th>Organisation Name</th><th>Sessions</th><th>Created</th><th>Action</th></tr></thead>
         <tbody id="ev-table"></tbody></table>
       </div>
     </div>
@@ -272,7 +272,7 @@ tr:hover td{background:var(--sur2);}
     <!-- PARTICIPANTS -->
     <div class="pg" id="pg-parts">
       <div class="ph"><h2>Participants</h2></div>
-      <div id="p-noev" class="noev">← Select an Event first</div>
+      <div id="p-noev" class="noev">← Select an Organisation first</div>
       <div id="p-body" style="display:none">
         <div class="sc">
           <div class="sct">Add Participant</div>
@@ -292,7 +292,7 @@ tr:hover td{background:var(--sur2);}
     <!-- TEAMS -->
     <div class="pg" id="pg-teams">
       <div class="ph"><h2>Teams</h2></div>
-      <div id="t-noev" class="noev">← Select an Event first</div>
+      <div id="t-noev" class="noev">← Select an Organisation first</div>
       <div id="t-body" style="display:none">
         <div class="g2">
           <div class="sc">
@@ -330,7 +330,7 @@ tr:hover td{background:var(--sur2);}
     <!-- SESSION -->
     <div class="pg" id="pg-session">
       <div class="ph"><h2>Session</h2></div>
-      <div id="sess-noev" class="noev">← Select an Event first</div>
+      <div id="sess-noev" class="noev">← Select an Organisation first</div>
       <div id="sess-body" style="display:none">
         <div class="sc">
           <div class="sct">Create New Session (Game Day)</div>
@@ -341,13 +341,13 @@ tr:hover td{background:var(--sur2);}
               <input id="s-pin" placeholder="e.g. 2468" maxlength="4" type="tel"/></div>
           </div>
           <div><label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px">Total Rounds</label>
-            <input id="s-rounds" type="number" value="10" style="max-width:100px"/></div>
+            <input id="s-rounds" type="number" value="10" min="1" max="20" style="max-width:100px"/></div>
           <button class="btn ba" onclick="makeSession()">+ Create Session</button>
           <div id="s-msg" style="font-size:13px;margin-top:8px;min-height:16px"></div>
         </div>
 
         <div class="sc">
-          <div class="sct">All Sessions for this Event</div>
+          <div class="sct">All Sessions for this Organisation</div>
           <table><thead><tr><th>Session</th><th>PIN</th><th>Rounds</th><th>Status</th><th>Action</th></tr></thead>
           <tbody id="sess-table"></tbody></table>
         </div>
@@ -362,14 +362,14 @@ tr:hover td{background:var(--sur2);}
     <!-- SCORES -->
     <div class="pg" id="pg-scores">
       <div class="ph"><h2>Scoreboard</h2><button class="btn bo bsm" onclick="loadScores()">↺ Refresh</button></div>
-      <div id="sc-noev" class="noev">← Select an Event & Session first</div>
+      <div id="sc-noev" class="noev">← Select an Organisation & Session first</div>
       <div id="sc-body"></div>
     </div>
 
     <!-- RESPONSES -->
     <div class="pg" id="pg-resps">
       <div class="ph"><h2>Responses</h2><button class="btn bo bsm" onclick="loadResps()">↺ Refresh</button></div>
-      <div id="rs-noev" class="noev">← Select an Event & Session first</div>
+      <div id="rs-noev" class="noev">← Select an Organisation & Session first</div>
       <div id="rs-body" style="display:none">
         <div class="sc"><div class="sct">Individual Opinions (Phase 1)</div>
           <table><thead><tr><th>Round</th><th>Participant</th><th>Team</th><th>Opinion</th><th>Time</th></tr></thead>
@@ -385,7 +385,7 @@ tr:hover td{background:var(--sur2);}
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('Trust Analysis Admin v5 loaded');
+console.log('Game of Trust Admin v5 loaded');
 const U='https://wrzpgultvahxbrgooibn.supabase.co';
 const K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndyenBndWx0dmFoeGJyZ29vaWJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzc2MTcsImV4cCI6MjA5MzExMzYxN30.sZM4GQiwom34d7TjeK_Jc_n8KYoC8VhI48jfq71dwb8';
 const PASS='vijay11';
@@ -482,24 +482,45 @@ async function makeEvent(){
   if(!res.ok){msg.style.color='var(--hi)';msg.textContent='Error: '+JSON.stringify(res.d);return;}
   const ev=Array.isArray(res.d)?res.d[0]:res.d;
   document.getElementById('e-name').value='';
-  msg.style.color='var(--lo)';msg.textContent='Event created!';
-  toast('Event created!','ok');
+  msg.style.color='var(--lo)';msg.textContent='Organisation created!';
+  toast('Organisation created!','ok');
   await loadEvents();
   switchEvent(ev.id);
   document.getElementById('ev-sel').value=ev.id;
 }
 
 async function delEvent(id){
-  if(!confirm('Delete this event and ALL data (teams, participants, sessions)?'))return;
-  await DEL('ta_scores','session_id=in.(select id from ta_sessions where event_id=eq.'+id+')');
-  await DEL('ta_team_answers','session_id=in.(select id from ta_sessions where event_id=eq.'+id+')');
-  await DEL('ta_individual_answers','session_id=in.(select id from ta_sessions where event_id=eq.'+id+')');
-  await DEL('ta_rounds','session_id=in.(select id from ta_sessions where event_id=eq.'+id+')');
-  await DEL('ta_sessions','event_id=eq.'+id);
+  if(!confirm('Delete this organisation and ALL data (teams, participants, sessions)?'))return;
+  // Fetch real ID lists first — PostgREST does not support nested SQL subqueries
+  // in filter strings, so session/round IDs must be resolved client-side before
+  // deleting dependent rows.
+  const sessRows=await GET('ta_sessions','event_id=eq.'+id+'&select=id')||[];
+  const sids=sessRows.map(s=>s.id);
+  let rids=[];
+  if(sids.length){
+    const roundRows=await GET('ta_rounds','session_id=in.('+sids.join(',')+')&select=id')||[];
+    rids=roundRows.map(r=>r.id);
+  }
+  if(sids.length){
+    await DEL('ta_scores','session_id=in.('+sids.join(',')+')');
+    await DEL('ta_team_answers','session_id=in.('+sids.join(',')+')');
+    await DEL('ta_individual_answers','session_id=in.('+sids.join(',')+')');
+    await DEL('ta_captain_votes','session_id=in.('+sids.join(',')+')');
+  }
+  if(rids.length){
+    await DEL('ta_round_cases','round_id=in.('+rids.join(',')+')');
+  }
+  if(sids.length){
+    await DEL('ta_rounds','session_id=in.('+sids.join(',')+')');
+    await DEL('ta_sessions','id=in.('+sids.join(',')+')');
+  }
   await DEL('ta_participants','event_id=eq.'+id);
   await DEL('ta_teams','event_id=eq.'+id);
   await DEL('ta_events','id=eq.'+id);
-  EV=null;SESS=null;toast('Deleted','in');loadEvents();
+  EV=null;SESS=null;TEAMS=[];PARTS=[];ROUNDS=[];
+  toast('Deleted','in');
+  await loadEvents();
+  renderParts();renderTeams();refreshDash();
 }
 
 async function switchEvent(id){
@@ -548,13 +569,14 @@ async function loadSessions(){
 }
 
 async function makeSession(){
-  if(!EV){toast('Select event first','er');return;}
+  if(!EV){toast('Select organisation first','er');return;}
   const name=document.getElementById('s-name').value.trim();
   const pin=document.getElementById('s-pin').value.trim();
   const rnds=parseInt(document.getElementById('s-rounds').value)||10;
   const msg=document.getElementById('s-msg');
   if(!name){msg.style.color='var(--hi)';msg.textContent='Session name required';return;}
   if(!pin||pin.length!==4){msg.style.color='var(--hi)';msg.textContent='4-digit PIN required';return;}
+  if(rnds<1||rnds>20){msg.style.color='var(--hi)';msg.textContent='Total rounds must be between 1 and 20';return;}
   msg.style.color='var(--acc)';msg.textContent='Creating...';
   // Reset is_present for all participants
   await PATCH('ta_participants','event_id=eq.'+EV.id,{is_present:false});
@@ -576,9 +598,13 @@ async function makeSession(){
 
 async function delSession(id){
   if(!confirm('Delete this session and its scores?'))return;
+  const roundRows=await GET('ta_rounds','session_id=eq.'+id+'&select=id')||[];
+  const rids=roundRows.map(r=>r.id);
   await DEL('ta_scores','session_id=eq.'+id);
   await DEL('ta_team_answers','session_id=eq.'+id);
   await DEL('ta_individual_answers','session_id=eq.'+id);
+  await DEL('ta_captain_votes','session_id=eq.'+id);
+  if(rids.length) await DEL('ta_round_cases','round_id=in.('+rids.join(',')+')');
   await DEL('ta_rounds','session_id=eq.'+id);
   await DEL('ta_sessions','id=eq.'+id);
   if(SESS&&SESS.id===id)SESS=null;
@@ -689,7 +715,7 @@ async function uploadCaseFile(roundId, num){
 
 // PARTICIPANTS
 async function addPart(){
-  if(!EV){toast('Select event first','er');return;}
+  if(!EV){toast('Select organisation first','er');return;}
   const name=document.getElementById('p-name').value.trim();
   if(!name){toast('Name required','er');return;}
   const res=await POST('ta_participants',{event_id:EV.id,name,is_captain:false,is_present:false});
@@ -734,7 +760,7 @@ function renderParts(){
 function pickC(el){document.querySelectorAll('.clr').forEach(c=>c.classList.remove('on'));el.classList.add('on');CLR=el.dataset.c;}
 
 async function addTeam(){
-  if(!EV){toast('Select event first','er');return;}
+  if(!EV){toast('Select organisation first','er');return;}
   const name=document.getElementById('t-name').value.trim();
   if(!name){toast('Team name required','er');return;}
   const res=await POST('ta_teams',{event_id:EV.id,name,color:CLR});
@@ -824,6 +850,7 @@ async function announceTeams(){
 
 async function openRegistration(){
   if(!SESS){toast('No session loaded','er');return;}
+  if(TEAMS.length<2||TEAMS.length%2!==0){toast('Teams must be an even number (2, 4, 6, 8...) — currently '+TEAMS.length,'er');return;}
   await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'registration',current_round:0});
   SESS.status='registration';SESS.current_round=0;
   toast('Registration open — participants can now mark presence','ok');
@@ -832,6 +859,7 @@ async function openRegistration(){
 
 async function openBreakout(){
   if(!SESS){toast('No session','er');return;}
+  if(TEAMS.length<2||TEAMS.length%2!==0){toast('Teams must be an even number (2, 4, 6, 8...) — currently '+TEAMS.length,'er');return;}
   // Advance to next round
   const next=(SESS.current_round||0)+1;
   if(next>SESS.total_rounds){toast('All rounds completed!','in');return;}
@@ -890,6 +918,26 @@ async function endSession(){
   toast('Session ended','in');refreshDash();
 }
 
+// Payout per team given n=total teams, h=teams that chose H this round.
+// n===4 keeps the exact original hand-tuned table untouched (verified in play).
+// Any other even n uses the generalized formula (confirmed against n=6/n=8 by product owner):
+//   L payout: +100 flat if h===0 (full cooperation), else -100*h
+//   H payout: -100 flat if h===n (full defection), else the pool of 100pts-per-L-team
+//             split evenly among the H teams, rounded to nearest 10
+function computePayout(n,h){
+  const l=n-h;
+  if(n===4){
+    if(h===4)return{hp:-100,lp:0};
+    if(h===3)return{hp:100,lp:-300};
+    if(h===2)return{hp:-100,lp:-200};
+    if(h===1)return{hp:300,lp:-100};
+    return{hp:0,lp:100}; // h===0
+  }
+  const lp=h===0?100:-100*h;
+  const hp=(h===0)?0:(h===n?-100:Math.round((100*l/h)/10)*10);
+  return{hp,lp};
+}
+
 async function calcScores(round){
   const tas=await GET('ta_team_answers','round_id=eq.'+round.id+'&select=*')||[];
   // Only calculate if ALL teams have submitted
@@ -898,14 +946,9 @@ async function calcScores(round){
     toast(missing+' team(s) have not submitted yet — cannot calculate scores','er');
     return false;
   }
+  const n=TEAMS.length;
   const h=tas.filter(a=>a.answer==='H').length;
-  const l=tas.filter(a=>a.answer==='L').length;
-  let hp=0,lp=0;
-  if(h===4)hp=-100;
-  else if(h===3){hp=100;lp=-300;}
-  else if(h===2){hp=-100;lp=-200;}
-  else if(h===1){hp=300;lp=-100;}
-  else lp=100;
+  const{hp,lp}=computePayout(n,h);
   const mult=round.multiplier||1;
   for(const tm of TEAMS){
     const ta=tas.find(a=>a.team_id===tm.id);if(!ta)continue;
@@ -974,6 +1017,10 @@ async function refreshDash(){
 
   // Show presence matrix — during registration use is_present flag, during rounds use answers
   {
+    // Always refresh the full participant list (not just presence IDs) so changes
+    // made from a concurrent admin session (add/move/mark-present) show up within
+    // one poll cycle instead of only after a local user action.
+    PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
     let pids=new Set();
     if(SESS.current_round>0){
       const rnd=await getCurRound();
@@ -983,8 +1030,7 @@ async function refreshDash(){
       }
     } else {
       // Registration phase — use is_present flag
-      const freshParts=await GET('ta_participants','event_id=eq.'+EV.id+'&is_present=eq.true&select=id')||[];
-      freshParts.forEach(p=>pids.add(p.id));
+      PARTS.filter(p=>p.is_present).forEach(p=>pids.add(p.id));
     }
     document.getElementById('d-present').textContent=pids.size;
     renderPresenceMatrix(pids);
