@@ -221,6 +221,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="wait-title">Teams Announced!</div>
       <div class="wait-sub">Your facilitator has finalised the teams. Waiting for Breakout to begin...</div>
     </div>
+    <div id="ann-captain-vote" style="display:none;">
+      <div class="sec-label" style="margin-top:16px;">🗳️ Elect Your Captain</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Your team hasn't chosen a captain yet. Tap a teammate to vote — majority wins.</p>
+      <div id="ann-vote-list" class="name-list"></div>
+      <div id="ann-vote-status" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center;"></div>
+    </div>
     <div id="ann-teams-content"></div>
   </div>
 </div>
@@ -529,8 +535,9 @@ async function route(){
     document.getElementById('ann-dot').style.background=P.team?.color||'#3B82F6';
     document.getElementById('ann-name').textContent=P.participant.name;
     document.getElementById('ann-team').textContent=P.team?.name||'';
-    if(P.isCapt) document.getElementById('ann-cap').style.display='block';
+    document.getElementById('ann-cap').style.display=P.isCapt?'block':'none';
     await loadAnnounceTeams();
+    await checkCaptainVoting();
     return;
   }
   if(st==='general'&&rnd){
@@ -622,6 +629,55 @@ async function loadAnnounceTeams(){
       </div>
     </div>`;
   });
+}
+
+// CAPTAIN ELECTION — majority vote among present team members.
+// Runs every time the 'announced' screen refreshes (every poll cycle);
+// once a captain exists (by vote or admin override) this becomes a no-op.
+async function checkCaptainVoting(){
+  const sec=document.getElementById('ann-captain-vote');
+  if(!P.team){sec.style.display='none';return;}
+  const capRows=await GET('ta_participants','team_id=eq.'+P.team.id+'&is_captain=eq.true&select=id');
+  if(capRows&&capRows.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  const members=await GET('ta_participants','team_id=eq.'+P.team.id+'&is_present=eq.true&select=*&order=name')||[];
+  const myVoteRows=await GET('ta_captain_votes','session_id=eq.'+P.session.id+'&team_id=eq.'+P.team.id+'&voter_participant_id=eq.'+P.participant.id+'&select=voted_for_participant_id');
+  const myVotedFor=(myVoteRows&&myVoteRows.length)?myVoteRows[0].voted_for_participant_id:null;
+  document.getElementById('ann-vote-list').innerHTML=members.map(m=>{
+    const sel=m.id===myVotedFor;
+    return `<div class="name-card${sel?' sel':''}" onclick="castCaptainVote('${m.id}')">
+      <div class="av" style="background:var(--s2);color:var(--muted)">${m.name.charAt(0).toUpperCase()}</div>
+      <div><div class="ni-name">${m.name}${m.id===P.participant.id?' (You)':''}</div></div>
+    </div>`;
+  }).join('');
+  const allVotes=await GET('ta_captain_votes','session_id=eq.'+P.session.id+'&team_id=eq.'+P.team.id+'&select=voted_for_participant_id')||[];
+  const tally={};allVotes.forEach(v=>{tally[v.voted_for_participant_id]=(tally[v.voted_for_participant_id]||0)+1;});
+  const totalPresent=members.length;
+  let winner=null,winnerVotes=0;
+  Object.entries(tally).forEach(([pid,ct])=>{if(ct>winnerVotes){winner=pid;winnerVotes=ct;}});
+  const majorityThreshold=Math.floor(totalPresent/2)+1;
+  const statusEl=document.getElementById('ann-vote-status');
+  if(winner&&winnerVotes>=majorityThreshold&&totalPresent>0){
+    await fetch(`${SURL}/rest/v1/ta_participants?team_id=eq.${P.team.id}&is_captain=eq.true`,{method:'PATCH',headers:H(),body:JSON.stringify({is_captain:false})});
+    await fetch(`${SURL}/rest/v1/ta_participants?id=eq.${winner}`,{method:'PATCH',headers:H(),body:JSON.stringify({is_captain:true})});
+    sec.style.display='none';
+    toast('Captain elected!','success');
+    return;
+  }
+  if(allVotes.length>=totalPresent&&totalPresent>0){
+    statusEl.textContent='No majority yet — awaiting facilitator to break the tie.';
+  }else{
+    statusEl.textContent=allVotes.length+'/'+totalPresent+' votes cast so far';
+  }
+}
+
+async function castCaptainVote(votedForId){
+  await fetch(`${SURL}/rest/v1/ta_captain_votes`,{
+    method:'POST',
+    headers:{...H(),'Prefer':'resolution=merge-duplicates,return=representation'},
+    body:JSON.stringify({session_id:P.session.id,team_id:P.team.id,voter_participant_id:P.participant.id,voted_for_participant_id:votedForId})
+  });
+  await checkCaptainVoting();
 }
 
 // CAPTAIN LIVE ANSWER POLL (for non-captain members)
