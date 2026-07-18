@@ -146,9 +146,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <h1>Enter Session PIN</h1>
       <p>Enter the 4-digit PIN given by your facilitator</p>
     </div>
-    <div class="pin-dots">
-      <div class="pdot-box" id="pd0"></div><div class="pdot-box" id="pd1"></div>
-      <div class="pdot-box" id="pd2"></div><div class="pdot-box" id="pd3"></div>
+    <div style="position:relative;">
+      <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="pin-real-input"
+        autocomplete="one-time-code" aria-label="Session PIN"
+        style="position:absolute;inset:0;opacity:0;border:none;background:transparent;text-align:center;font-size:16px;z-index:2;"
+        oninput="onRealPinInput(this)"/>
+      <div class="pin-dots">
+        <div class="pdot-box" id="pd0"></div><div class="pdot-box" id="pd1"></div>
+        <div class="pdot-box" id="pd2"></div><div class="pdot-box" id="pd3"></div>
+      </div>
     </div>
     <div class="pin-err" id="pin-err"></div>
     <div class="keypad">
@@ -346,7 +352,19 @@ function toast(msg,type='info'){const t=document.getElementById('toast');t.class
 // PIN
 function pk(k){if(P.pin.length>=4)return;P.pin+=k;updPin();if(P.pin.length===4)verPin();}
 function pd(){P.pin=P.pin.slice(0,-1);document.getElementById('pin-err').textContent='';updPin();}
-function updPin(){for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);d.textContent=i<P.pin.length?'●':'';d.className='pdot-box'+(i<P.pin.length?' filled':'');}}
+function updPin(){
+  for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);d.textContent=i<P.pin.length?'●':'';d.className='pdot-box'+(i<P.pin.length?' filled':'');}
+  const realInput=document.getElementById('pin-real-input');
+  if(realInput&&realInput.value!==P.pin)realInput.value=P.pin;
+}
+function onRealPinInput(el){
+  const digits=el.value.replace(/\D/g,'').slice(0,4);
+  el.value=digits;
+  P.pin=digits;
+  document.getElementById('pin-err').textContent='';
+  updPin();
+  if(digits.length===4)verPin();
+}
 
 async function verPin(){
   document.getElementById('pin-err').textContent='Checking...';
@@ -357,13 +375,23 @@ async function verPin(){
     if(s.status==='setup'){document.getElementById('pin-err').textContent='Session not started yet. Wait for facilitator.';P.pin='';updPin();return;}
     if(s.status==='complete'){document.getElementById('pin-err').textContent='This session has ended.';P.pin='';updPin();return;}
     P.session=s;
+    // Fetch org name for the header subtitle on post-PIN screens
+    try{
+      const orgRows=await GET('ta_events','id=eq.'+s.event_id+'&select=name');
+      P.orgName=(orgRows&&orgRows[0])?orgRows[0].name:'';
+    }catch(e){P.orgName='';}
     loadNames();
   }catch(e){document.getElementById('pin-err').textContent='Connection error. Try again.';P.pin='';updPin();}
 }
 
+function orgSessionLabel(){
+  if(!P.session)return'';
+  return P.orgName?(P.orgName+' • '+P.session.name):P.session.name;
+}
+
 // NAMES
 async function loadNames(){
-  document.getElementById('ev-name-display').textContent=P.session.name;
+  document.getElementById('ev-name-display').textContent=orgSessionLabel();
   show('name');
   const parts=await GET('ta_participants','event_id=eq.'+P.session.event_id+'&select=*,ta_teams(name,color)&order=name');
   const list=document.getElementById('name-list');
@@ -400,7 +428,7 @@ async function confirmName(){
   await fetch(`${SURL}/rest/v1/ta_participants?id=eq.${P.participant.id}`,{method:'PATCH',headers:H(),body:JSON.stringify({is_present:true})});
   setupBars();
   show('wait');
-  document.getElementById('wait-ev-name').textContent=P.session.name;
+  document.getElementById('wait-ev-name').textContent=orgSessionLabel();
   startPoll();
 }
 
@@ -446,7 +474,7 @@ async function route(){
   }
   if(st==='announced'){
     show('announce');
-    document.getElementById('ann-sess-name').textContent=P.session.name;
+    document.getElementById('ann-sess-name').textContent=orgSessionLabel();
     document.getElementById('ann-pbar').style.display='flex';
     document.getElementById('ann-dot').style.background=P.team?.color||'#3B82F6';
     document.getElementById('ann-name').textContent=P.participant.name;
