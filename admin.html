@@ -430,7 +430,9 @@ function closeMenu(){
 }
 
 // NAV
+let CUR_PAGE='dash';
 function go(n){
+  CUR_PAGE=n;
   closeMenu();
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.snav a').forEach(a=>a.classList.remove('on'));
@@ -1283,6 +1285,14 @@ async function moveMember(participantId, newTeamId, selectEl){
 }
 
 async function pollSess(){
+  // Keep the Participants/Teams tabs live too — not just the dashboard — so a
+  // participant marking presence on their phone shows up here within 5s with
+  // no manual refresh/relogin needed, no matter which admin tab is open.
+  if(EV&&(CUR_PAGE==='parts'||CUR_PAGE==='teams')){
+    PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
+    if(CUR_PAGE==='parts')renderParts();
+    if(CUR_PAGE==='teams')renderTeams();
+  }
   if(!SESS)return;
   const s=await GET('ta_sessions','id=eq.'+SESS.id+'&select=*');
   if(s&&s[0]){SESS=s[0];refreshDash();}
