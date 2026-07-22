@@ -1690,6 +1690,11 @@ async function loadScores(){
   const sc=await GET('ta_scores','session_id=eq.'+SESS.id+'&select=*,ta_teams(name,color),ta_rounds(round_number,multiplier)&order=ta_rounds(round_number)')||[];
   const c=document.getElementById('sc-body');c.style.display='block';
   if(!sc.length){c.innerHTML='<div class="sc" style="text-align:center;color:var(--mut)">No scores yet.</div>';return;}
+  const roundIds=[...new Set(sc.map(s=>s.round_id))];
+  const teamAnswers=roundIds.length?(await GET('ta_team_answers','round_id=in.('+roundIds.join(',')+')&select=round_id,team_id,answer')||[]):[];
+  const ansKey=(roundId,teamId)=>roundId+'|'+teamId;
+  const ansByKey={};
+  teamAnswers.forEach(ta=>{ansByKey[ansKey(ta.round_id,ta.team_id)]=ta.answer;});
   const tm={};
   sc.forEach(s=>{if(!tm[s.team_id])tm[s.team_id]={team:s.ta_teams,rows:[],cum:0};tm[s.team_id].rows.push(s);tm[s.team_id].cum=s.cumulative_points;});
   const sorted=Object.values(tm).sort((a,b)=>b.cum-a.cum);
@@ -1704,7 +1709,13 @@ async function loadScores(){
   html+='<th style="color:var(--acc)">TOTAL</th></tr></thead><tbody>';
   sorted.forEach(t=>{
     html+=`<tr><td><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:${escHtml(t.team?.color)};display:inline-block"></span>${escHtml(t.team?.name)}</span></td>`;
-    rns.forEach(r=>{const s=t.rows.find(x=>x.ta_rounds?.round_number===r);const p=s?s.round_points:'—';html+=`<td style="color:${typeof p==='number'?(p>=0?'var(--lo)':'var(--hi)'):'var(--mut)'};text-align:center">${typeof p==='number'?(p>0?'+':'')+p:p}</td>`;});
+    rns.forEach(r=>{
+      const s=t.rows.find(x=>x.ta_rounds?.round_number===r);
+      const p=s?s.round_points:'—';
+      const a=s?ansByKey[ansKey(s.round_id,s.team_id)]:null;
+      const label=(a?a+' ':'')+(typeof p==='number'?(p>0?'+':'')+p:p);
+      html+=`<td style="color:${typeof p==='number'?(p>=0?'var(--lo)':'var(--hi)'):'var(--mut)'};text-align:center">${label}</td>`;
+    });
     html+=`<td style="font-weight:700;color:${t.cum>=0?'var(--lo)':'var(--hi)'};text-align:center">${t.cum>0?'+':''}${t.cum}</td></tr>`;
   });
   // Net row
