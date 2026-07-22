@@ -1569,22 +1569,6 @@ async function renderPresenceMatrix(presentIds){
         <span class="xb" style="margin-left:4px" onclick="removeFromTeamLive('${p.id}','${escJs(p.name)}')" title="Remove from team">×</span>
       </div>`;
     });
-    // Unassigned members shown in first team column
-    if(tm===TEAMS[0]){
-      const unassigned=PARTS.filter(p=>!p.team_id);
-      unassigned.forEach(p=>{
-        const present=presentIds.has(p.id);
-        const allTeams=TEAMS.map(t=>`<option value="${t.id}">${escHtml(t.name)}</option>`).join('');
-        html+=`<div class="pmember ${present?'present':'absent'}" style="border-style:dashed">
-          <span class="pmember-status">${present?'✅':'⏳'}</span>
-          <span class="pmember-name" style="margin-left:6px;color:var(--mut)">${escHtml(p.name)} (no team)</span>
-          <select class="move-sel" onchange="moveMember('${p.id}',this.value,this)">
-            <option value="">Assign→</option>
-            ${allTeams}
-          </select>
-        </div>`;
-      });
-    }
     html+='</div>';
     el.innerHTML+=html;
   });
