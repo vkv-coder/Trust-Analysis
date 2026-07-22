@@ -1469,8 +1469,8 @@ function renderPayoutRulesTable(n){
   const cell=v=>v==null?'<span style="color:var(--mut)">—</span>':'<span style="color:'+(v>=0?'var(--lo)':'var(--hi)')+'">'+(v>0?'+':'')+v+' each</span>';
   let html='<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr>'
     +'<th style="text-align:left;padding:6px 8px;color:var(--mut);font-weight:600">Combination</th>'
-    +'<th style="padding:6px 8px;color:var(--mut);font-weight:600">HIGH Teams Get</th>'
-    +'<th style="padding:6px 8px;color:var(--mut);font-weight:600">LOW Teams Get</th>'
+    +'<th style="text-align:center;padding:6px 8px;color:var(--mut);font-weight:600">HIGH Teams Get</th>'
+    +'<th style="text-align:center;padding:6px 8px;color:var(--mut);font-weight:600">LOW Teams Get</th>'
     +'</tr></thead><tbody>';
   rows.forEach(r=>{
     html+='<tr><td style="padding:6px 8px;border-top:1px solid var(--bdr)">'+escHtml(r.label)+'</td>'
@@ -1729,17 +1729,13 @@ async function loadScores(){
   const tm={};
   sc.forEach(s=>{if(!tm[s.team_id])tm[s.team_id]={team:s.ta_teams,rows:[],cum:0};tm[s.team_id].rows.push(s);tm[s.team_id].cum=s.cumulative_points;});
   const sorted=Object.values(tm).sort((a,b)=>b.cum-a.cum);
-  const ranks=['🥇','🥈','🥉'];
-  let html='<div class="sc"><div class="sct">Standings</div>';
-  sorted.forEach((t,i)=>{html+=`<div class="srow"><div style="font-size:16px;width:22px">${ranks[i]||i+1}</div><div class="sdot" style="background:${escHtml(t.team?.color)}"></div><div style="flex:1;font-weight:600">${escHtml(t.team?.name)}</div><div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:${t.cum>=0?'var(--lo)':'var(--hi)'}">${t.cum>0?'+':''}${t.cum}</div></div>`;});
-  html+='</div>';
-  html+='<div class="sc"><div class="sct">Scoring Rules ('+sorted.length+' teams)</div>'+renderPayoutRulesTable(sorted.length)+'</div>';
+  let html='<div class="sc"><div class="sct">Scoring Rules ('+sorted.length+' teams)</div>'+renderPayoutRulesTable(sorted.length)+'</div>';
   const rns=[...new Set(sc.map(s=>s.ta_rounds?.round_number))].sort((a,b)=>a-b);
   const mults={};sc.forEach(s=>{if(s.ta_rounds)mults[s.ta_rounds.round_number]=s.ta_rounds.multiplier||1;});
   // Round-by-round, transposed: one row per round, one column per team.
   html+='<div class="sc"><div class="sct">Round by Round</div><div style="overflow-x:auto"><table><thead><tr><th>Round</th>';
-  sorted.forEach(t=>{html+=`<th><span style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap"><span style="width:9px;height:9px;border-radius:50%;background:${escHtml(t.team?.color)};display:inline-block"></span>${escHtml(t.team?.name)}</span></th>`;});
-  html+='<th style="color:var(--acc)">Net</th></tr></thead><tbody>';
+  sorted.forEach(t=>{html+=`<th style="text-align:center"><span style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap"><span style="width:9px;height:9px;border-radius:50%;background:${escHtml(t.team?.color)};display:inline-block"></span>${escHtml(t.team?.name)}</span></th>`;});
+  html+='<th style="color:var(--acc);text-align:center">Net</th></tr></thead><tbody>';
   rns.forEach(r=>{
     html+=`<tr><td>R${r}${mults[r]>1?' <span style="color:var(--acc);font-size:10px">×'+mults[r]+'</span>':''}</td>`;
     let net=0;
