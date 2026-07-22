@@ -1458,7 +1458,7 @@ function payoutRuleRows(n){
     const{hp,lp}=computePayout(n,h);
     const l=n-h;
     const label=h===n?n+' teams say HIGH':h===0?n+' teams say LOW':h+' say HIGH, '+l+' say LOW';
-    rows.push({label,hp:h===n?null:hp,lp:h===0?null:lp});
+    rows.push({label,hp:h===0?null:hp,lp:h===n?null:lp});
   }
   return rows;
 }
