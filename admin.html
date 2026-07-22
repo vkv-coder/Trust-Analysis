@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Game of Trust Admin v5</title>
+<title>Game of Trust Admin v6</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
 :root{--bg:#0F172A;--sur:#1E293B;--sur2:#273548;--bdr:#334155;--acc:#F59E0B;--hi:#EF4444;--lo:#22C55E;--txt:#F1F5F9;--mut:#94A3B8;}
@@ -122,6 +122,19 @@ tr:hover td{background:var(--sur2);}
 .mob-bar.force-show{display:flex !important;}
 .mob-bar .mb-logo{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--acc);}
 .hamburger{background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);font-size:22px;padding:8px 14px;cursor:pointer;line-height:1;}
+/* WIZARD PENDING CUE — pulses on a step's action button until that step is done */
+@keyframes wizpulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.55);}50%{box-shadow:0 0 0 8px rgba(245,158,11,0);}}
+.pulse{animation:wizpulse 1.4s infinite;}
+/* TEAM ASSIGNMENT MATRIX */
+.tmatrix{width:100%;border-collapse:collapse;}
+.tmatrix th{padding:8px 10px;font-size:11px;text-align:center;color:var(--mut);border-bottom:1px solid var(--bdr);}
+.tmatrix th.tmname{text-align:left;}
+.tmatrix td{padding:6px 10px;border-bottom:1px solid var(--bdr);font-size:13px;}
+.tcell{width:26px;height:26px;border-radius:50%;border:2px dashed var(--bdr);margin:0 auto;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:transparent;}
+.tcell.assigned{border-style:solid;color:#fff;}
+.tbal{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.tbal.ok{background:rgba(34,197,94,.15);color:var(--lo);}
+.tbal.bad{background:rgba(239,68,68,.15);color:var(--hi);}
 @media(max-width:768px){
   .layout{display:block;}
   .side{display:none;position:fixed;top:54px;left:0;bottom:0;width:240px;box-shadow:4px 0 20px rgba(0,0,0,0.5);z-index:1000;}
@@ -138,7 +151,7 @@ tr:hover td{background:var(--sur2);}
 
 <!-- LOGIN -->
 <div id="login" class="wrap">
-  <div class="lcard">
+  <div class="lcard" id="login-card">
     <div style="font-size:44px;margin-bottom:12px">🎯</div>
     <h1>Game of Trust</h1>
     <p>Admin Panel</p>
@@ -146,6 +159,28 @@ tr:hover td{background:var(--sur2);}
     <input type="password" id="pw" placeholder="Admin password" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()" style="width:100%;background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);padding:12px;font-size:15px;margin-bottom:12px;display:block;outline:none;"/>
     <button class="btn ba bfull" onclick="login()">Login →</button>
     <div id="lerr" style="color:var(--hi);font-size:13px;margin-top:8px;min-height:16px"></div>
+    <div style="margin-top:10px"><span onclick="showForgot()" style="font-size:12px;color:var(--mut);cursor:pointer;text-decoration:underline">Forgot password?</span></div>
+  </div>
+
+  <!-- FORGOT PASSWORD (email entry) -->
+  <div class="lcard" id="forgot-card" style="display:none">
+    <div style="font-size:44px;margin-bottom:12px">🔑</div>
+    <h1>Reset Password</h1>
+    <p>Enter your admin email — we'll send a reset link</p>
+    <input type="email" id="forgot-em" placeholder="Admin email" autocomplete="username" onkeydown="if(event.key==='Enter')sendReset()" style="width:100%;background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);padding:12px;font-size:15px;margin-bottom:12px;display:block;outline:none;"/>
+    <button class="btn ba bfull" onclick="sendReset()">Send Reset Link</button>
+    <div id="forgot-msg" style="color:var(--mut);font-size:13px;margin-top:8px;min-height:16px"></div>
+    <div style="margin-top:10px"><span onclick="showLogin()" style="font-size:12px;color:var(--mut);cursor:pointer;text-decoration:underline">← Back to login</span></div>
+  </div>
+
+  <!-- SET NEW PASSWORD (after clicking the emailed reset link) -->
+  <div class="lcard" id="reset-card" style="display:none">
+    <div style="font-size:44px;margin-bottom:12px">🔒</div>
+    <h1>Set New Password</h1>
+    <p>Choose a new admin password</p>
+    <input type="password" id="reset-pw" placeholder="New password" autocomplete="new-password" onkeydown="if(event.key==='Enter')setNewPassword()" style="width:100%;background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);padding:12px;font-size:15px;margin-bottom:12px;display:block;outline:none;"/>
+    <button class="btn ba bfull" onclick="setNewPassword()">Set Password →</button>
+    <div id="reset-msg" style="color:var(--mut);font-size:13px;margin-top:8px;min-height:16px"></div>
   </div>
 </div>
 
@@ -157,29 +192,52 @@ tr:hover td{background:var(--sur2);}
   </div>
   <div class="side-overlay" id="side-overlay" onclick="closeMenu()"></div>
   <div class="side" id="sidebar">
-    <div class="slogo"><div class="slogo-t">Game of Trust</div><div class="slogo-s">Admin v5</div></div>
+    <div class="slogo"><div class="slogo-t">Game of Trust</div><div class="slogo-s">Admin v6</div></div>
     <div class="ssel">
       <label>Active Organisation</label>
       <select id="ev-sel" onchange="switchEvent(this.value)" style="margin-bottom:6px"></select>
       <label>Active Session</label>
       <select id="sess-sel" onchange="switchSession(this.value)" style="margin-bottom:0"></select>
     </div>
-    <div class="snav">
-      <a onclick="go('dash')" id="n-dash" class="on">📊 Dashboard</a>
-      <a onclick="go('events')" id="n-events">🏢 Organisation</a>
-      <a onclick="go('session')" id="n-session">🎮 Session</a>
-      <a onclick="go('parts')" id="n-parts">👤 Participants</a>
-      <a onclick="go('teams')" id="n-teams">👥 Teams</a>
+    <div class="tabs" style="margin:12px;width:auto">
+      <div class="tab on" id="tt-pre" onclick="goTop('pre')">🧩 Pre-Workshop</div>
+      <div class="tab" id="tt-create" onclick="goTop('create')">🚀 Create Workshop</div>
+    </div>
+    <div class="snav" id="snav-pre">
+      <a onclick="go('events')" id="n-events" class="on">① 🏢 Organisation</a>
+      <a onclick="go('session')" id="n-session">② 🎮 Session</a>
+      <a onclick="go('parts')" id="n-parts">③ 👤 Participants</a>
+      <a onclick="go('teams')" id="n-teams">④ 👥 Teams</a>
+    </div>
+    <div class="snav" id="snav-create" style="display:none">
+      <a onclick="go('dash')" id="n-dash">📊 Dashboard</a>
       <a onclick="go('scores')" id="n-scores">🏆 Scores</a>
       <a onclick="go('resps')" id="n-resps">📋 Responses</a>
+    </div>
+    <div class="snav">
       <a onclick="logout()" id="n-logout">🚪 Logout</a>
     </div>
   </div>
 
   <div class="main">
 
+    <!-- Persistent PIN/QR banner — visible on every Pre-Workshop step once a session exists -->
+    <div class="sc" id="pin-banner" style="display:none;border-color:var(--acc)">
+      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+        <img id="pin-qr" src="" alt="QR code" style="width:96px;height:96px;border-radius:8px;background:#fff;padding:4px"/>
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Give this to players — always visible so late joiners can rejoin</div>
+          <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center">
+            <span>PIN: <strong style="font-size:24px;color:var(--acc);font-family:'Space Grotesk',sans-serif" id="pin-banner-pin">—</strong></span>
+            <span style="font-size:13px;color:#3B82F6" id="pin-banner-link"></span>
+            <button class="btn bo bsm" onclick="copyLink()">📋 Copy Link</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- DASHBOARD -->
-    <div class="pg on" id="pg-dash">
+    <div class="pg" id="pg-dash">
       <div class="ph"><h2>Dashboard</h2><span class="sb s-setup" id="d-status">setup</span></div>
       <div id="d-noev" class="noev">← Create or select an Organisation to begin</div>
       <div id="d-body" style="display:none">
@@ -258,14 +316,14 @@ tr:hover td{background:var(--sur2);}
     </div>
 
     <!-- ORGANISATIONS -->
-    <div class="pg" id="pg-events">
+    <div class="pg on" id="pg-events">
       <div class="ph"><h2>Organisations</h2></div>
       <div class="sc">
         <div class="sct">Create New Organisation</div>
         <div style="display:flex;gap:10px;align-items:flex-end">
           <div style="flex:1"><label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px">Organisation Name</label>
             <input id="e-name" placeholder="e.g. Tata Motors" style="margin-bottom:0"/></div>
-          <button class="btn ba" onclick="makeEvent()">+ Create</button>
+          <button class="btn ba" id="btn-make-event" onclick="makeEvent()">+ Create</button>
         </div>
         <div id="e-msg" style="font-size:13px;margin-top:8px;min-height:16px"></div>
       </div>
@@ -287,7 +345,16 @@ tr:hover td{background:var(--sur2);}
             <input id="p-name" placeholder="Full name" style="margin-bottom:0" onkeydown="if(event.key==='Enter')addPart()"/>
             <button class="btn ba" onclick="addPart()">+ Add</button>
           </div>
-          <div style="font-size:12px;color:var(--mut);margin-top:6px">Add all names first, then assign to teams below</div>
+          <div style="font-size:12px;color:var(--mut);margin-top:6px">Add names one at a time, or bulk-import below. You can keep adding more at any time — e.g. if a few people arrive after the initial list.</div>
+        </div>
+        <div class="sc">
+          <div class="sct">Bulk Import from Excel</div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <input type="file" id="p-excel" accept=".xlsx,.xls,.csv" style="font-size:12px;color:var(--txt);background:var(--sur2);border:1px solid var(--bdr);border-radius:6px;padding:6px;margin:0;flex:1;min-width:200px;"/>
+            <button class="btn ba" onclick="importExcel()">⬆ Import</button>
+          </div>
+          <div style="font-size:12px;color:var(--mut);margin-top:6px">File needs one column of names — header row (e.g. "Name") plus one name per row below it.</div>
+          <div id="p-excel-msg" style="font-size:13px;margin-top:6px;min-height:16px"></div>
         </div>
         <div class="sc">
           <div class="sct">All Participants (<span id="p-count">0</span>)</div>
@@ -316,10 +383,12 @@ tr:hover td{background:var(--sur2);}
               <div class="clr" style="background:#EC4899" data-c="#EC4899" onclick="pickC(this)"></div>
             </div>
           </div>
-          <button class="btn ba" style="margin-top:10px" onclick="addTeam()">+ Add Team</button>
+          <button class="btn ba" id="btn-add-team" style="margin-top:10px" onclick="addTeam()">+ Add Team</button>
+          <div id="team-checkpoint" style="font-size:12px;margin-top:8px"></div>
         </div>
         <div class="sc">
-          <div class="sct">Assign to Team — tap a colour dot to assign or move a participant</div>
+          <div class="sct">Assign to Team — click the cell under a team to assign that player</div>
+          <div id="team-balance" style="margin-bottom:10px"></div>
           <div id="assign-matrix" style="overflow-x:auto;"></div>
         </div>
         <div id="t-list"></div>
@@ -341,7 +410,7 @@ tr:hover td{background:var(--sur2);}
           </div>
           <div><label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px">Total Rounds</label>
             <input id="s-rounds" type="number" value="10" min="1" max="20" style="max-width:100px"/></div>
-          <button class="btn ba" onclick="makeSession()">+ Create Session</button>
+          <button class="btn ba" id="btn-make-session" onclick="makeSession()">+ Create Session</button>
           <div id="s-msg" style="font-size:13px;margin-top:8px;min-height:16px"></div>
         </div>
 
@@ -383,8 +452,9 @@ tr:hover td{background:var(--sur2);}
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
-console.log('Game of Trust Admin v5 loaded');
+console.log('Game of Trust Admin v6 loaded');
 const U='https://wrzpgultvahxbrgooibn.supabase.co';
 const K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndyenBndWx0dmFoeGJyZ29vaWJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzc2MTcsImV4cCI6MjA5MzExMzYxN30.sZM4GQiwom34d7TjeK_Jc_n8KYoC8VhI48jfq71dwb8';
 const APP='https://vkv-coder.github.io/Trust-Analysis/';
@@ -480,10 +550,81 @@ function logout(){
   document.getElementById('app').style.display='none';
   document.getElementById('login').style.display='flex';
   document.getElementById('pw').value='';
+  showLogin();
+}
+
+// FORGOT PASSWORD
+function showForgot(){
+  document.getElementById('login-card').style.display='none';
+  document.getElementById('reset-card').style.display='none';
+  document.getElementById('forgot-card').style.display='block';
+  document.getElementById('forgot-em').value=document.getElementById('em').value.trim();
+}
+function showLogin(){
+  document.getElementById('forgot-card').style.display='none';
+  document.getElementById('reset-card').style.display='none';
+  document.getElementById('login-card').style.display='block';
+}
+
+async function sendReset(){
+  const email=document.getElementById('forgot-em').value.trim();
+  const msg=document.getElementById('forgot-msg');
+  if(!email){msg.style.color='var(--hi)';msg.textContent='Enter your email';return;}
+  msg.style.color='var(--acc)';msg.textContent='Sending...';
+  try{
+    const redirectTo=encodeURIComponent(location.origin+location.pathname);
+    const r=await fetch(U+'/auth/v1/recover?redirect_to='+redirectTo,{
+      method:'POST',
+      headers:{'apikey':K,'Content-Type':'application/json'},
+      body:JSON.stringify({email})
+    });
+    if(!r.ok){const d=await r.json();throw new Error(d.error_description||d.msg||'Could not send reset email');}
+    msg.style.color='var(--lo)';msg.textContent='Reset link sent — check your email.';
+  }catch(e){
+    msg.style.color='var(--hi)';msg.textContent=e.message;
+  }
+}
+
+// If we arrived here via the emailed reset link, Supabase appends
+// #access_token=...&type=recovery to the URL — swap to the "set new
+// password" card and hold onto that token to authorize the one update call.
+let RECOVERY_TOKEN=null;
+function checkRecoveryLink(){
+  const hash=location.hash.startsWith('#')?location.hash.slice(1):location.hash;
+  const params=new URLSearchParams(hash);
+  if(params.get('type')==='recovery'&&params.get('access_token')){
+    RECOVERY_TOKEN=params.get('access_token');
+    document.getElementById('login-card').style.display='none';
+    document.getElementById('forgot-card').style.display='none';
+    document.getElementById('reset-card').style.display='block';
+    history.replaceState(null,'',location.pathname);
+    return true;
+  }
+  return false;
+}
+
+async function setNewPassword(){
+  const pw=document.getElementById('reset-pw').value;
+  const msg=document.getElementById('reset-msg');
+  if(!pw||pw.length<6){msg.style.color='var(--hi)';msg.textContent='Password must be at least 6 characters';return;}
+  msg.style.color='var(--acc)';msg.textContent='Updating...';
+  try{
+    const r=await fetch(U+'/auth/v1/user',{
+      method:'PUT',
+      headers:{'apikey':K,'Authorization':'Bearer '+RECOVERY_TOKEN,'Content-Type':'application/json'},
+      body:JSON.stringify({password:pw})
+    });
+    if(!r.ok){const d=await r.json();throw new Error(d.error_description||d.msg||'Could not update password');}
+    msg.style.color='var(--lo)';msg.textContent='Password updated! Redirecting to login...';
+    setTimeout(()=>{RECOVERY_TOKEN=null;showLogin();},1500);
+  }catch(e){
+    msg.style.color='var(--hi)';msg.textContent=e.message;
+  }
 }
 
 // Auto-login if a previous session's tokens are still valid/refreshable.
 (async function initAuth(){
+  if(checkRecoveryLink())return; // reset-password flow takes priority over auto-login
   const stored=loadStoredSession();
   if(!stored)return;
   SESSION_TOKENS=stored;
@@ -501,7 +642,19 @@ function closeMenu(){
 }
 
 // NAV
-let CUR_PAGE='dash';
+let CUR_PAGE='events';
+let TOP_TAB='pre';
+const CREATE_PAGES=['dash','scores','resps'];
+
+function goTop(t){
+  TOP_TAB=t;
+  document.getElementById('tt-pre').classList.toggle('on',t==='pre');
+  document.getElementById('tt-create').classList.toggle('on',t==='create');
+  document.getElementById('snav-pre').style.display=t==='pre'?'block':'none';
+  document.getElementById('snav-create').style.display=t==='create'?'block':'none';
+  go(t==='pre'?'events':'dash');
+}
+
 function go(n){
   CUR_PAGE=n;
   closeMenu();
@@ -516,6 +669,38 @@ function go(n){
   if(n==='scores')loadScores();
   if(n==='resps')loadResps();
   if(n==='events')loadEvents();
+  updateWizardCues();
+  renderPinBanner();
+}
+
+// WIZARD CUES — pulses each step's action button while that step isn't done yet.
+function updateWizardCues(){
+  const be=document.getElementById('btn-make-event');
+  if(be)be.classList.toggle('pulse',!EV);
+  const bs=document.getElementById('btn-make-session');
+  if(bs)bs.classList.toggle('pulse',!!EV&&!SESS);
+  const bt=document.getElementById('btn-add-team');
+  if(bt)bt.classList.toggle('pulse',!!EV&&(TEAMS.length===0||TEAMS.length%2!==0));
+  const cp=document.getElementById('team-checkpoint');
+  if(cp){
+    if(!EV){cp.textContent='';}
+    else if(TEAMS.length===0){cp.style.color='var(--mut)';cp.textContent='No teams yet — add your first team above.';}
+    else if(TEAMS.length%2!==0){cp.style.color='var(--hi)';cp.textContent='⚠️ Teams must be an even number (2, 4, 6, 8...) — currently '+TEAMS.length+'.';}
+    else{cp.style.color='var(--lo)';cp.textContent='✅ '+TEAMS.length+' teams — even count, good to go.';}
+  }
+}
+
+// PERSISTENT PIN/QR BANNER — visible on every Pre-Workshop step once a session exists,
+// so the admin never has to hunt for it to help a late/disconnected joiner.
+function renderPinBanner(){
+  const el=document.getElementById('pin-banner');
+  if(!el)return;
+  if(!SESS||TOP_TAB!=='pre'){el.style.display='none';return;}
+  el.style.display='block';
+  document.getElementById('pin-banner-pin').textContent=SESS.pin;
+  const link=APP+'?pin='+SESS.pin;
+  document.getElementById('pin-banner-link').textContent=link;
+  document.getElementById('pin-qr').src='https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(link);
 }
 
 // TOAST
@@ -591,6 +776,7 @@ async function delEvent(id){
   toast('Deleted','in');
   await loadEvents();
   renderParts();renderTeams();refreshDash();
+  updateWizardCues();renderPinBanner();
 }
 
 async function switchEvent(id){
@@ -613,6 +799,8 @@ async function switchEvent(id){
   if(active){switchSession(active.id);ssel.value=active.id;}
   else{SESS=null;}
   refreshDash();
+  updateWizardCues();
+  renderPinBanner();
   toast('Loaded: '+EV.name,'in');
 }
 
@@ -694,6 +882,8 @@ async function switchSession(id){
   document.getElementById('sess-sel').value=id;
   ROUNDS=await GET('ta_rounds','session_id=eq.'+id+'&order=round_number')||[];
   refreshDash();
+  updateWizardCues();
+  renderPinBanner();
 }
 
 async function showRounds(id,name){
@@ -876,6 +1066,53 @@ async function addPart(){
   renderParts();toast(name+' added','ok');
 }
 
+// BULK IMPORT — parses a single-column (names) Excel/CSV sheet client-side via
+// SheetJS, skips names that are already in this org's participant list (so
+// re-importing an updated sheet, or a "few more arrived" top-up, doesn't
+// create duplicates), and inserts the rest in one bulk POST.
+async function importExcel(){
+  if(!EV){toast('Select organisation first','er');return;}
+  const fileInput=document.getElementById('p-excel');
+  const file=fileInput.files[0];
+  const msgEl=document.getElementById('p-excel-msg');
+  if(!file){msgEl.style.color='var(--hi)';msgEl.textContent='Choose a file first';return;}
+  msgEl.style.color='var(--acc)';msgEl.textContent='Reading file...';
+  try{
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+    const sheet=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(sheet,{header:1});
+    const names=[];
+    rows.forEach((row,i)=>{
+      const cell=(row[0]??'').toString().trim();
+      if(!cell)return;
+      if(i===0&&/^name$/i.test(cell))return; // skip a "Name" header row
+      names.push(cell);
+    });
+    if(!names.length){msgEl.style.color='var(--hi)';msgEl.textContent='No names found in that file';return;}
+    const existing=new Set(PARTS.map(p=>p.name.trim().toLowerCase()));
+    const toAdd=[];
+    const seen=new Set();
+    names.forEach(n=>{
+      const key=n.toLowerCase();
+      if(existing.has(key)||seen.has(key))return;
+      seen.add(key);
+      toAdd.push({event_id:EV.id,name:n,is_captain:false,is_present:false});
+    });
+    const skipped=names.length-toAdd.length;
+    if(!toAdd.length){msgEl.style.color='var(--acc)';msgEl.textContent='All '+names.length+' name(s) are already in the list — nothing to add.';return;}
+    const res=await POST('ta_participants',toAdd);
+    if(!res.ok){msgEl.style.color='var(--hi)';msgEl.textContent='Import failed: '+JSON.stringify(res.d);return;}
+    PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
+    renderParts();
+    fileInput.value='';
+    msgEl.style.color='var(--lo)';msgEl.textContent='✅ Added '+toAdd.length+' new participant(s)'+(skipped?' — skipped '+skipped+' already in the list':'')+'.';
+    toast(toAdd.length+' participant(s) imported','ok');
+  }catch(e){
+    msgEl.style.color='var(--hi)';msgEl.textContent='Could not read file: '+e.message;
+  }
+}
+
 async function remPart(id,name){
   if(!confirm('Remove '+name+'?'))return;
   await DEL('ta_participants','id=eq.'+id);
@@ -955,57 +1192,48 @@ function renderTeams(){
     </div>`;
   });
   renderAssignMatrix();
+  updateWizardCues();
 }
 
-let ASSIGN_SEL=new Set();
+// Team balance check: no team should have more than one more/fewer player than any other.
+function teamBalance(){
+  const counts=TEAMS.map(t=>PARTS.filter(p=>p.team_id===t.id&&p.is_present).length);
+  if(!counts.length)return{max:0,min:0,balanced:true};
+  const max=Math.max(...counts),min=Math.min(...counts);
+  return{max,min,balanced:(max-min)<=1};
+}
 
 function renderAssignMatrix(){
   const el=document.getElementById('assign-matrix');
+  const bal=document.getElementById('team-balance');
   if(!el)return;
   const presentParts=PARTS.filter(p=>p.is_present);
-  if(!TEAMS.length){el.innerHTML='<span style="color:var(--mut);font-size:13px">No teams yet — create one first.</span>';return;}
-  if(!presentParts.length){el.innerHTML='<span style="color:var(--mut);font-size:13px">No participants have marked presence yet.</span>';return;}
-  const validIds=new Set(presentParts.map(p=>p.id));
-  ASSIGN_SEL.forEach(id=>{if(!validIds.has(id))ASSIGN_SEL.delete(id);});
+  if(!TEAMS.length){el.innerHTML='<span style="color:var(--mut);font-size:13px">No teams yet — create one first.</span>';if(bal)bal.innerHTML='';return;}
+  if(!presentParts.length){el.innerHTML='<span style="color:var(--mut);font-size:13px">No participants have marked presence yet.</span>';if(bal)bal.innerHTML='';return;}
 
-  let html='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;padding:8px 10px;background:var(--sur2);border-radius:8px;">';
-  html+='<span style="font-size:12px;color:var(--mut);">'+ASSIGN_SEL.size+' ticked — tap a colour to assign them:</span>';
-  TEAMS.forEach(tm=>{
-    html+='<div class="clr" style="background:'+escHtml(tm.color)+';width:26px;height:26px;cursor:pointer;" title="Assign ticked players to '+escHtml(tm.name)+'" onclick="bulkAssignToTeam(\''+tm.id+'\')"></div>';
+  if(bal){
+    const b=teamBalance();
+    const counts=TEAMS.map(t=>escHtml(t.name)+': '+PARTS.filter(p=>p.team_id===t.id&&p.is_present).length).join(' · ');
+    bal.innerHTML='<span class="tbal '+(b.balanced?'ok':'bad')+'">'+(b.balanced?'✅ Balanced':'⚠️ Unbalanced — largest gap is '+(b.max-b.min))+'</span> <span style="font-size:12px;color:var(--mut);margin-left:8px">'+counts+'</span>';
+  }
+
+  let html='<table class="tmatrix"><thead><tr><th class="tmname">Player</th>';
+  TEAMS.forEach(t=>{
+    html+='<th><span style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap"><span style="width:9px;height:9px;border-radius:50%;background:'+escHtml(t.color)+';display:inline-block"></span>'+escHtml(t.name)+'</span></th>';
   });
-  if(ASSIGN_SEL.size)html+='<button class="btn bd bsm" onclick="clearAssignSel()">Clear</button>';
-  html+='</div>';
-
-  html+='<div style="display:flex;flex-direction:column;gap:6px;">';
+  html+='</tr></thead><tbody>';
   presentParts.forEach(p=>{
-    const checked=ASSIGN_SEL.has(p.id);
-    html+='<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--sur2);border-radius:8px;">';
-    html+='<input type="checkbox" '+(checked?'checked':'')+' onchange="toggleAssignSel(\''+p.id+'\')" style="width:18px;height:18px;flex-shrink:0;cursor:pointer;">';
-    html+='<div style="flex:1;font-size:13px;min-width:120px;">'+(p.is_captain?'👑 ':'')+escHtml(p.name)
-      +(p.ta_teams?' <span style="color:'+escHtml(p.ta_teams.color)+';font-size:11px">('+escHtml(p.ta_teams.name)+')</span>'
-        :'<span style="color:var(--mut);font-size:11px"> (no team)</span>')+'</div>';
-    html+='<div style="width:22px;height:22px;border-radius:50%;border:1px dashed var(--bdr);color:var(--mut);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;" title="Remove from team" onclick="assignToTeam(\''+p.id+'\',null)">×</div>';
-    html+='</div>';
+    html+='<tr><td class="tmname">'+(p.is_captain?'👑 ':'')+escHtml(p.name)+'</td>';
+    TEAMS.forEach(t=>{
+      const on=p.team_id===t.id;
+      const style=on?'border-color:'+escHtml(t.color)+';background:'+escHtml(t.color)+';':'';
+      const arg=on?'null':"'"+t.id+"'";
+      html+='<td><div class="tcell'+(on?' assigned':'')+'" style="'+style+'" onclick="assignToTeam(\''+p.id+'\','+arg+')" title="'+(on?'Click to unassign':'Assign to '+escJs(t.name))+'">'+(on?'✓':'')+'</div></td>';
+    });
+    html+='</tr>';
   });
-  html+='</div>';
+  html+='</tbody></table>';
   el.innerHTML=html;
-}
-
-function toggleAssignSel(id){
-  if(ASSIGN_SEL.has(id))ASSIGN_SEL.delete(id);else ASSIGN_SEL.add(id);
-  renderAssignMatrix();
-}
-
-function clearAssignSel(){ASSIGN_SEL.clear();renderAssignMatrix();}
-
-async function bulkAssignToTeam(teamId){
-  if(!ASSIGN_SEL.size){toast('Tick some players first','er');return;}
-  const ids=[...ASSIGN_SEL];
-  await PATCH('ta_participants','id=in.('+ids.join(',')+')',{team_id:teamId});
-  ASSIGN_SEL.clear();
-  PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
-  renderTeams();
-  toast(ids.length+' player(s) assigned!','ok');
 }
 
 async function assignToTeam(participantId,teamId){
@@ -1375,7 +1603,7 @@ async function pollSess(){
   if(s&&s[0]){SESS=s[0];refreshDash();}
 }
 
-function copyLink(){navigator.clipboard.writeText(APP).then(()=>toast('Copied!','ok'));}
+function copyLink(){navigator.clipboard.writeText(SESS?APP+'?pin='+SESS.pin:APP).then(()=>toast('Copied!','ok'));}
 
 // SCORES
 async function loadScores(){

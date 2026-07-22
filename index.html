@@ -951,6 +951,13 @@ async function submitVote(){
   if(res.ok){showBoDone(v);toast('Team answer submitted!','success');}
   else{const err=await res.json();console.error('Submit error:',err);toast('Error: '+(err.message||'Try again'),'error');}
 }
+
+// QR deep link — scanning a session's QR code lands here as ?pin=1234, which
+// skips the manual keypad and goes straight into PIN verification.
+(function initFromQuery(){
+  const qp=(new URLSearchParams(location.search).get('pin')||'').replace(/\D/g,'').slice(0,4);
+  if(qp.length===4){P.pin=qp;updPin();verPin();}
+})();
 </script>
 </body>
 </html>
