@@ -1183,7 +1183,10 @@ function renderTeams(){
   document.getElementById('t-body').style.display='block';
   const l=document.getElementById('t-list');l.innerHTML='';
   TEAMS.forEach(tm=>{
-    const members=PARTS.filter(p=>p.team_id===tm.id&&p.is_present);
+    // Pre-Workshop assignment is planning ahead of the event — everyone added
+    // so far, not just whoever has already marked presence (presence only
+    // starts once registration opens live, later, in Create Workshop).
+    const members=PARTS.filter(p=>p.team_id===tm.id);
     l.innerHTML+=`<div class="sc">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <div style="width:12px;height:12px;border-radius:50%;background:${escHtml(tm.color)}"></div>
@@ -1200,7 +1203,7 @@ function renderTeams(){
 
 // Team balance check: no team should have more than one more/fewer player than any other.
 function teamBalance(){
-  const counts=TEAMS.map(t=>PARTS.filter(p=>p.team_id===t.id&&p.is_present).length);
+  const counts=TEAMS.map(t=>PARTS.filter(p=>p.team_id===t.id).length);
   if(!counts.length)return{max:0,min:0,balanced:true};
   const max=Math.max(...counts),min=Math.min(...counts);
   return{max,min,balanced:(max-min)<=1};
@@ -1210,13 +1213,15 @@ function renderAssignMatrix(){
   const el=document.getElementById('assign-matrix');
   const bal=document.getElementById('team-balance');
   if(!el)return;
-  const presentParts=PARTS.filter(p=>p.is_present);
+  // Pre-Workshop assignment covers everyone added so far — presence isn't
+  // marked until registration opens live, later, in Create Workshop.
+  const allParts=PARTS;
   if(!TEAMS.length){el.innerHTML='<span style="color:var(--mut);font-size:13px">No teams yet — create one first.</span>';if(bal)bal.innerHTML='';return;}
-  if(!presentParts.length){el.innerHTML='<span style="color:var(--mut);font-size:13px">No participants have marked presence yet.</span>';if(bal)bal.innerHTML='';return;}
+  if(!allParts.length){el.innerHTML='<span style="color:var(--mut);font-size:13px">No participants added yet.</span>';if(bal)bal.innerHTML='';return;}
 
   if(bal){
     const b=teamBalance();
-    const counts=TEAMS.map(t=>escHtml(t.name)+': '+PARTS.filter(p=>p.team_id===t.id&&p.is_present).length).join(' · ');
+    const counts=TEAMS.map(t=>escHtml(t.name)+': '+PARTS.filter(p=>p.team_id===t.id).length).join(' · ');
     bal.innerHTML='<span class="tbal '+(b.balanced?'ok':'bad')+'">'+(b.balanced?'✅ Balanced':'⚠️ Unbalanced — largest gap is '+(b.max-b.min))+'</span> <span style="font-size:12px;color:var(--mut);margin-left:8px">'+counts+'</span>';
   }
 
@@ -1225,7 +1230,7 @@ function renderAssignMatrix(){
     html+='<th><span style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap"><span style="width:9px;height:9px;border-radius:50%;background:'+escHtml(t.color)+';display:inline-block"></span>'+escHtml(t.name)+'</span></th>';
   });
   html+='</tr></thead><tbody>';
-  presentParts.forEach(p=>{
+  allParts.forEach(p=>{
     html+='<tr><td class="tmname">'+(p.is_captain?'👑 ':'')+escHtml(p.name)+'</td>';
     TEAMS.forEach(t=>{
       const on=p.team_id===t.id;
