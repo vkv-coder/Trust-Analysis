@@ -558,9 +558,12 @@ async function route(){
     const gm=document.getElementById('gr-mult');
     if(rnd.multiplier>1){gm.style.display='block';gm.textContent='×'+rnd.multiplier;}else gm.style.display='none';
     await updGrCase(rnd);
-    startTimer(rnd,'gr-timer-val',()=>autoSubmitGeneral(rnd));
+    // Check for an existing answer BEFORE (re)starting the timer -- otherwise
+    // every poll cycle restarts the countdown even after submission, so it
+    // never visibly stops on screen.
     const ia=await GET('ta_individual_answers','round_id=eq.'+rnd.id+'&participant_id=eq.'+P.participant.id+'&select=*');
-    if(ia&&ia.length){showGrDone(ia[0].answer,ia[0].auto_submitted);return;}
+    if(ia&&ia.length){stopTimer();showGrDone(ia[0].answer,ia[0].auto_submitted);return;}
+    startTimer(rnd,'gr-timer-val',()=>autoSubmitGeneral(rnd));
     document.getElementById('gr-vote').style.display='block';
     document.getElementById('gr-subcard').style.display='none';
     return;
@@ -568,11 +571,11 @@ async function route(){
   if(st==='breakout'&&rnd){
     show('breakout');
     await updBo(rnd);
-    startTimer(rnd,'timer-val',()=>autoSubmitBreakout(rnd));
     await loadBoScores();
-    // Check if team already submitted
+    // Same as above -- check first, only start the timer if not yet submitted.
     const ta=await GET('ta_team_answers','round_id=eq.'+rnd.id+'&team_id=eq.'+P.participant.team_id+'&select=*');
-    if(ta&&ta.length){showBoDone(ta[0].answer);return;}
+    if(ta&&ta.length){stopTimer();showBoDone(ta[0].answer);return;}
+    startTimer(rnd,'timer-val',()=>autoSubmitBreakout(rnd));
     // Show captain or member view
     if(P.isCapt){
       document.getElementById('captain-vote').style.display='block';
@@ -759,6 +762,7 @@ function showBoDone(ans){
   const el=document.getElementById('bo-sub-ans');
   el.textContent=ans==='H'?'HIGH':'LOW';el.className='atag '+ans;
   if(captPollT)clearInterval(captPollT);
+  stopTimer();
 }
 
 // GENERAL ROUND (individual opinions)
@@ -780,6 +784,7 @@ function showGrDone(ans,auto){
   el.textContent=ans==='H'?'HIGH':'LOW';el.className='atag '+ans;
   document.getElementById('gr-sub-icon').textContent=auto?'⏰':'✅';
   document.getElementById('gr-sub-title').textContent=auto?"Time's Up — Auto-Submitted":'Opinion Submitted';
+  stopTimer();
 }
 
 // TIMER AUTO-SUBMIT — fires once if the responsible person hasn't submitted
@@ -809,6 +814,10 @@ async function autoSubmitBreakout(rnd){
     });
     showBoDone('H');
   }catch(e){console.error('Auto-submit (breakout) failed:',e);}
+}
+
+function stopTimer(){
+  if(P.timerT){clearInterval(P.timerT);P.timerT=null;}
 }
 
 // TIMER — UTC fix. targetElId defaults to the breakout timer for backward
