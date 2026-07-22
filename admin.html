@@ -1187,14 +1187,15 @@ function renderTeams(){
     // so far, not just whoever has already marked presence (presence only
     // starts once registration opens live, later, in Create Workshop).
     const members=PARTS.filter(p=>p.team_id===tm.id);
+    const presentCount=members.filter(p=>p.is_present).length;
     l.innerHTML+=`<div class="sc">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <div style="width:12px;height:12px;border-radius:50%;background:${escHtml(tm.color)}"></div>
         <strong>${escHtml(tm.name)}</strong>
-        <span style="font-size:12px;color:var(--mut)">${members.length} member${members.length!==1?'s':''}</span>
+        <span style="font-size:12px;color:var(--mut)">${presentCount}/${members.length} present</span>
         <button class="btn bd bsm" onclick="remTeam('${tm.id}','${escJs(tm.name)}')">Remove Team</button>
       </div>
-      <div class="chips">${members.map(p=>`<div class="chip">${p.is_captain?'👑 ':''}${escHtml(p.name)}<span class="xb" onclick="remFromTeam('${p.id}')">×</span></div>`).join('')||'<span style="font-size:12px;color:var(--mut)">No members</span>'}</div>
+      <div class="chips">${members.map(p=>`<div class="chip" style="${p.is_present?'':'opacity:.5'}" title="${p.is_present?'Present':'Not marked present yet — click × to remove them from the team, or reassign someone else in the matrix below'}">${p.is_present?'✅':'⏳'} ${p.is_captain?'👑 ':''}${escHtml(p.name)}<span class="xb" onclick="remFromTeam('${p.id}')">×</span></div>`).join('')||'<span style="font-size:12px;color:var(--mut)">No members</span>'}</div>
     </div>`;
   });
   renderAssignMatrix();
@@ -1202,11 +1203,18 @@ function renderTeams(){
 }
 
 // Team balance check: no team should have more than one more/fewer player than any other.
+// Once anyone has checked in, team-of-equal-strength is really about who's
+// actually here — count present members. Before check-in starts (pure
+// planning), fall back to counting everyone assigned so far.
+function teamCount(t,anyPresence){
+  return PARTS.filter(p=>p.team_id===t.id&&(!anyPresence||p.is_present)).length;
+}
 function teamBalance(){
-  const counts=TEAMS.map(t=>PARTS.filter(p=>p.team_id===t.id).length);
-  if(!counts.length)return{max:0,min:0,balanced:true};
+  const anyPresence=PARTS.some(p=>p.is_present);
+  const counts=TEAMS.map(t=>teamCount(t,anyPresence));
+  if(!counts.length)return{max:0,min:0,balanced:true,anyPresence};
   const max=Math.max(...counts),min=Math.min(...counts);
-  return{max,min,balanced:(max-min)<=1};
+  return{max,min,balanced:(max-min)<=1,anyPresence};
 }
 
 function renderAssignMatrix(){
@@ -1221,8 +1229,8 @@ function renderAssignMatrix(){
 
   if(bal){
     const b=teamBalance();
-    const counts=TEAMS.map(t=>escHtml(t.name)+': '+PARTS.filter(p=>p.team_id===t.id).length).join(' · ');
-    bal.innerHTML='<span class="tbal '+(b.balanced?'ok':'bad')+'">'+(b.balanced?'✅ Balanced':'⚠️ Unbalanced — largest gap is '+(b.max-b.min))+'</span> <span style="font-size:12px;color:var(--mut);margin-left:8px">'+counts+'</span>';
+    const counts=TEAMS.map(t=>escHtml(t.name)+': '+(b.anyPresence?teamCount(t,true)+' present / '+teamCount(t,false)+' assigned':teamCount(t,false)+' assigned')).join(' · ');
+    bal.innerHTML='<span class="tbal '+(b.balanced?'ok':'bad')+'">'+(b.balanced?'✅ Balanced':'⚠️ Unbalanced — largest gap is '+(b.max-b.min)+(b.anyPresence?' (by who\'s present)':''))+'</span> <span style="font-size:12px;color:var(--mut);margin-left:8px">'+counts+'</span>';
   }
 
   let html='<table class="tmatrix"><thead><tr><th class="tmname">Player</th>';
@@ -1231,7 +1239,8 @@ function renderAssignMatrix(){
   });
   html+='</tr></thead><tbody>';
   allParts.forEach(p=>{
-    html+='<tr><td class="tmname">'+(p.is_captain?'👑 ':'')+escHtml(p.name)+'</td>';
+    const presence=p.is_present?'✅':'⏳';
+    html+='<tr><td class="tmname" title="'+(p.is_present?'Present':'Not marked present yet')+'">'+presence+' '+(p.is_captain?'👑 ':'')+escHtml(p.name)+'</td>';
     TEAMS.forEach(t=>{
       const on=p.team_id===t.id;
       const style=on?'border-color:'+escHtml(t.color)+';background:'+escHtml(t.color)+';':'';
