@@ -42,6 +42,14 @@
 -- These CREATE TABLE IF NOT EXISTS statements are safe to run whether or not
 -- the tables already exist.
 -- ---------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
+-- Missing-column fix: the original schema never had `auto_submitted`, but the
+-- app writes it on every answer (to mark "time ran out" vs a real submit).
+-- Safe to run whether or not the column already exists.
+-- ---------------------------------------------------------------------------
+alter table ta_individual_answers add column if not exists auto_submitted boolean default false;
+alter table ta_team_answers add column if not exists auto_submitted boolean default false;
+
 create table if not exists ta_captain_votes (
   id uuid primary key default gen_random_uuid(),
   session_id uuid references ta_sessions(id) on delete cascade,
