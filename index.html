@@ -108,12 +108,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .atag{display:inline-block;padding:2px 10px;border-radius:6px;font-weight:700;font-size:13px;}
 .atag.H{background:rgba(239,68,68,.2);color:var(--red);}
 .atag.L{background:rgba(34,197,94,.2);color:var(--green);}
-/* LIVE CAPTAIN ANSWER */
-.live-ans{background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:16px;text-align:center;}
-.live-ans-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
-.live-ans-val{font-family:'Space Grotesk',sans-serif;font-size:36px;font-weight:700;color:var(--muted);}
-.live-ans-val.H{color:var(--red);}
-.live-ans-val.L{color:var(--green);}
 /* SCORE TABLE */
 .sc-table{width:100%;border-collapse:collapse;font-size:12px;min-width:280px;}
 .sc-table th{background:var(--s2);padding:8px 10px;text-align:center;color:var(--muted);font-weight:700;font-size:11px;text-transform:uppercase;border:1px solid var(--border);}
@@ -300,24 +294,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="case-txt" id="bo-case">Case study will appear here.</div>
       <div id="bo-case-file" style="display:none;margin-top:8px"></div>
     </div>
-    <!-- CAPTAIN: sees H/L buttons -->
+    <!-- Any team member can submit the team's answer -->
     <div id="captain-vote" style="display:none">
-      <div class="vote-lbl">You are the Captain — submit your team's final answer</div>
+      <div class="vote-lbl">Submit your team's final answer — any teammate can do this</div>
       <div class="vote-btns">
         <button class="vbtn H" id="vH-bo" onclick="selVote('H','bo')">H<span>HIGH</span></button>
         <button class="vbtn L" id="vL-bo" onclick="selVote('L','bo')">L<span>LOW</span></button>
       </div>
       <button class="btn btn-primary" id="btn-sub-bo" onclick="openModal('bo')" disabled>Submit Team Answer</button>
     </div>
-    <!-- MEMBER: sees captain's live selection -->
-    <div id="member-view" style="display:none">
-      <div class="live-ans">
-        <div class="live-ans-lbl">🟡 Captain's Current Selection</div>
-        <div class="live-ans-val" id="live-captain-ans">—</div>
-      </div>
-      <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px">Waiting for captain to submit team answer...</div>
-    </div>
-    <!-- SUBMITTED (both captain and member see this) -->
+    <!-- SUBMITTED (everyone on the team sees this) -->
     <div class="sub-card" id="bo-subcard" style="display:none">
       <div class="sub-icon">✅</div>
       <div class="sub-title">Team Answer Submitted</div>
@@ -579,16 +565,9 @@ async function route(){
     const ta=await GET('ta_team_answers','round_id=eq.'+rnd.id+'&team_id=eq.'+P.participant.team_id+'&select=*');
     if(ta&&ta.length){stopTimer();showBoDone(ta[0].answer);return;}
     startTimer(rnd,'timer-val',()=>autoSubmitBreakout(rnd));
-    // Show captain or member view
-    if(P.isCapt){
-      document.getElementById('captain-vote').style.display='block';
-      document.getElementById('member-view').style.display='none';
-    }else{
-      document.getElementById('captain-vote').style.display='none';
-      document.getElementById('member-view').style.display='block';
-      // Poll captain's live selection
-      pollCaptainAnswer(rnd);
-    }
+    // Any team member can submit the team's answer, not just the captain —
+    // the "have you checked with your team?" confirm step is the safeguard.
+    document.getElementById('captain-vote').style.display='block';
     return;
   }
   if(st==='scoring'&&rnd){
@@ -698,23 +677,6 @@ async function castCaptainVote(votedForId){
 }
 
 // CAPTAIN LIVE ANSWER POLL (for non-captain members)
-let captPollT=null;
-async function pollCaptainAnswer(rnd){
-  if(captPollT)clearInterval(captPollT);
-  captPollT=setInterval(async()=>{
-    // Get captain's individual answer as proxy for live selection
-    const caps=await GET('ta_participants','team_id=eq.'+P.participant.team_id+'&is_captain=eq.true&select=id');
-    if(!caps||!caps.length)return;
-    // Check if team answer submitted
-    const ta=await GET('ta_team_answers','round_id=eq.'+rnd.id+'&team_id=eq.'+P.participant.team_id+'&select=answer');
-    if(ta&&ta.length){
-      clearInterval(captPollT);
-      showBoDone(ta[0].answer);
-      return;
-    }
-  },3000);
-}
-
 // Resolve which case study applies to a given team for a round:
 // a case specifically assigned to this team wins; otherwise fall back to
 // the round's "Applies to All Teams" case, if any.
@@ -760,11 +722,9 @@ function updMain(r){
 
 function showBoDone(ans){
   document.getElementById('captain-vote').style.display='none';
-  document.getElementById('member-view').style.display='none';
   document.getElementById('bo-subcard').style.display='block';
   const el=document.getElementById('bo-sub-ans');
   el.textContent=ans==='H'?'HIGH':'LOW';el.className='atag '+ans;
-  if(captPollT)clearInterval(captPollT);
   stopTimer();
 }
 
@@ -806,7 +766,9 @@ async function autoSubmitGeneral(rnd){
 }
 
 async function autoSubmitBreakout(rnd){
-  if(!P.isCapt)return; // only the captain's own phone submits the team answer
+  // Any team member's phone can auto-submit on timeout now, not just the
+  // captain's -- the merge-duplicates upsert means only the first one to
+  // land actually counts, so multiple devices firing at once is harmless.
   try{
     const existing=await GET('ta_team_answers','round_id=eq.'+rnd.id+'&team_id=eq.'+P.participant.team_id+'&select=id');
     if(existing&&existing.length)return;
@@ -911,9 +873,6 @@ function selVote(v,ctx){
   document.getElementById('vH-'+ctx).className='vbtn H'+(v==='H'?' sel':'');
   document.getElementById('vL-'+ctx).className='vbtn L'+(v==='L'?' sel':'');
   document.getElementById('btn-sub-'+ctx).disabled=false;
-  // Show live selection for captain (others poll this) — breakout only
-  const la=document.getElementById('live-captain-ans');
-  if(ctx==='bo'&&la){la.textContent=v==='H'?'HIGH':'LOW';la.className='live-ans-val '+v;}
 }
 
 function openModal(ctx){
