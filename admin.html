@@ -287,7 +287,7 @@ tr:hover td{background:var(--sur2);}
             <!-- GENERAL: everyone submits their own individual opinion -->
             <div id="ctrl-general" style="display:none">
               <div style="font-size:12px;color:var(--mut);margin-bottom:8px" id="ctrl-general-status">Waiting for individual opinions...</div>
-              <button class="cbtn c2" style="width:100%" onclick="openBreakout()"><span class="ci">🔀</span>Open Breakout (Captains Submit) →</button>
+              <button class="cbtn c2" style="width:100%" id="btn-open-breakout" onclick="openBreakout()" disabled><span class="ci">🔀</span>Open Breakout (Teams Submit) →</button>
             </div>
             <!-- BREAKOUT: Open Main Room (Score Reveal) -->
             <div id="ctrl-breakout" style="display:none">
@@ -1586,11 +1586,15 @@ async function refreshDash(){
     if(rnd){
       const ops=await GET('ta_individual_answers','round_id=eq.'+rnd.id+'&select=participant_id')||[];
       const pids=new Set(ops.map(o=>o.participant_id));
-      // Show individual-opinion submission count in the general round
+      // Show individual-opinion submission count in the general round, and
+      // only unlock "Open Breakout" once every present participant has
+      // submitted -- so admin can't accidentally jump ahead of stragglers.
       if(SESS.status==='general'){
         const presentCount=PARTS.filter(p=>p.is_present).length;
         const statusEl=document.getElementById('ctrl-general-status');
         if(statusEl)statusEl.innerHTML=`<strong>${pids.size}/${presentCount} participants submitted their opinion</strong>`;
+        const btn=document.getElementById('btn-open-breakout');
+        if(btn)btn.disabled=presentCount===0||pids.size<presentCount;
       }
       // Show team answer count in breakout
       if(SESS.status==='breakout'){

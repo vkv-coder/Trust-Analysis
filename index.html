@@ -25,6 +25,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .hdr-logo{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:var(--accent);}
 .hdr-sub{font-size:11px;color:var(--muted);margin-top:1px;}
 .badge{background:var(--accent);color:#000;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.badge.big{font-size:18px;padding:6px 16px;}
 .body{flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;}
 .pbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 18px;display:flex;align-items:center;gap:10px;}
 .pdot{width:10px;height:10px;border-radius:50%;}
@@ -63,10 +64,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .wait-title{font-size:17px;font-weight:600;}
 .wait-sub{font-size:13px;color:var(--muted);line-height:1.5;}
 /* ROUND */
-.r-banner{background:linear-gradient(135deg,var(--accent),#D97706);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
-.r-no{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#000;}
-.r-lbl{font-size:11px;font-weight:600;color:rgba(0,0,0,.6);text-transform:uppercase;letter-spacing:1px;}
-.mult-tag{background:#000;color:var(--accent);font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px;}
+.mult-tag{background:var(--surface);border:1px solid var(--border);color:var(--accent);font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px;}
 /* CASE */
 .case-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;}
 .case-lbl{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
@@ -232,7 +230,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="screen" id="s-general">
   <div class="hdr">
     <div><div class="hdr-logo">🎯 General Round</div><div class="hdr-sub">Your Own Opinion</div></div>
-    <div class="badge" id="gr-badge">R1</div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <div id="gr-mult" style="display:none" class="mult-tag">×1</div>
+      <div class="badge big" id="gr-badge">R1</div>
+    </div>
   </div>
   <div class="pbar">
     <div class="pdot" id="g-dot"></div>
@@ -242,10 +243,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="timer-card">
       <div class="timer-lbl">⏱ Time Remaining</div>
       <div class="timer-val" id="gr-timer-val">05:00</div>
-    </div>
-    <div class="r-banner">
-      <div><div class="r-lbl">Round</div><div class="r-no" id="gr-rno">1</div></div>
-      <div id="gr-mult" style="display:none" class="mult-tag">×1</div>
     </div>
     <div class="case-card">
       <div class="case-lbl">📋 Case Study</div>
@@ -273,7 +270,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="screen" id="s-breakout">
   <div class="hdr">
     <div><div class="hdr-logo">🎯 Breakout</div><div class="hdr-sub">Team Decision</div></div>
-    <div class="badge" id="bo-badge">R1</div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <div id="bo-mult" style="display:none" class="mult-tag">×1</div>
+      <div class="badge big" id="bo-badge">R1</div>
+    </div>
   </div>
   <div class="pbar">
     <div class="pdot" id="b-dot"></div>
@@ -284,10 +284,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="timer-card">
       <div class="timer-lbl">⏱ Time Remaining</div>
       <div class="timer-val" id="timer-val">05:00</div>
-    </div>
-    <div class="r-banner">
-      <div><div class="r-lbl">Round</div><div class="r-no" id="bo-rno">1</div></div>
-      <div id="bo-mult" style="display:none" class="mult-tag">×1</div>
     </div>
     <div class="case-card">
       <div class="case-lbl">📋 Case Study</div>
@@ -332,26 +328,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="screen" id="s-main">
   <div class="hdr">
     <div><div class="hdr-logo">🎯 Main Room</div><div class="hdr-sub">Round Results</div></div>
-    <div class="badge" id="main-badge">R1</div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <div id="main-mult" style="display:none" class="mult-tag">×1</div>
+      <div class="badge big" id="main-badge">R1</div>
+    </div>
   </div>
   <div class="pbar">
     <div class="pdot" id="m-dot"></div>
     <div><div class="pnm" id="m-name"></div><div class="pteam" id="m-team"></div></div>
   </div>
   <div class="body">
-    <div class="r-banner">
-      <div><div class="r-lbl">Round</div><div class="r-no" id="main-rno">1</div></div>
-      <div id="main-mult" style="display:none" class="mult-tag">×1</div>
-    </div>
     <div id="main-wait" class="wait-card">
       <div class="spinner"></div>
       <div class="wait-sub">Waiting for facilitator to reveal scores...</div>
     </div>
     <div id="main-scores-section" style="display:none">
-      <div class="case-card" id="main-case-card" style="margin-bottom:16px;display:none">
-        <div class="case-lbl">📋 This Round's Case Study</div>
-        <div class="case-txt" id="main-case"></div>
-      </div>
+      <div class="sec-label" style="margin-bottom:8px">📐 Scoring Rules</div>
+      <div style="overflow-x:auto;margin-bottom:16px" id="main-payout-rules"></div>
       <div id="my-history-section" style="margin-bottom:16px;display:none">
         <div class="sec-label" style="margin-bottom:4px">📝 My Opinions — All Rounds</div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:8px">For your own reference only — these don't affect your team's score. Only the Breakout answer counts.</div>
@@ -362,15 +355,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
           </table>
         </div>
       </div>
-      <div class="sec-label" style="margin-bottom:8px">📐 Scoring Rules</div>
-      <div style="overflow-x:auto;margin-bottom:16px" id="main-payout-rules"></div>
       <div class="sec-label" style="margin-bottom:8px">🏆 Scoreboard — All Rounds</div>
-      <div style="overflow-x:auto">
+      <div style="overflow-x:auto;margin-bottom:16px">
         <table class="sc-table">
           <thead><tr id="main-sc-th"></tr></thead>
           <tbody id="main-sc-tb"></tbody>
           <tfoot><tr id="main-sc-tf"></tr></tfoot>
         </table>
+      </div>
+      <div class="case-card" id="main-case-card" style="display:none">
+        <div class="case-lbl">📋 This Round's Case Study</div>
+        <div class="case-txt" id="main-case"></div>
       </div>
     </div>
     <div id="main-next-wait" class="wait-card" style="display:none">
@@ -554,7 +549,6 @@ async function route(){
   if(st==='general'&&rnd){
     show('general');
     document.getElementById('gr-badge').textContent='R'+rnd.round_number;
-    document.getElementById('gr-rno').textContent=rnd.round_number;
     const gm=document.getElementById('gr-mult');
     if(rnd.multiplier>1){gm.style.display='block';gm.textContent='×'+rnd.multiplier;}else gm.style.display='none';
     await updGrCase(rnd);
@@ -709,7 +703,6 @@ async function resolveCaseForTeam(roundId,teamId){
 }
 
 async function updBo(r){
-  document.getElementById('bo-rno').textContent=r.round_number;
   document.getElementById('bo-badge').textContent='R'+r.round_number;
   const m=document.getElementById('bo-mult');
   if(r.multiplier>1){m.style.display='block';m.textContent='×'+r.multiplier;}else m.style.display='none';
@@ -731,7 +724,6 @@ async function updBo(r){
 }
 
 function updMain(r){
-  document.getElementById('main-rno').textContent=r.round_number;
   document.getElementById('main-badge').textContent='R'+r.round_number;
   const m=document.getElementById('main-mult');
   if(r.multiplier>1){m.style.display='block';m.textContent='×'+r.multiplier;}else m.style.display='none';
