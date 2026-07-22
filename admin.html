@@ -292,6 +292,7 @@ tr:hover td{background:var(--sur2);}
             <!-- BREAKOUT: Open Main Room (Score Reveal) -->
             <div id="ctrl-breakout" style="display:none">
               <div style="font-size:12px;color:var(--mut);margin-bottom:8px" id="ctrl-teams-status">Waiting for team answers...</div>
+              <button class="btn bo bsm" style="margin-bottom:8px" onclick="simulateTeamAnswers()">🎲 Simulate Team Answers (Testing)</button>
               <button class="cbtn c3" style="width:100%" onclick="revealScores()"><span class="ci">📊</span>Reveal Scores (Main Room)</button>
             </div>
             <!-- SCORING: End Round or Skip or End Session -->
@@ -1331,6 +1332,29 @@ async function openBreakout(){
   SESS.status='breakout';
   toast('Breakout started — captains submit the team answer now!','ok');
   refreshDash();
+}
+
+// Testing helper: fills in a random H/L for any team that hasn't submitted
+// yet this round, so a solo admin can reach Reveal Scores without needing
+// every team logged in on a separate device.
+async function simulateTeamAnswers(){
+  if(!SESS)return;
+  try{
+    const r=await getCurRound();
+    if(!r){toast('No current round','er');return;}
+    const existing=await GET('ta_team_answers','round_id=eq.'+r.id+'&select=team_id')||[];
+    const answered=new Set(existing.map(e=>e.team_id));
+    const pending=TEAMS.filter(t=>!answered.has(t.id));
+    if(!pending.length){toast('All teams already submitted','in');return;}
+    for(const t of pending){
+      const member=PARTS.find(p=>p.team_id===t.id);
+      await UPSERT('ta_team_answers',{session_id:SESS.id,round_id:r.id,team_id:t.id,answer:Math.random()<0.5?'H':'L',submitted_by:member?member.id:null,auto_submitted:true});
+    }
+    toast(pending.length+' team(s) given a random test answer','ok');
+    refreshDash();
+  }catch(e){
+    toast('Simulate failed: '+e.message,'er');
+  }
 }
 
 async function revealScores(){
