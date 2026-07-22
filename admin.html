@@ -142,7 +142,8 @@ tr:hover td{background:var(--sur2);}
     <div style="font-size:44px;margin-bottom:12px">🎯</div>
     <h1>Game of Trust</h1>
     <p>Admin Panel</p>
-    <input type="password" id="pw" placeholder="Admin password" onkeydown="if(event.key==='Enter')login()" style="width:100%;background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);padding:12px;font-size:15px;margin-bottom:12px;display:block;outline:none;"/>
+    <input type="email" id="em" placeholder="Admin email" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('pw').focus()" style="width:100%;background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);padding:12px;font-size:15px;margin-bottom:10px;display:block;outline:none;"/>
+    <input type="password" id="pw" placeholder="Admin password" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()" style="width:100%;background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);padding:12px;font-size:15px;margin-bottom:12px;display:block;outline:none;"/>
     <button class="btn ba bfull" onclick="login()">Login →</button>
     <div id="lerr" style="color:var(--hi);font-size:13px;margin-top:8px;min-height:16px"></div>
   </div>
@@ -171,6 +172,7 @@ tr:hover td{background:var(--sur2);}
       <a onclick="go('teams')" id="n-teams">👥 Teams</a>
       <a onclick="go('scores')" id="n-scores">🏆 Scores</a>
       <a onclick="go('resps')" id="n-resps">📋 Responses</a>
+      <a onclick="logout()" id="n-logout">🚪 Logout</a>
     </div>
   </div>
 
@@ -385,15 +387,51 @@ tr:hover td{background:var(--sur2);}
 console.log('Game of Trust Admin v5 loaded');
 const U='https://wrzpgultvahxbrgooibn.supabase.co';
 const K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndyenBndWx0dmFoeGJyZ29vaWJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzc2MTcsImV4cCI6MjA5MzExMzYxN30.sZM4GQiwom34d7TjeK_Jc_n8KYoC8VhI48jfq71dwb8';
-const PASS='vijay11';
 const APP='https://vkv-coder.github.io/Trust-Analysis/';
 
-const H=()=>({'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json','Prefer':'return=representation'});
-async function GET(t,q){const r=await fetch(U+'/rest/v1/'+t+'?'+(q||''),{headers:{'apikey':K,'Authorization':'Bearer '+K}});return r.json();}
-async function POST(t,b){const r=await fetch(U+'/rest/v1/'+t,{method:'POST',headers:H(),body:JSON.stringify(b)});return{ok:r.ok,st:r.status,d:await r.json()};}
-async function PATCH(t,q,b){const r=await fetch(U+'/rest/v1/'+t+'?'+q,{method:'PATCH',headers:H(),body:JSON.stringify(b)});return r.json();}
-async function DEL(t,q){await fetch(U+'/rest/v1/'+t+'?'+q,{method:'DELETE',headers:{'apikey':K,'Authorization':'Bearer '+K}});}
-async function UPSERT(t,b){const r=await fetch(U+'/rest/v1/'+t,{method:'POST',headers:{...H(),'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(b)});return r.json();}
+// Escape untrusted text (names, case study text, etc.) before inserting into innerHTML.
+function escHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+// Same, plus safe for embedding as a single-quoted JS string literal inside an onclick="..." attribute.
+function escJs(s){return escHtml(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+// Only the 8 preset swatch colours are ever legitimate; reject anything else before it's ever rendered as CSS/HTML.
+function isSafeColor(c){return /^#[0-9A-Fa-f]{6}$/.test(c);}
+
+// AUTH — real Supabase Auth login (replaces the old hardcoded 'vijay11' password,
+// which was visible in view-source to any visitor). Create the admin login user
+// once via Supabase Dashboard > Authentication > Users > Add user, then run
+// supabase_auth_rls_migration.sql so RLS actually enforces this role distinction.
+let SESSION_TOKENS=null; // {access_token, refresh_token, expires_at}
+
+function loadStoredSession(){try{const raw=localStorage.getItem('ta_admin_session');return raw?JSON.parse(raw):null;}catch(e){return null;}}
+function storeSession(t){SESSION_TOKENS=t;localStorage.setItem('ta_admin_session',JSON.stringify(t));}
+function clearSession(){SESSION_TOKENS=null;localStorage.removeItem('ta_admin_session');}
+
+async function authRequest(grantType,body){
+  const r=await fetch(U+'/auth/v1/token?grant_type='+grantType,{method:'POST',headers:{'apikey':K,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json();
+  if(!r.ok)throw new Error(d.error_description||d.msg||'Authentication failed');
+  return d;
+}
+
+// Called before every API request; refreshes the access token if it's expired
+// (or about to), so a long-running game day doesn't get logged out mid-session.
+async function ensureFreshToken(){
+  if(!SESSION_TOKENS)return false;
+  if(Date.now()<SESSION_TOKENS.expires_at-60000)return true;
+  try{
+    const d=await authRequest('refresh_token',{refresh_token:SESSION_TOKENS.refresh_token});
+    storeSession({access_token:d.access_token,refresh_token:d.refresh_token,expires_at:Date.now()+d.expires_in*1000});
+    return true;
+  }catch(e){clearSession();return false;}
+}
+
+function bearer(){return SESSION_TOKENS?SESSION_TOKENS.access_token:K;}
+const H=()=>({'apikey':K,'Authorization':'Bearer '+bearer(),'Content-Type':'application/json','Prefer':'return=representation'});
+async function GET(t,q){await ensureFreshToken();const r=await fetch(U+'/rest/v1/'+t+'?'+(q||''),{headers:{'apikey':K,'Authorization':'Bearer '+bearer()}});return r.json();}
+async function POST(t,b){await ensureFreshToken();const r=await fetch(U+'/rest/v1/'+t,{method:'POST',headers:H(),body:JSON.stringify(b)});return{ok:r.ok,st:r.status,d:await r.json()};}
+async function PATCH(t,q,b){await ensureFreshToken();const r=await fetch(U+'/rest/v1/'+t+'?'+q,{method:'PATCH',headers:H(),body:JSON.stringify(b)});return r.json();}
+async function DEL(t,q){await ensureFreshToken();await fetch(U+'/rest/v1/'+t+'?'+q,{method:'DELETE',headers:{'apikey':K,'Authorization':'Bearer '+bearer()}});}
+async function UPSERT(t,b){await ensureFreshToken();const r=await fetch(U+'/rest/v1/'+t,{method:'POST',headers:{...H(),'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(b)});return r.json();}
 
 let EV=null,SESS=null,TEAMS=[],PARTS=[],ROUNDS=[],CLR='#EF4444',POLL=null;
 
@@ -411,14 +449,47 @@ function checkMobileBar(){
 }
 window.addEventListener('resize',checkMobileBar);
 
-function login(){
-  if(document.getElementById('pw').value!==PASS){document.getElementById('lerr').textContent='Wrong password';return;}
+function enterApp(){
   document.getElementById('login').style.display='none';
   document.getElementById('app').style.display='flex';
   checkMobileBar();
   loadEvents();
   POLL=setInterval(pollSess,5000);
 }
+
+async function login(){
+  const email=document.getElementById('em').value.trim();
+  const pw=document.getElementById('pw').value;
+  const err=document.getElementById('lerr');
+  if(!email||!pw){err.textContent='Enter email and password';return;}
+  err.textContent='Signing in...';
+  try{
+    const d=await authRequest('password',{email,password:pw});
+    storeSession({access_token:d.access_token,refresh_token:d.refresh_token,expires_at:Date.now()+d.expires_in*1000});
+    err.textContent='';
+    enterApp();
+  }catch(e){
+    err.textContent='Login failed: '+e.message;
+  }
+}
+
+function logout(){
+  clearSession();
+  if(POLL)clearInterval(POLL);
+  EV=null;SESS=null;TEAMS=[];PARTS=[];ROUNDS=[];
+  document.getElementById('app').style.display='none';
+  document.getElementById('login').style.display='flex';
+  document.getElementById('pw').value='';
+}
+
+// Auto-login if a previous session's tokens are still valid/refreshable.
+(async function initAuth(){
+  const stored=loadStoredSession();
+  if(!stored)return;
+  SESSION_TOKENS=stored;
+  if(await ensureFreshToken())enterApp();
+  else clearSession();
+})();
 
 function toggleMenu(){
   document.getElementById('sidebar').classList.toggle('mob-open');
@@ -458,10 +529,10 @@ async function loadEvents(){
   sel.innerHTML='<option value="">— Select Event —</option>';
   if(tb)tb.innerHTML='';
   for(const e of (evs||[])){
-    sel.innerHTML+=`<option value="${e.id}">${e.name}</option>`;
+    sel.innerHTML+=`<option value="${e.id}">${escHtml(e.name)}</option>`;
     const sc=await GET('ta_sessions','event_id=eq.'+e.id+'&select=id');
     if(tb)tb.innerHTML+=`<tr>
-      <td><strong>${e.name}</strong></td>
+      <td><strong>${escHtml(e.name)}</strong></td>
       <td>${(sc||[]).length} session(s)</td>
       <td style="color:var(--mut)">${new Date(e.created_at).toLocaleDateString('en-IN')}</td>
       <td style="display:flex;gap:6px">
@@ -536,7 +607,7 @@ async function switchEvent(id){
   const sessions=await GET('ta_sessions','event_id=eq.'+id+'&order=created_at.desc&select=*')||[];
   const ssel=document.getElementById('sess-sel');
   ssel.innerHTML='<option value="">— Select Session —</option>';
-  sessions.forEach(s=>{ssel.innerHTML+=`<option value="${s.id}">${s.name} [PIN:${s.pin}]</option>`;});
+  sessions.forEach(s=>{ssel.innerHTML+=`<option value="${s.id}">${escHtml(s.name)} [PIN:${escHtml(s.pin)}]</option>`;});
   // Auto load latest active session
   const active=sessions.find(s=>s.status!=='complete')||sessions[0];
   if(active){switchSession(active.id);ssel.value=active.id;}
@@ -554,13 +625,13 @@ async function loadSessions(){
   const tb=document.getElementById('sess-table');tb.innerHTML='';
   sessions.forEach(s=>{
     tb.innerHTML+=`<tr>
-      <td><strong>${s.name}</strong></td>
-      <td><strong style="color:var(--acc)">${s.pin}</strong></td>
+      <td><strong>${escHtml(s.name)}</strong></td>
+      <td><strong style="color:var(--acc)">${escHtml(s.pin)}</strong></td>
       <td>${s.total_rounds}</td>
       <td><span class="sb s-${s.status}">${s.status}</span></td>
       <td style="display:flex;gap:6px">
         <button class="btn bo bsm" onclick="switchSession('${s.id}');go('dash')">Load</button>
-        <button class="btn bo bsm" onclick="showRounds('${s.id}','${s.name}')">Rounds</button>
+        <button class="btn bo bsm" onclick="showRounds('${s.id}','${escJs(s.name)}')">Rounds</button>
         <button class="btn bd bsm" onclick="delSession('${s.id}')">Del</button>
       </td></tr>`;
   });
@@ -576,6 +647,10 @@ async function makeSession(){
   if(!name){msg.style.color='var(--hi)';msg.textContent='Session name required';return;}
   if(!pin||pin.length!==4){msg.style.color='var(--hi)';msg.textContent='4-digit PIN required';return;}
   if(rnds<1||rnds>20){msg.style.color='var(--hi)';msg.textContent='Total rounds must be between 1 and 20';return;}
+  // PINs aren't scoped to an organisation in the schema, so two active sessions
+  // sharing a PIN would send participants into the wrong session non-deterministically.
+  const clashing=await GET('ta_sessions','pin=eq.'+pin+'&status=neq.complete&select=id')||[];
+  if(clashing.length){msg.style.color='var(--hi)';msg.textContent='This PIN is already in use by another active session — pick a different one';return;}
   msg.style.color='var(--acc)';msg.textContent='Creating...';
   // Reset is_present for all participants
   await PATCH('ta_participants','event_id=eq.'+EV.id,{is_present:false});
@@ -686,7 +761,7 @@ function renderRounds(){
               <input type="checkbox" id="rc-all-${r.id}" checked onchange="toggleAllTeamsCase('${r.id}')"/> Applies to All Teams
             </label>
             <div id="rc-teams-${r.id}" style="display:none;flex-wrap:wrap;gap:8px;">
-              ${TEAMS.map(t=>`<label style="font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" class="rc-team-cb-${r.id}" value="${t.id}"/> <span style="color:${t.color}">${t.name}</span></label>`).join('')}
+              ${TEAMS.map(t=>`<label style="font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" class="rc-team-cb-${r.id}" value="${t.id}"/> <span style="color:${escHtml(t.color)}">${escHtml(t.name)}</span></label>`).join('')}
             </div>
           </div>
           <div id="rc-msg-${r.id}" style="font-size:12px;margin-top:6px;min-height:14px"></div>
@@ -716,10 +791,10 @@ function renderRoundCasesListHtml(roundId){
   return cases.map(c=>{
     const teamBadges=c.applies_to_all
       ?'<span class="sb s-scoring">All Teams</span>'
-      :(TEAMS.filter(t=>c.team_ids.includes(t.id)).map(t=>`<span style="background:${t.color};color:#000;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;">${t.name}</span>`).join(' ')||'<span style="color:var(--mut);font-size:11px;">No teams assigned</span>');
+      :(TEAMS.filter(t=>c.team_ids.includes(t.id)).map(t=>`<span style="background:${escHtml(t.color)};color:#000;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;">${escHtml(t.name)}</span>`).join(' ')||'<span style="color:var(--mut);font-size:11px;">No teams assigned</span>');
     return `<div style="background:var(--sur2);border-radius:8px;padding:10px;margin-bottom:6px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-        <div style="flex:1;font-size:13px;">${c.case_text||'<span style="color:var(--mut)">(no text)</span>'}</div>
+        <div style="flex:1;font-size:13px;">${c.case_text?escHtml(c.case_text):'<span style="color:var(--mut)">(no text)</span>'}</div>
         <button class="btn bd bsm" onclick="deleteRoundCase('${c.id}','${roundId}')">Del</button>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center;">
@@ -747,9 +822,10 @@ async function addRoundCase(roundId){
   msgEl.style.color='var(--acc)';msgEl.textContent='Saving...';
   let fileUrl=null;
   if(file){
+    await ensureFreshToken();
     const fileName='case_'+roundId+'_'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
     const r=await fetch('https://wrzpgultvahxbrgooibn.supabase.co/storage/v1/object/trust-analysis/'+fileName,{
-      method:'POST',headers:{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':file.type,'x-upsert':'true'},body:file
+      method:'POST',headers:{'apikey':K,'Authorization':'Bearer '+bearer(),'Content-Type':file.type,'x-upsert':'true'},body:file
     });
     if(!r.ok){const err=await r.json();msgEl.style.color='var(--hi)';msgEl.textContent='Upload failed: '+(err.message||r.status);return;}
     fileUrl='https://wrzpgultvahxbrgooibn.supabase.co/storage/v1/object/public/trust-analysis/'+fileName;
@@ -818,10 +894,10 @@ function renderParts(){
   sorted.forEach(p=>{
     const t=p.ta_teams;
     const present=p.is_present===true;
-    l.innerHTML+=`<div class="chip" style="border-color:${present?'var(--lo)':t?.color||'var(--bdr)'};background:${present?'rgba(34,197,94,0.08)':'var(--sur2)'}">
-      ${present?'✅ ':'⏳ '}${p.is_captain?'👑 ':''}${p.name}
-      ${t?`<span style="color:${t.color};font-size:11px">(${t.name})</span>`:'<span style="color:var(--mut);font-size:11px">(no team)</span>'}
-      <span class="xb" onclick="remPart('${p.id}','${p.name}')">×</span>
+    l.innerHTML+=`<div class="chip" style="border-color:${present?'var(--lo)':escHtml(t?.color)||'var(--bdr)'};background:${present?'rgba(34,197,94,0.08)':'var(--sur2)'}">
+      ${present?'✅ ':'⏳ '}${p.is_captain?'👑 ':''}${escHtml(p.name)}
+      ${t?`<span style="color:${escHtml(t.color)};font-size:11px">(${escHtml(t.name)})</span>`:'<span style="color:var(--mut);font-size:11px">(no team)</span>'}
+      <span class="xb" onclick="remPart('${p.id}','${escJs(p.name)}')">×</span>
     </div>`;
   });
   // Summary at bottom
@@ -838,6 +914,7 @@ async function addTeam(){
   if(!EV){toast('Select organisation first','er');return;}
   const name=document.getElementById('t-name').value.trim();
   if(!name){toast('Team name required','er');return;}
+  if(!isSafeColor(CLR)){toast('Invalid colour','er');return;}
   const res=await POST('ta_teams',{event_id:EV.id,name,color:CLR});
   if(!res.ok){toast('Error adding team','er');return;}
   document.getElementById('t-name').value='';
@@ -869,12 +946,12 @@ function renderTeams(){
     const members=PARTS.filter(p=>p.team_id===tm.id&&p.is_present);
     l.innerHTML+=`<div class="sc">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <div style="width:12px;height:12px;border-radius:50%;background:${tm.color}"></div>
-        <strong>${tm.name}</strong>
+        <div style="width:12px;height:12px;border-radius:50%;background:${escHtml(tm.color)}"></div>
+        <strong>${escHtml(tm.name)}</strong>
         <span style="font-size:12px;color:var(--mut)">${members.length} member${members.length!==1?'s':''}</span>
-        <button class="btn bd bsm" onclick="remTeam('${tm.id}','${tm.name}')">Remove Team</button>
+        <button class="btn bd bsm" onclick="remTeam('${tm.id}','${escJs(tm.name)}')">Remove Team</button>
       </div>
-      <div class="chips">${members.map(p=>`<div class="chip">${p.is_captain?'👑 ':''}${p.name}<span class="xb" onclick="remFromTeam('${p.id}')">×</span></div>`).join('')||'<span style="font-size:12px;color:var(--mut)">No members</span>'}</div>
+      <div class="chips">${members.map(p=>`<div class="chip">${p.is_captain?'👑 ':''}${escHtml(p.name)}<span class="xb" onclick="remFromTeam('${p.id}')">×</span></div>`).join('')||'<span style="font-size:12px;color:var(--mut)">No members</span>'}</div>
     </div>`;
   });
   renderAssignMatrix();
@@ -894,7 +971,7 @@ function renderAssignMatrix(){
   let html='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;padding:8px 10px;background:var(--sur2);border-radius:8px;">';
   html+='<span style="font-size:12px;color:var(--mut);">'+ASSIGN_SEL.size+' ticked — tap a colour to assign them:</span>';
   TEAMS.forEach(tm=>{
-    html+='<div class="clr" style="background:'+tm.color+';width:26px;height:26px;cursor:pointer;" title="Assign ticked players to '+tm.name+'" onclick="bulkAssignToTeam(\''+tm.id+'\')"></div>';
+    html+='<div class="clr" style="background:'+escHtml(tm.color)+';width:26px;height:26px;cursor:pointer;" title="Assign ticked players to '+escHtml(tm.name)+'" onclick="bulkAssignToTeam(\''+tm.id+'\')"></div>';
   });
   if(ASSIGN_SEL.size)html+='<button class="btn bd bsm" onclick="clearAssignSel()">Clear</button>';
   html+='</div>';
@@ -904,8 +981,8 @@ function renderAssignMatrix(){
     const checked=ASSIGN_SEL.has(p.id);
     html+='<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--sur2);border-radius:8px;">';
     html+='<input type="checkbox" '+(checked?'checked':'')+' onchange="toggleAssignSel(\''+p.id+'\')" style="width:18px;height:18px;flex-shrink:0;cursor:pointer;">';
-    html+='<div style="flex:1;font-size:13px;min-width:120px;">'+(p.is_captain?'👑 ':'')+p.name
-      +(p.ta_teams?' <span style="color:'+p.ta_teams.color+';font-size:11px">('+p.ta_teams.name+')</span>'
+    html+='<div style="flex:1;font-size:13px;min-width:120px;">'+(p.is_captain?'👑 ':'')+escHtml(p.name)
+      +(p.ta_teams?' <span style="color:'+escHtml(p.ta_teams.color)+';font-size:11px">('+escHtml(p.ta_teams.name)+')</span>'
         :'<span style="color:var(--mut);font-size:11px"> (no team)</span>')+'</div>';
     html+='<div style="width:22px;height:22px;border-radius:50%;border:1px dashed var(--bdr);color:var(--mut);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;" title="Remove from team" onclick="assignToTeam(\''+p.id+'\',null)">×</div>';
     html+='</div>';
@@ -1173,8 +1250,8 @@ async function refreshDash(){
         if(statusEl){
           const submitted=tas.length;const total=TEAMS.length;
           let html=`<strong>${submitted}/${total} teams submitted</strong><br>`;
-          tas.forEach(ta=>{html+=`<span style="color:${ta.ta_teams?.color||'#3B82F6'}">${ta.ta_teams?.name||'?'}</span>: <strong style="color:${ta.answer==='H'?'var(--hi)':'var(--lo)'}">${ta.answer==='H'?'HIGH':'LOW'}</strong> &nbsp;`;});
-          if(total>submitted){const pending=TEAMS.filter(t=>!tas.find(ta=>ta.team_id===t.id));html+='<br>Pending: '+pending.map(t=>`<span style="color:${t.color}">${t.name}</span>`).join(', ');}
+          tas.forEach(ta=>{html+=`<span style="color:${escHtml(ta.ta_teams?.color)||'#3B82F6'}">${escHtml(ta.ta_teams?.name)||'?'}</span>: <strong style="color:${ta.answer==='H'?'var(--hi)':'var(--lo)'}">${ta.answer==='H'?'HIGH':'LOW'}</strong> &nbsp;`;});
+          if(total>submitted){const pending=TEAMS.filter(t=>!tas.find(ta=>ta.team_id===t.id));html+='<br>Pending: '+pending.map(t=>`<span style="color:${escHtml(t.color)}">${escHtml(t.name)}</span>`).join(', ');}
           statusEl.innerHTML=html;
         }
       }
@@ -1197,18 +1274,18 @@ async function renderPresenceMatrix(presentIds){
     const presentCount=members.filter(p=>presentIds.has(p.id)).length;
     let html=`<div class="pmatrix-col">
       <div class="pmatrix-team">
-        <div class="pmatrix-dot" style="background:${tm.color}"></div>
-        <div class="pmatrix-name">${tm.name}</div>
+        <div class="pmatrix-dot" style="background:${escHtml(tm.color)}"></div>
+        <div class="pmatrix-name">${escHtml(tm.name)}</div>
         <div class="pmatrix-count">${presentCount}/${members.length}</div>
       </div>`;
     members.forEach(p=>{
       const present=presentIds.has(p.id);
       const isCap=p.is_captain===true;
       const otherTeams=TEAMS.filter(t=>t.id!==tm.id);
-      const moveOpts=otherTeams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+      const moveOpts=otherTeams.map(t=>`<option value="${t.id}">${escHtml(t.name)}</option>`).join('');
       html+=`<div class="pmember ${present?'present':'absent'}" style="${isCap?'border-color:var(--acc);border-width:2px':''}">
         <span class="pmember-status">${present?'✅':'⏳'}</span>
-        <span class="pmember-name" style="margin-left:6px">${p.name}</span>
+        <span class="pmember-name" style="margin-left:6px">${escHtml(p.name)}</span>
         <button onclick="toggleCaptain('${p.id}','${tm.id}',${isCap})"
           style="background:${isCap?'var(--acc)':'var(--sur2)'};color:${isCap?'#000':'var(--mut)'};border:1px solid ${isCap?'var(--acc)':'var(--bdr)'};border-radius:6px;padding:2px 7px;font-size:12px;cursor:pointer;margin-left:4px"
           title="${isCap?'Remove captain':'Make captain'}">👑</button>
@@ -1223,10 +1300,10 @@ async function renderPresenceMatrix(presentIds){
       const unassigned=PARTS.filter(p=>!p.team_id);
       unassigned.forEach(p=>{
         const present=presentIds.has(p.id);
-        const allTeams=TEAMS.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+        const allTeams=TEAMS.map(t=>`<option value="${t.id}">${escHtml(t.name)}</option>`).join('');
         html+=`<div class="pmember ${present?'present':'absent'}" style="border-style:dashed">
           <span class="pmember-status">${present?'✅':'⏳'}</span>
-          <span class="pmember-name" style="margin-left:6px;color:var(--mut)">${p.name} (no team)</span>
+          <span class="pmember-name" style="margin-left:6px;color:var(--mut)">${escHtml(p.name)} (no team)</span>
           <select class="move-sel" onchange="moveMember('${p.id}',this.value,this)">
             <option value="">Assign→</option>
             ${allTeams}
@@ -1312,7 +1389,7 @@ async function loadScores(){
   const sorted=Object.values(tm).sort((a,b)=>b.cum-a.cum);
   const ranks=['🥇','🥈','🥉'];
   let html='<div class="sc"><div class="sct">Standings</div>';
-  sorted.forEach((t,i)=>{html+=`<div class="srow"><div style="font-size:16px;width:22px">${ranks[i]||i+1}</div><div class="sdot" style="background:${t.team?.color}"></div><div style="flex:1;font-weight:600">${t.team?.name}</div><div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:${t.cum>=0?'var(--lo)':'var(--hi)'}">${t.cum>0?'+':''}${t.cum}</div></div>`;});
+  sorted.forEach((t,i)=>{html+=`<div class="srow"><div style="font-size:16px;width:22px">${ranks[i]||i+1}</div><div class="sdot" style="background:${escHtml(t.team?.color)}"></div><div style="flex:1;font-weight:600">${escHtml(t.team?.name)}</div><div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:${t.cum>=0?'var(--lo)':'var(--hi)'}">${t.cum>0?'+':''}${t.cum}</div></div>`;});
   html+='</div>';
   const rns=[...new Set(sc.map(s=>s.ta_rounds?.round_number))].sort((a,b)=>a-b);
   const mults={};sc.forEach(s=>{if(s.ta_rounds)mults[s.ta_rounds.round_number]=s.ta_rounds.multiplier||1;});
@@ -1320,7 +1397,7 @@ async function loadScores(){
   rns.forEach(r=>{html+=`<th>R${r}${mults[r]>1?'<br><span style="color:var(--acc);font-size:10px">×'+mults[r]+'</span>':''}</th>`;});
   html+='<th style="color:var(--acc)">TOTAL</th></tr></thead><tbody>';
   sorted.forEach(t=>{
-    html+=`<tr><td><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:${t.team?.color};display:inline-block"></span>${t.team?.name}</span></td>`;
+    html+=`<tr><td><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:${escHtml(t.team?.color)};display:inline-block"></span>${escHtml(t.team?.name)}</span></td>`;
     rns.forEach(r=>{const s=t.rows.find(x=>x.ta_rounds?.round_number===r);const p=s?s.round_points:'—';html+=`<td style="color:${typeof p==='number'?(p>=0?'var(--lo)':'var(--hi)'):'var(--mut)'};text-align:center">${typeof p==='number'?(p>0?'+':'')+p:p}</td>`;});
     html+=`<td style="font-weight:700;color:${t.cum>=0?'var(--lo)':'var(--hi)'};text-align:center">${t.cum>0?'+':''}${t.cum}</td></tr>`;
   });
@@ -1341,10 +1418,10 @@ async function loadResps(){
   const tv=await GET('ta_team_answers','session_id=eq.'+SESS.id+'&select=*,ta_teams(name,color),ta_rounds(round_number),ta_participants(name)&order=ta_rounds(round_number),submitted_at')||[];
   const it=document.getElementById('rs-iv');it.innerHTML='';
   iv.forEach(r=>{const p=r.ta_participants;const t=p?.ta_teams;const tm=new Date(r.submitted_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-    it.innerHTML+=`<tr><td>R${r.ta_rounds?.round_number||'?'}</td><td>${p?.name||'—'}</td><td style="color:${t?.color||'#3B82F6'}">${t?.name||'—'}</td><td><strong style="color:${r.answer==='H'?'var(--hi)':'var(--lo)'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td><td style="color:var(--mut)">${tm}</td></tr>`;});
+    it.innerHTML+=`<tr><td>R${r.ta_rounds?.round_number||'?'}</td><td>${escHtml(p?.name)||'—'}</td><td style="color:${escHtml(t?.color)||'#3B82F6'}">${escHtml(t?.name)||'—'}</td><td><strong style="color:${r.answer==='H'?'var(--hi)':'var(--lo)'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td><td style="color:var(--mut)">${tm}</td></tr>`;});
   const tt=document.getElementById('rs-tv');tt.innerHTML='';
   tv.forEach(r=>{const t=r.ta_teams;const cap=r.ta_participants;const tm=new Date(r.submitted_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-    tt.innerHTML+=`<tr><td>R${r.ta_rounds?.round_number||'?'}</td><td style="color:${t?.color||'#3B82F6'}">${t?.name||'—'}</td><td><strong style="color:${r.answer==='H'?'var(--hi)':'var(--lo)'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td><td>${cap?.name||'—'}</td><td style="color:var(--mut)">${tm}</td></tr>`;});
+    tt.innerHTML+=`<tr><td>R${r.ta_rounds?.round_number||'?'}</td><td style="color:${escHtml(t?.color)||'#3B82F6'}">${escHtml(t?.name)||'—'}</td><td><strong style="color:${r.answer==='H'?'var(--hi)':'var(--lo)'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td><td>${escHtml(cap?.name)||'—'}</td><td style="color:var(--mut)">${tm}</td></tr>`;});
 }
 </script>
 </body>

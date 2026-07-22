@@ -397,8 +397,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <script>
 const SURL='https://wrzpgultvahxbrgooibn.supabase.co';
 const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndyenBndWx0dmFoeGJyZ29vaWJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mzc2MTcsImV4cCI6MjA5MzExMzYxN30.sZM4GQiwom34d7TjeK_Jc_n8KYoC8VhI48jfq71dwb8';
+// Escape untrusted text (names, case study text, etc.) before inserting into innerHTML.
+function escHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 const H=()=>({'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':'application/json','Prefer':'return=representation'});
 const GET=(t,q='')=>fetch(`${SURL}/rest/v1/${t}?${q}`,{headers:H()}).then(r=>r.json());
+// ta_sessions/ta_events are locked down (see supabase_auth_rls_migration.sql) — this
+// RPC is the only way to look up a session, and only ever returns the row matching p_pin.
+const RPC=(fn,args)=>fetch(`${SURL}/rest/v1/rpc/${fn}`,{method:'POST',headers:H(),body:JSON.stringify(args)}).then(r=>r.json());
 
 let P={pin:'',session:null,participant:null,team:null,round:null,vote:null,ctx:null,pollT:null,timerT:null,isCapt:false};
 
@@ -425,17 +430,13 @@ function onRealPinInput(el){
 async function verPin(){
   document.getElementById('pin-err').textContent='Checking...';
   try{
-    const res=await GET('ta_sessions','pin=eq.'+P.pin+'&select=*');
+    const res=await RPC('get_session_by_pin',{p_pin:P.pin});
     if(!res||!res.length){document.getElementById('pin-err').textContent='Wrong PIN. Try again.';P.pin='';updPin();return;}
     const s=res[0];
     if(s.status==='setup'){document.getElementById('pin-err').textContent='Session not started yet. Wait for facilitator.';P.pin='';updPin();return;}
     if(s.status==='complete'){document.getElementById('pin-err').textContent='This session has ended.';P.pin='';updPin();return;}
     P.session=s;
-    // Fetch org name for the header subtitle on post-PIN screens
-    try{
-      const orgRows=await GET('ta_events','id=eq.'+s.event_id+'&select=name');
-      P.orgName=(orgRows&&orgRows[0])?orgRows[0].name:'';
-    }catch(e){P.orgName='';}
+    P.orgName=s.event_name||'';
     loadNames();
   }catch(e){document.getElementById('pin-err').textContent='Connection error. Try again.';P.pin='';updPin();}
 }
@@ -458,8 +459,8 @@ async function loadNames(){
     const taken=p.is_present===true;
     const card=document.createElement('div');
     card.className='name-card'+(taken?' taken':'');
-    card.innerHTML=`<div class="av" style="background:var(--s2);color:var(--muted)">${p.name.charAt(0).toUpperCase()}</div>
-      <div><div class="ni-name" style="${taken?'color:var(--muted)':''}">${p.name}</div></div>
+    card.innerHTML=`<div class="av" style="background:var(--s2);color:var(--muted)">${escHtml(p.name.charAt(0).toUpperCase())}</div>
+      <div><div class="ni-name" style="${taken?'color:var(--muted)':''}">${escHtml(p.name)}</div></div>
       <div style="margin-left:auto;font-size:12px;color:var(--muted)">${taken?'✅ Joined':''}</div>`;
     if(!taken){card.onclick=()=>{
       document.querySelectorAll('.name-card').forEach(c=>{c.style.display='none';});
@@ -501,7 +502,7 @@ function startPoll(){if(P.pollT)clearInterval(P.pollT);P.pollT=setInterval(poll,
 
 async function poll(){
   try{
-    const sv=await GET('ta_sessions','id=eq.'+P.session.id+'&select=*');
+    const sv=await RPC('get_session_by_pin',{p_pin:P.pin});
     if(!sv||!sv[0])return;
     P.session=sv[0];
     if(P.session.current_round>0){
@@ -600,11 +601,11 @@ async function loadTeamList(){
     if(!members.length)return;
     cont.innerHTML+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <div style="width:10px;height:10px;border-radius:50%;background:${tm.color}"></div>
-        <strong style="font-size:14px">${tm.name}</strong>
+        <div style="width:10px;height:10px;border-radius:50%;background:${escHtml(tm.color)}"></div>
+        <strong style="font-size:14px">${escHtml(tm.name)}</strong>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
-        ${members.map(p=>`<span style="background:var(--s2);border:1px solid ${p.is_captain?tm.color:'var(--border)'};border-radius:20px;padding:3px 10px;font-size:12px">${p.is_captain?'👑 ':''}${p.name}</span>`).join('')}
+        ${members.map(p=>`<span style="background:var(--s2);border:1px solid ${p.is_captain?escHtml(tm.color):'var(--border)'};border-radius:20px;padding:3px 10px;font-size:12px">${p.is_captain?'👑 ':''}${escHtml(p.name)}</span>`).join('')}
       </div>
     </div>`;
   });
@@ -617,14 +618,14 @@ async function loadAnnounceTeams(){
   cont.innerHTML='';
   teams.forEach(tm=>{
     const members=parts.filter(p=>p.team_id===tm.id);
-    cont.innerHTML+=`<div style="background:var(--surface);border:2px solid ${tm.color};border-radius:12px;padding:14px;margin-bottom:10px">
+    cont.innerHTML+=`<div style="background:var(--surface);border:2px solid ${escHtml(tm.color)};border-radius:12px;padding:14px;margin-bottom:10px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <div style="width:12px;height:12px;border-radius:50%;background:${tm.color}"></div>
-        <strong style="font-size:15px;color:${tm.color}">${tm.name}</strong>
+        <div style="width:12px;height:12px;border-radius:50%;background:${escHtml(tm.color)}"></div>
+        <strong style="font-size:15px;color:${escHtml(tm.color)}">${escHtml(tm.name)}</strong>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
-        ${members.map(p=>`<div style="background:${p.id===P.participant.id?tm.color+'33':'var(--s2)'};border:1px solid ${p.is_captain?tm.color:'var(--border)'};border-radius:20px;padding:5px 12px;font-size:13px;font-weight:${p.id===P.participant.id?'700':'400'}">
-          ${p.is_captain?'👑 ':''}${p.name}${p.id===P.participant.id?' (You)':''}
+        ${members.map(p=>`<div style="background:${p.id===P.participant.id?escHtml(tm.color)+'33':'var(--s2)'};border:1px solid ${p.is_captain?escHtml(tm.color):'var(--border)'};border-radius:20px;padding:5px 12px;font-size:13px;font-weight:${p.id===P.participant.id?'700':'400'}">
+          ${p.is_captain?'👑 ':''}${escHtml(p.name)}${p.id===P.participant.id?' (You)':''}
         </div>`).join('')}
       </div>
     </div>`;
@@ -646,8 +647,8 @@ async function checkCaptainVoting(){
   document.getElementById('ann-vote-list').innerHTML=members.map(m=>{
     const sel=m.id===myVotedFor;
     return `<div class="name-card${sel?' sel':''}" onclick="castCaptainVote('${m.id}')">
-      <div class="av" style="background:var(--s2);color:var(--muted)">${m.name.charAt(0).toUpperCase()}</div>
-      <div><div class="ni-name">${m.name}${m.id===P.participant.id?' (You)':''}</div></div>
+      <div class="av" style="background:var(--s2);color:var(--muted)">${escHtml(m.name.charAt(0).toUpperCase())}</div>
+      <div><div class="ni-name">${escHtml(m.name)}${m.id===P.participant.id?' (You)':''}</div></div>
     </div>`;
   }).join('');
   const allVotes=await GET('ta_captain_votes','session_id=eq.'+P.session.id+'&team_id=eq.'+P.team.id+'&select=voted_for_participant_id')||[];
@@ -846,7 +847,7 @@ async function buildScoreTable(thId,tbId,tfId){
   sorted.forEach(t=>{
     const isMe=P.participant&&t.id===P.participant.team_id;
     const td=tm[t.id]||{r:{},ans:{},c:0};
-    let row=`<tr class="${isMe?'mt':''}"><td class="tnc"><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${t.color||'#3B82F6'};display:inline-block"></span>${t.name}${isMe?' 👤':''}</span></td>`;
+    let row=`<tr class="${isMe?'mt':''}"><td class="tnc"><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${escHtml(t.color)||'#3B82F6'};display:inline-block"></span>${escHtml(t.name)}${isMe?' 👤':''}</span></td>`;
     rns.forEach(n=>{
       const p=td.r[n];const a=td.ans[n];
       row+=p===undefined?'<td class="pz">—</td>':`<td class="${p>0?'pp':p<0?'pn':'pz'}">${a?a+' ':''}${p>0?'+':''}${p}</td>`;
