@@ -911,24 +911,33 @@ function openModal(ctx){
   document.getElementById('modal').classList.add('open');
 }
 
-// Two-step "are you sure" — stage 1 states the choice, stage 2 re-confirms it's final.
+// Main Room (individual opinion) is a single confirm — low stakes, just you.
+// Breakout (team's official answer) is two steps: first a nudge to actually
+// talk to the team before locking in an answer on their behalf, then a final
+// "are you sure" — teammates standing nearby can weigh in before stage 2.
 function renderConfirmStage(){
   const v=P.vote;const ctx=P.ctx;
-  const label=ctx==='gr'?'your opinion':"your team's final answer";
   const btn=document.getElementById('modal-submit-btn');
-  if(P.confirmStage===1){
+  if(ctx==='gr'){
     document.getElementById('modal-title').textContent='Submit '+(v==='H'?'HIGH':'LOW')+'?';
-    document.getElementById('modal-body').textContent='Once submitted this cannot be changed. '+label.charAt(0).toUpperCase()+label.slice(1)+' will be '+(v==='H'?'HIGH':'LOW')+'.';
+    document.getElementById('modal-body').textContent='Once submitted this cannot be changed. Your opinion will be '+(v==='H'?'HIGH':'LOW')+'.';
+    btn.textContent='Yes, Submit';
+    return;
+  }
+  // ctx === 'bo'
+  if(P.confirmStage===1){
+    document.getElementById('modal-title').textContent='Have you checked with your team?';
+    document.getElementById('modal-body').textContent='Make sure your teammates have discussed and agreed — you\'re about to submit '+(v==='H'?'HIGH':'LOW')+' on behalf of the whole team.';
     btn.textContent='Yes, Continue';
   }else{
     document.getElementById('modal-title').textContent='Are you absolutely sure?';
-    document.getElementById('modal-body').textContent='This is final — '+label+' will be locked in as '+(v==='H'?'HIGH':'LOW')+'.';
+    document.getElementById('modal-body').textContent='This is final — your team\'s answer will be locked in as '+(v==='H'?'HIGH':'LOW')+'.';
     btn.textContent='Yes, Submit';
   }
 }
 
 function advanceConfirm(){
-  if(P.confirmStage===1){
+  if(P.ctx==='bo'&&P.confirmStage===1){
     P.confirmStage=2;
     renderConfirmStage();
     return;

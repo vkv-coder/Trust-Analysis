@@ -303,6 +303,11 @@ tr:hover td{background:var(--sur2);}
             </div>
           </div>
         </div>
+        <div class="sc" id="reset-sess-card" style="display:none;border-color:var(--hi)">
+          <div class="sct" style="color:var(--hi)">Danger Zone</div>
+          <p style="font-size:12px;color:var(--mut);margin-bottom:10px">For retesting: restarts this session from Setup, clears everyone's presence, and deletes its submitted answers/scores/votes so far. Participants, teams, and case studies are kept.</p>
+          <button class="btn bd bsm" onclick="resetSession()">🔁 Reset Session (Testing)</button>
+        </div>
         <div class="sc">
           <div class="sct">Participant Presence — Team Matrix</div>
           <div id="d-presence-matrix"><span style="color:var(--mut);font-size:13px">No session active</span></div>
@@ -1359,6 +1364,27 @@ async function endSession(){
   toast('Session ended','in');refreshDash();
 }
 
+// For retesting/practice runs: rewinds this session to Setup and clears its
+// game data, without touching participants, teams, or case studies.
+async function resetSession(){
+  if(!SESS)return;
+  if(!confirm('Reset this session for retesting?\n\nThis will:\n- Set status back to Setup\n- Clear everyone\'s presence\n- Delete all submitted answers, team answers, scores, and captain votes for this session\n\nParticipants, teams, and case studies are kept.\n\nContinue?'))return;
+  const roundRows=await GET('ta_rounds','session_id=eq.'+SESS.id+'&select=id')||[];
+  await DEL('ta_scores','session_id=eq.'+SESS.id);
+  await DEL('ta_team_answers','session_id=eq.'+SESS.id);
+  await DEL('ta_individual_answers','session_id=eq.'+SESS.id);
+  await DEL('ta_captain_votes','session_id=eq.'+SESS.id);
+  for(const r of roundRows){
+    await PATCH('ta_rounds','id=eq.'+r.id,{status:'pending',timer_started_at:null});
+  }
+  await PATCH('ta_participants','event_id=eq.'+EV.id,{is_present:false});
+  await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'setup',current_round:0});
+  SESS.status='setup';SESS.current_round=0;
+  ROUNDS=await GET('ta_rounds','session_id=eq.'+SESS.id+'&order=round_number')||[];
+  toast('Session reset — ready to retest','ok');
+  refreshDash();
+}
+
 // Payout per team given n=total teams, h=teams that chose H this round.
 // n===4 keeps the exact original hand-tuned table untouched (verified in play).
 // Any other even n uses the generalized formula (confirmed against n=6/n=8 by product owner):
@@ -1418,6 +1444,7 @@ async function refreshDash(){
     document.getElementById('d-present').textContent='0';
     document.getElementById('d-nosess').style.display='block';
     document.getElementById('d-ctrl').style.display='none';
+    document.getElementById('reset-sess-card').style.display='none';
     document.getElementById('d-status').textContent='no session';
     document.getElementById('d-status').className='sb s-setup';
     return;
@@ -1425,6 +1452,7 @@ async function refreshDash(){
 
   document.getElementById('d-nosess').style.display='none';
   document.getElementById('d-ctrl').style.display='block';
+  document.getElementById('reset-sess-card').style.display='block';
   document.getElementById('d-sessname').textContent=SESS.name;
   document.getElementById('d-pin').textContent=SESS.pin;
   document.getElementById('d-round').textContent=SESS.current_round>0?SESS.current_round+'/'+SESS.total_rounds:'—';
