@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
 <title>Game of Trust Admin v6</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
@@ -504,8 +507,18 @@ function bearer(){return SESSION_TOKENS?SESSION_TOKENS.access_token:K;}
 const H=()=>({'apikey':K,'Authorization':'Bearer '+bearer(),'Content-Type':'application/json','Prefer':'return=representation'});
 async function GET(t,q){await ensureFreshToken();const r=await fetch(U+'/rest/v1/'+t+'?'+(q||''),{headers:{'apikey':K,'Authorization':'Bearer '+bearer()}});return r.json();}
 async function POST(t,b){await ensureFreshToken();const r=await fetch(U+'/rest/v1/'+t,{method:'POST',headers:H(),body:JSON.stringify(b)});return{ok:r.ok,st:r.status,d:await r.json()};}
-async function PATCH(t,q,b){await ensureFreshToken();const r=await fetch(U+'/rest/v1/'+t+'?'+q,{method:'PATCH',headers:H(),body:JSON.stringify(b)});return r.json();}
-async function DEL(t,q){await ensureFreshToken();await fetch(U+'/rest/v1/'+t+'?'+q,{method:'DELETE',headers:{'apikey':K,'Authorization':'Bearer '+bearer()}});}
+async function PATCH(t,q,b){
+  await ensureFreshToken();
+  const r=await fetch(U+'/rest/v1/'+t+'?'+q,{method:'PATCH',headers:H(),body:JSON.stringify(b)});
+  const d=await r.json().catch(()=>null);
+  if(!r.ok)throw new Error('PATCH '+t+' failed ('+r.status+'): '+(d?.message||JSON.stringify(d)));
+  return d;
+}
+async function DEL(t,q){
+  await ensureFreshToken();
+  const r=await fetch(U+'/rest/v1/'+t+'?'+q,{method:'DELETE',headers:{'apikey':K,'Authorization':'Bearer '+bearer()}});
+  if(!r.ok){const d=await r.json().catch(()=>null);throw new Error('DELETE '+t+' failed ('+r.status+'): '+(d?.message||JSON.stringify(d)));}
+}
 async function UPSERT(t,b){await ensureFreshToken();const r=await fetch(U+'/rest/v1/'+t,{method:'POST',headers:{...H(),'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(b)});return r.json();}
 
 let EV=null,SESS=null,TEAMS=[],PARTS=[],ROUNDS=[],CLR='#EF4444',POLL=null;
@@ -1367,22 +1380,30 @@ async function endSession(){
 // For retesting/practice runs: rewinds this session to Setup and clears its
 // game data, without touching participants, teams, or case studies.
 async function resetSession(){
-  if(!SESS)return;
+  if(!SESS||!EV)return;
   if(!confirm('Reset this session for retesting?\n\nThis will:\n- Set status back to Setup\n- Clear everyone\'s presence\n- Delete all submitted answers, team answers, scores, and captain votes for this session\n\nParticipants, teams, and case studies are kept.\n\nContinue?'))return;
-  const roundRows=await GET('ta_rounds','session_id=eq.'+SESS.id+'&select=id')||[];
-  await DEL('ta_scores','session_id=eq.'+SESS.id);
-  await DEL('ta_team_answers','session_id=eq.'+SESS.id);
-  await DEL('ta_individual_answers','session_id=eq.'+SESS.id);
-  await DEL('ta_captain_votes','session_id=eq.'+SESS.id);
-  for(const r of roundRows){
-    await PATCH('ta_rounds','id=eq.'+r.id,{status:'pending',timer_started_at:null});
+  try{
+    const roundRows=await GET('ta_rounds','session_id=eq.'+SESS.id+'&select=id')||[];
+    await DEL('ta_scores','session_id=eq.'+SESS.id);
+    await DEL('ta_team_answers','session_id=eq.'+SESS.id);
+    await DEL('ta_individual_answers','session_id=eq.'+SESS.id);
+    await DEL('ta_captain_votes','session_id=eq.'+SESS.id);
+    for(const r of roundRows){
+      await PATCH('ta_rounds','id=eq.'+r.id,{status:'pending',timer_started_at:null});
+    }
+    await PATCH('ta_participants','event_id=eq.'+EV.id,{is_present:false});
+    await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'setup',current_round:0});
+    SESS.status='setup';SESS.current_round=0;
+    ROUNDS=await GET('ta_rounds','session_id=eq.'+SESS.id+'&order=round_number')||[];
+    toast('Session reset — ready to retest','ok');
+    await refreshDash();
+    // Verify the clear actually took, instead of trusting it silently.
+    const stillPresent=(PARTS||[]).filter(p=>p.is_present).length;
+    if(stillPresent>0)toast('Warning: '+stillPresent+' participant(s) still show as present — reset may not have fully applied','er');
+  }catch(e){
+    console.error('resetSession failed:',e);
+    toast('Reset failed: '+e.message,'er');
   }
-  await PATCH('ta_participants','event_id=eq.'+EV.id,{is_present:false});
-  await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'setup',current_round:0});
-  SESS.status='setup';SESS.current_round=0;
-  ROUNDS=await GET('ta_rounds','session_id=eq.'+SESS.id+'&order=round_number')||[];
-  toast('Session reset — ready to retest','ok');
-  refreshDash();
 }
 
 // Payout per team given n=total teams, h=teams that chose H this round.
