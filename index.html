@@ -294,6 +294,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="case-txt" id="bo-case">Case study will appear here.</div>
       <div id="bo-case-file" style="display:none;margin-top:8px"></div>
     </div>
+    <div style="margin-bottom:16px">
+      <div class="sec-label" style="margin-bottom:6px;font-size:11px">📐 Scoring Rules</div>
+      <div style="overflow-x:auto" id="bo-payout-rules"></div>
+    </div>
     <!-- Any team member can submit the team's answer -->
     <div id="captain-vote" style="display:none">
       <div class="vote-lbl">Submit your team's final answer — any teammate can do this</div>
@@ -721,6 +725,9 @@ async function updBo(r){
   // Captain badge
   if(P.isCapt)document.getElementById('b-cap').style.display='block';
   else document.getElementById('b-cap').style.display='none';
+  // Scoring rules, so the team can see the payout structure before deciding
+  const teamCount=(await GET('ta_teams','event_id=eq.'+P.session.event_id+'&select=id')||[]).length;
+  document.getElementById('bo-payout-rules').innerHTML=renderPayoutRulesTable(teamCount);
 }
 
 function updMain(r){
