@@ -1450,6 +1450,37 @@ function computePayout(n,h){
   return{hp,lp};
 }
 
+// Human-readable payout table for the current team count (n) — one row per
+// possible H/L split, from all-HIGH down to all-LOW.
+function payoutRuleRows(n){
+  const rows=[];
+  for(let h=n;h>=0;h--){
+    const{hp,lp}=computePayout(n,h);
+    const l=n-h;
+    const label=h===n?n+' teams say HIGH':h===0?n+' teams say LOW':h+' say HIGH, '+l+' say LOW';
+    rows.push({label,hp:h===n?null:hp,lp:h===0?null:lp});
+  }
+  return rows;
+}
+
+function renderPayoutRulesTable(n){
+  if(!n)return'';
+  const rows=payoutRuleRows(n);
+  const cell=v=>v==null?'<span style="color:var(--mut)">—</span>':'<span style="color:'+(v>=0?'var(--lo)':'var(--hi)')+'">'+(v>0?'+':'')+v+' each</span>';
+  let html='<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr>'
+    +'<th style="text-align:left;padding:6px 8px;color:var(--mut);font-weight:600">Combination</th>'
+    +'<th style="padding:6px 8px;color:var(--mut);font-weight:600">HIGH Teams Get</th>'
+    +'<th style="padding:6px 8px;color:var(--mut);font-weight:600">LOW Teams Get</th>'
+    +'</tr></thead><tbody>';
+  rows.forEach(r=>{
+    html+='<tr><td style="padding:6px 8px;border-top:1px solid var(--bdr)">'+escHtml(r.label)+'</td>'
+      +'<td style="padding:6px 8px;border-top:1px solid var(--bdr);text-align:center">'+cell(r.hp)+'</td>'
+      +'<td style="padding:6px 8px;border-top:1px solid var(--bdr);text-align:center">'+cell(r.lp)+'</td></tr>';
+  });
+  html+='</tbody></table>';
+  return html;
+}
+
 async function calcScores(round){
   const tas=await GET('ta_team_answers','round_id=eq.'+round.id+'&select=*')||[];
   // Only calculate if ALL teams have submitted
@@ -1702,25 +1733,29 @@ async function loadScores(){
   let html='<div class="sc"><div class="sct">Standings</div>';
   sorted.forEach((t,i)=>{html+=`<div class="srow"><div style="font-size:16px;width:22px">${ranks[i]||i+1}</div><div class="sdot" style="background:${escHtml(t.team?.color)}"></div><div style="flex:1;font-weight:600">${escHtml(t.team?.name)}</div><div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:${t.cum>=0?'var(--lo)':'var(--hi)'}">${t.cum>0?'+':''}${t.cum}</div></div>`;});
   html+='</div>';
+  html+='<div class="sc"><div class="sct">Scoring Rules ('+sorted.length+' teams)</div>'+renderPayoutRulesTable(sorted.length)+'</div>';
   const rns=[...new Set(sc.map(s=>s.ta_rounds?.round_number))].sort((a,b)=>a-b);
   const mults={};sc.forEach(s=>{if(s.ta_rounds)mults[s.ta_rounds.round_number]=s.ta_rounds.multiplier||1;});
-  html+='<div class="sc"><div class="sct">Round by Round</div><div style="overflow-x:auto"><table><thead><tr><th>Team</th>';
-  rns.forEach(r=>{html+=`<th>R${r}${mults[r]>1?'<br><span style="color:var(--acc);font-size:10px">×'+mults[r]+'</span>':''}</th>`;});
-  html+='<th style="color:var(--acc)">TOTAL</th></tr></thead><tbody>';
-  sorted.forEach(t=>{
-    html+=`<tr><td><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:${escHtml(t.team?.color)};display:inline-block"></span>${escHtml(t.team?.name)}</span></td>`;
-    rns.forEach(r=>{
+  // Round-by-round, transposed: one row per round, one column per team.
+  html+='<div class="sc"><div class="sct">Round by Round</div><div style="overflow-x:auto"><table><thead><tr><th>Round</th>';
+  sorted.forEach(t=>{html+=`<th><span style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap"><span style="width:9px;height:9px;border-radius:50%;background:${escHtml(t.team?.color)};display:inline-block"></span>${escHtml(t.team?.name)}</span></th>`;});
+  html+='<th style="color:var(--acc)">Net</th></tr></thead><tbody>';
+  rns.forEach(r=>{
+    html+=`<tr><td>R${r}${mults[r]>1?' <span style="color:var(--acc);font-size:10px">×'+mults[r]+'</span>':''}</td>`;
+    let net=0;
+    sorted.forEach(t=>{
       const s=t.rows.find(x=>x.ta_rounds?.round_number===r);
-      const p=s?s.round_points:'—';
+      const p=s?s.round_points:null;
+      if(typeof p==='number')net+=p;
       const a=s?ansByKey[ansKey(s.round_id,s.team_id)]:null;
-      const label=(a?a+' ':'')+(typeof p==='number'?(p>0?'+':'')+p:p);
+      const label=p==null?'—':(a?a+' ':'')+(p>0?'+':'')+p;
       html+=`<td style="color:${typeof p==='number'?(p>=0?'var(--lo)':'var(--hi)'):'var(--mut)'};text-align:center">${label}</td>`;
     });
-    html+=`<td style="font-weight:700;color:${t.cum>=0?'var(--lo)':'var(--hi)'};text-align:center">${t.cum>0?'+':''}${t.cum}</td></tr>`;
+    html+=`<td style="font-weight:700;text-align:center;color:${net>=0?'var(--lo)':'var(--hi)'}">${net>0?'+':''}${net}</td></tr>`;
   });
-  // Net row
-  html+='<tr style="background:var(--sur2)"><td><strong style="color:var(--acc)">Net Cash</strong></td>';
-  rns.forEach(r=>{const tot=Object.values(tm).reduce((s,t)=>{const row=t.rows.find(x=>x.ta_rounds?.round_number===r);return s+(row?row.round_points:0);},0);html+=`<td style="font-weight:700;text-align:center;color:${tot>=0?'var(--lo)':'var(--hi)'}">${tot>0?'+':''}${tot}</td>`;});
+  // Total row
+  html+='<tr style="background:var(--sur2)"><td><strong style="color:var(--acc)">TOTAL</strong></td>';
+  sorted.forEach(t=>{html+=`<td style="font-weight:700;text-align:center;color:${t.cum>=0?'var(--lo)':'var(--hi)'}">${t.cum>0?'+':''}${t.cum}</td>`;});
   const grand=Object.values(tm).reduce((s,t)=>s+t.cum,0);
   html+=`<td style="font-weight:700;text-align:center;color:${grand>=0?'var(--lo)':'var(--hi)'}">${grand>0?'+':''}${grand}</td></tr>`;
   html+='</tbody></table></div></div>';

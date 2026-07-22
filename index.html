@@ -344,8 +344,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="wait-sub">Waiting for facilitator to reveal scores...</div>
     </div>
     <div id="main-scores-section" style="display:none">
+      <div class="case-card" id="main-case-card" style="margin-bottom:16px;display:none">
+        <div class="case-lbl">📋 This Round's Case Study</div>
+        <div class="case-txt" id="main-case"></div>
+      </div>
       <div id="my-history-section" style="margin-bottom:16px;display:none">
-        <div class="sec-label" style="margin-bottom:8px">📝 My Opinions — All Rounds</div>
+        <div class="sec-label" style="margin-bottom:4px">📝 My Opinions — All Rounds</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">For your own reference only — these don't affect your team's score. Only the Breakout answer counts.</div>
         <div style="overflow-x:auto">
           <table class="sc-table">
             <thead><tr id="my-hist-th"></tr></thead>
@@ -353,6 +358,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
           </table>
         </div>
       </div>
+      <div class="sec-label" style="margin-bottom:8px">📐 Scoring Rules</div>
+      <div style="overflow-x:auto;margin-bottom:16px" id="main-payout-rules"></div>
       <div class="sec-label" style="margin-bottom:8px">🏆 Scoreboard — All Rounds</div>
       <div style="overflow-x:auto">
         <table class="sc-table">
@@ -576,7 +583,10 @@ async function route(){
     document.getElementById('main-wait').style.display='none';
     document.getElementById('main-scores-section').style.display='block';
     document.getElementById('main-next-wait').style.display='block';
+    await updMainCase(rnd);
     await buildMyAnswerHistory();
+    const teamCount=(await GET('ta_teams','event_id=eq.'+P.session.event_id+'&select=id')||[]).length;
+    document.getElementById('main-payout-rules').innerHTML=renderPayoutRulesTable(teamCount);
     await buildScoreTable('main-sc-th','main-sc-tb','main-sc-tf');
     return;
   }
@@ -740,6 +750,60 @@ async function updGrCase(r){
   }else cf.style.display='none';
 }
 
+// Show the round's case study again on the reveal screen, as a reminder of
+// context while reviewing the scoreboard.
+async function updMainCase(r){
+  const theCase=await resolveCaseForTeam(r.id,P.team?P.team.id:null);
+  const ct=theCase?(theCase.case_text||''):'';
+  const card=document.getElementById('main-case-card');
+  if(!ct){card.style.display='none';return;}
+  card.style.display='block';
+  document.getElementById('main-case').textContent=ct;
+}
+
+// Same payout logic as the admin panel (computePayout in admin.html) --
+// n===4 is the exact hand-tuned table, other even n use the generalized
+// formula. Kept in sync manually since this is a plain static page.
+function computePayout(n,h){
+  const l=n-h;
+  if(n===4){
+    if(h===4)return{hp:-100,lp:0};
+    if(h===3)return{hp:100,lp:-300};
+    if(h===2)return{hp:-100,lp:-200};
+    if(h===1)return{hp:300,lp:-100};
+    return{hp:0,lp:100}; // h===0
+  }
+  const lp=h===0?100:-100*h;
+  const hp=(h===0)?0:(h===n?-100:Math.round((100*l/h)/10)*10);
+  return{hp,lp};
+}
+
+function payoutRuleRows(n){
+  const rows=[];
+  for(let h=n;h>=0;h--){
+    const{hp,lp}=computePayout(n,h);
+    const l=n-h;
+    const label=h===n?n+' teams say HIGH':h===0?n+' teams say LOW':h+' say HIGH, '+l+' say LOW';
+    rows.push({label,hp:h===n?null:hp,lp:h===0?null:lp});
+  }
+  return rows;
+}
+
+function renderPayoutRulesTable(n){
+  if(!n)return'';
+  const rows=payoutRuleRows(n);
+  const cell=v=>v==null?'<span style="color:var(--muted)">—</span>':'<span class="'+(v>=0?'pp':'pn')+'">'+(v>0?'+':'')+v+' each</span>';
+  let html='<table class="sc-table"><thead><tr>'
+    +'<th class="tc">Combination</th><th>HIGH Teams Get</th><th>LOW Teams Get</th>'
+    +'</tr></thead><tbody>';
+  rows.forEach(r=>{
+    html+='<tr><td class="tnc" style="font-weight:400">'+escHtml(r.label)+'</td>'
+      +'<td>'+cell(r.hp)+'</td><td>'+cell(r.lp)+'</td></tr>';
+  });
+  html+='</tbody></table>';
+  return html;
+}
+
 function showGrDone(ans,auto){
   document.getElementById('gr-vote').style.display='none';
   document.getElementById('gr-subcard').style.display='block';
@@ -810,6 +874,7 @@ function startTimer(r,targetElId,onExpire){
 }
 
 // SCOREBOARD
+// Transposed: rounds as rows, teams as columns (Net column per round, TOTAL row at the bottom).
 async function buildScoreTable(thId,tbId,tfId){
   const allSc=await GET('ta_scores','session_id=eq.'+P.session.id+'&select=*,ta_teams(name,color),ta_rounds(round_number,multiplier)&order=ta_rounds(round_number)')||[];
   const teams=await GET('ta_teams','event_id=eq.'+P.session.event_id+'&order=created_at')||[];
@@ -823,24 +888,31 @@ async function buildScoreTable(thId,tbId,tfId){
     const sc=allSc.find(s=>s.round_id===ta.round_id&&s.team_id===ta.team_id);
     if(sc&&sc.ta_rounds&&tm[ta.team_id])tm[ta.team_id].ans[sc.ta_rounds.round_number]=ta.answer;
   });
-  const th=document.getElementById(thId);th.innerHTML='<th class="tc">Team</th>';
-  rns.forEach(n=>{th.innerHTML+=`<th>R${n}${mults[n]>1?'<br><span style="color:var(--accent);font-size:10px">×'+mults[n]+'</span>':''}</th>`;});
-  th.innerHTML+='<th style="color:var(--accent)">TOTAL</th>';
-  const tb=document.getElementById(tbId);tb.innerHTML='';
   const sorted=teams.map(t=>({...t,...(tm[t.id]||{r:{},ans:{},c:0,team:t})})).sort((a,b)=>(b.c||0)-(a.c||0));
+
+  const th=document.getElementById(thId);th.innerHTML='<th class="tc">Round</th>';
   sorted.forEach(t=>{
     const isMe=P.participant&&t.id===P.participant.team_id;
-    const td=tm[t.id]||{r:{},ans:{},c:0};
-    let row=`<tr class="${isMe?'mt':''}"><td class="tnc"><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${escHtml(t.color)||'#3B82F6'};display:inline-block"></span>${escHtml(t.name)}${isMe?' 👤':''}</span></td>`;
-    rns.forEach(n=>{
+    th.innerHTML+=`<th><span style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap"><span style="width:7px;height:7px;border-radius:50%;background:${escHtml(t.color)||'#3B82F6'};display:inline-block"></span>${escHtml(t.name)}${isMe?' 👤':''}</span></th>`;
+  });
+  th.innerHTML+='<th style="color:var(--accent)">Net</th>';
+
+  const tb=document.getElementById(tbId);tb.innerHTML='';
+  rns.forEach(n=>{
+    let row=`<tr><td class="tnc">R${n}${mults[n]>1?' <span style="color:var(--accent);font-size:10px">×'+mults[n]+'</span>':''}</td>`;
+    let net=0;
+    sorted.forEach(t=>{
+      const td=tm[t.id]||{r:{},ans:{}};
       const p=td.r[n];const a=td.ans[n];
+      if(typeof p==='number')net+=p;
       row+=p===undefined?'<td class="pz">—</td>':`<td class="${p>0?'pp':p<0?'pn':'pz'}">${a?a+' ':''}${p>0?'+':''}${p}</td>`;
     });
-    const c=td.c||0;row+=`<td class="${c>0?'pp':c<0?'pn':'pz'}" style="font-size:14px">${c>0?'+':''}${c}</td></tr>`;
+    row+=`<td class="${net>0?'pp':net<0?'pn':'pz'}" style="font-weight:700">${net>0?'+':''}${net}</td></tr>`;
     tb.innerHTML+=row;
   });
-  const tf=document.getElementById(tfId);tf.innerHTML='<td style="color:var(--accent);font-weight:700">Net Cash</td>';
-  rns.forEach(n=>{const tot=Object.values(tm).reduce((s,t)=>s+(t.r[n]||0),0);tf.innerHTML+=`<td class="${tot>0?'pp':tot<0?'pn':'pz'}">${tot>0?'+':''}${tot}</td>`;});
+
+  const tf=document.getElementById(tfId);tf.innerHTML='<td style="color:var(--accent);font-weight:700">TOTAL</td>';
+  sorted.forEach(t=>{const c=(tm[t.id]||{c:0}).c||0;tf.innerHTML+=`<td class="${c>0?'pp':c<0?'pn':'pz'}" style="font-size:14px">${c>0?'+':''}${c}</td>`;});
   const grand=Object.values(tm).reduce((s,t)=>s+(t.c||0),0);
   tf.innerHTML+=`<td class="${grand>0?'pp':grand<0?'pn':'pz'}">${grand>0?'+':''}${grand}</td>`;
   return true;
