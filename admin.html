@@ -1538,6 +1538,7 @@ async function renderPresenceMatrix(presentIds){
           <option value="">Move→</option>
           ${moveOpts}
         </select>
+        <span class="xb" style="margin-left:4px" onclick="removeFromTeamLive('${p.id}','${escJs(p.name)}')" title="Remove from team">×</span>
       </div>`;
     });
     // Unassigned members shown in first team column
@@ -1561,6 +1562,22 @@ async function renderPresenceMatrix(presentIds){
   });
 }
 
+// Shared by toggleCaptain/moveMember/removeFromTeamLive: reload participants
+// and figure out which IDs count as "present" for this stage of the round,
+// then re-render the live matrix.
+async function refreshPresenceMatrix(){
+  PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
+  const rnd=await getCurRound();
+  let pids=new Set();
+  if(rnd){
+    const ops=await GET('ta_individual_answers','round_id=eq.'+rnd.id+'&select=participant_id')||[];
+    pids=new Set(ops.map(o=>o.participant_id));
+  } else {
+    PARTS.filter(p=>p.is_present).forEach(p=>pids.add(p.id));
+  }
+  renderPresenceMatrix(pids);
+}
+
 async function toggleCaptain(participantId, teamId, isCaptainNow){
   // If already captain — remove captainship
   if(isCaptainNow){
@@ -1573,37 +1590,24 @@ async function toggleCaptain(participantId, teamId, isCaptainNow){
     await PATCH('ta_participants','id=eq.'+participantId,{is_captain:true});
     toast('👑 Captain assigned!','ok');
   }
-  // Refresh
-  PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
-  const rnd=await getCurRound();
-  let pids=new Set();
-  if(rnd){
-    const ops=await GET('ta_individual_answers','round_id=eq.'+rnd.id+'&select=participant_id')||[];
-    pids=new Set(ops.map(o=>o.participant_id));
-  } else {
-    const fp=await GET('ta_participants','event_id=eq.'+EV.id+'&is_present=eq.true&select=id')||[];
-    fp.forEach(p=>pids.add(p.id));
-  }
-  renderPresenceMatrix(pids);
+  await refreshPresenceMatrix();
 }
 
 async function moveMember(participantId, newTeamId, selectEl){
   if(!newTeamId)return;
   selectEl.value=''; // reset dropdown
   await PATCH('ta_participants','id=eq.'+participantId,{team_id:newTeamId});
-  PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
-  // Re-render matrix with current present IDs
-  const rnd=await getCurRound();
-  let pids=new Set();
-  if(rnd){
-    const ops=await GET('ta_individual_answers','round_id=eq.'+rnd.id+'&select=participant_id')||[];
-    pids=new Set(ops.map(o=>o.participant_id));
-  } else {
-    // During registration use is_present flag
-    PARTS.filter(p=>p.is_present).forEach(p=>pids.add(p.id));
-  }
-  renderPresenceMatrix(pids);
+  await refreshPresenceMatrix();
   toast('Moved!','ok');
+}
+
+// Absentee handling, live on the Create Workshop dashboard: pulls someone off
+// their team (frees the slot for a reshuffle) without deleting the participant.
+async function removeFromTeamLive(participantId,name){
+  if(!confirm('Remove '+name+' from their team? (They stay in the participant list — this only clears their team.)'))return;
+  await PATCH('ta_participants','id=eq.'+participantId,{team_id:null,is_captain:false});
+  await refreshPresenceMatrix();
+  toast(name+' removed from team','in');
 }
 
 async function pollSess(){

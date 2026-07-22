@@ -509,9 +509,19 @@ async function poll(){
       const rr=await GET('ta_rounds','session_id=eq.'+P.session.id+'&round_number=eq.'+P.session.current_round+'&select=*');
       if(rr&&rr[0])P.round=rr[0];
     }
-    // Refresh captain status from DB (admin may have changed it)
-    const fresh=await GET('ta_participants','id=eq.'+P.participant.id+'&select=is_captain');
-    if(fresh&&fresh[0])P.isCapt=fresh[0].is_captain===true;
+    // Refresh captain status + team assignment from DB (admin may have changed
+    // either live — this is what lets a reassigned player see their new team
+    // without having to refresh the page or log in again).
+    const fresh=await GET('ta_participants','id=eq.'+P.participant.id+'&select=is_captain,team_id,ta_teams(name,color)');
+    if(fresh&&fresh[0]){
+      P.isCapt=fresh[0].is_captain===true;
+      if(fresh[0].team_id!==P.participant.team_id){
+        P.participant.team_id=fresh[0].team_id;
+        P.team=fresh[0].ta_teams||null;
+        setupBars();
+        toast('Your team has changed','info');
+      }
+    }
     route();
   }catch(e){console.error(e);}
 }
