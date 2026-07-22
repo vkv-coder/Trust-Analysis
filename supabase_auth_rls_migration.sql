@@ -35,6 +35,39 @@
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
+-- Missing-table fix: ta_captain_votes / ta_round_cases / ta_round_case_teams
+-- were added to the app's code later but never made it into a schema
+-- migration, so on some databases they don't exist yet (that's what threw
+-- "relation ta_round_cases does not exist" the first time this was run).
+-- These CREATE TABLE IF NOT EXISTS statements are safe to run whether or not
+-- the tables already exist.
+-- ---------------------------------------------------------------------------
+create table if not exists ta_captain_votes (
+  id uuid primary key default gen_random_uuid(),
+  session_id uuid references ta_sessions(id) on delete cascade,
+  team_id uuid references ta_teams(id) on delete cascade,
+  voter_participant_id uuid references ta_participants(id) on delete cascade,
+  voted_for_participant_id uuid references ta_participants(id) on delete cascade,
+  created_at timestamp default now(),
+  unique(session_id, team_id, voter_participant_id)
+);
+
+create table if not exists ta_round_cases (
+  id uuid primary key default gen_random_uuid(),
+  round_id uuid references ta_rounds(id) on delete cascade,
+  case_text text,
+  case_file_url text,
+  applies_to_all boolean default false,
+  created_at timestamp default now()
+);
+
+create table if not exists ta_round_case_teams (
+  case_id uuid references ta_round_cases(id) on delete cascade,
+  team_id uuid references ta_teams(id) on delete cascade,
+  primary key (case_id, team_id)
+);
+
+-- ---------------------------------------------------------------------------
 -- ta_events (Organisations) — admin only. Participants get the org name back
 -- from get_session_by_pin() instead of querying this table directly.
 -- ---------------------------------------------------------------------------
