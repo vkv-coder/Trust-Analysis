@@ -856,6 +856,9 @@ async function makeSession(){
   await loadSessions();
   switchSession(sess.id);
   document.getElementById('sess-sel').value=sess.id;
+  // Case studies/rounds are the natural next step — open that view automatically
+  // instead of leaving the admin to find and tap the "Rounds" button themselves.
+  await showRounds(sess.id,name);
 }
 
 async function delSession(id){
