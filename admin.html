@@ -1041,8 +1041,12 @@ async function renderCasesPage(){
     <p style="font-size:12px;color:var(--mut);margin-bottom:10px">One set of cases, shown to players in both Main Room and Breakout, for every round — not per-round.</p>
     <div id="rc-list-${r.id}">${renderRoundCasesListHtml(r.id)}</div>
     <div style="margin-top:8px;padding:10px;background:var(--sur);border-radius:8px;border:1px solid var(--bdr)">
-      <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:6px">+ Add a Case (full text — shown directly on the player's screen, no file/PDF)</label>
+      <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:6px">+ Add a Case</label>
       <textarea id="rc-text-${r.id}" rows="4" placeholder="Full case study text..."></textarea>
+      <div style="margin-top:6px;">
+        <input type="file" id="rc-file-${r.id}" accept=".pdf,.jpg,.jpeg,.png" style="font-size:12px;color:var(--txt);background:var(--sur2);border:1px solid var(--bdr);border-radius:6px;padding:6px;margin:0;width:100%;"/>
+        <div style="font-size:11px;color:var(--mut);margin-top:4px">Optional file (PDF/image) — opens directly on the player's phone, no download prompt.</div>
+      </div>
       <div style="margin-top:8px;">
         <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:6px;">
           <input type="checkbox" id="rc-all-${r.id}" checked onchange="toggleAllTeamsCase('${r.id}')"/> Applies to All Teams
@@ -1067,6 +1071,11 @@ function updateScoringTable(){
   const n=parseInt(document.getElementById('scoring-n').value)||4;
   document.getElementById('scoring-hint').textContent=TEAMS.length?('Currently '+TEAMS.length+' team(s) created for this organisation.'):'No teams created yet — this is just a preview.';
   document.getElementById('scoring-table').innerHTML=renderPayoutRulesTable(n);
+  // Actual scoring always uses the real team count — warn loudly if the admin
+  // is previewing a different one, so it's never mistaken for the live table.
+  if(TEAMS.length&&TEAMS.length!==n){
+    toast('⚠️ '+TEAMS.length+' team(s) created, but you\'re previewing the '+n+'-team table','er');
+  }
 }
 
 function renderRoundCasesListHtml(roundId){
@@ -1083,6 +1092,7 @@ function renderRoundCasesListHtml(roundId){
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center;">
         ${teamBadges}
+        ${c.case_file_url?'<a href="'+c.case_file_url+'" target="_blank" style="color:var(--acc);font-size:12px;">📄 View attached file</a>':''}
       </div>
     </div>`;
   }).join('');
@@ -1095,13 +1105,25 @@ function toggleAllTeamsCase(roundId){
 
 async function addRoundCase(roundId){
   const text=document.getElementById('rc-text-'+roundId).value.trim();
+  const fileInput=document.getElementById('rc-file-'+roundId);
+  const file=fileInput.files[0];
   const appliesAll=document.getElementById('rc-all-'+roundId).checked;
   const teamIds=appliesAll?[]:[...document.querySelectorAll('.rc-team-cb-'+roundId+':checked')].map(cb=>cb.value);
   const msgEl=document.getElementById('rc-msg-'+roundId);
-  if(!text){msgEl.style.color='var(--hi)';msgEl.textContent='Enter case text';return;}
+  if(!text&&!file){msgEl.style.color='var(--hi)';msgEl.textContent='Enter case text or choose a file';return;}
   if(!appliesAll&&!teamIds.length){msgEl.style.color='var(--hi)';msgEl.textContent='Select at least one team, or check "Applies to All Teams"';return;}
   msgEl.style.color='var(--acc)';msgEl.textContent='Saving...';
-  const res=await POST('ta_round_cases',{round_id:roundId,case_text:text,case_file_url:null,applies_to_all:appliesAll});
+  let fileUrl=null;
+  if(file){
+    await ensureFreshToken();
+    const fileName='case_'+roundId+'_'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    const r=await fetch(U+'/storage/v1/object/trust-analysis/'+fileName,{
+      method:'POST',headers:{'apikey':K,'Authorization':'Bearer '+bearer(),'Content-Type':file.type,'x-upsert':'true'},body:file
+    });
+    if(!r.ok){const err=await r.json();msgEl.style.color='var(--hi)';msgEl.textContent='Upload failed: '+(err.message||r.status);return;}
+    fileUrl=U+'/storage/v1/object/public/trust-analysis/'+fileName;
+  }
+  const res=await POST('ta_round_cases',{round_id:roundId,case_text:text,case_file_url:fileUrl,applies_to_all:appliesAll});
   const created=Array.isArray(res.d)?res.d[0]:res.d;
   if(!created||!created.id){msgEl.style.color='var(--hi)';msgEl.textContent='Error saving case';return;}
   if(!appliesAll){
@@ -1112,6 +1134,7 @@ async function addRoundCase(roundId){
   ROUND_CASES[roundId].push(created);
   document.getElementById('rc-list-'+roundId).innerHTML=renderRoundCasesListHtml(roundId);
   document.getElementById('rc-text-'+roundId).value='';
+  fileInput.value='';
   msgEl.style.color='var(--lo)';msgEl.textContent='✅ Case added';
   toast('Case added','ok');
 }
