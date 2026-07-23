@@ -764,14 +764,19 @@ async function resolveCaseForTeam(teamId){
 }
 
 // Render an attached case file so it opens straight on the player's phone —
-// no tap-to-download link. Images embed directly; anything else (PDFs) goes
-// through Google's viewer so it renders inline in an iframe across phones
-// that don't render PDFs natively in-page.
+// no tap-to-download link. Images embed directly; PDFs embed via a plain
+// iframe straight from Supabase storage (the same connection the rest of the
+// app already depends on) rather than routing through a third-party viewer
+// like Google Docs — on weak venue wifi, that would add a second external
+// service that has to be reachable, on top of Supabase, just to see a case
+// study. Most mobile browsers (iOS Safari, Chrome Android) render PDFs
+// natively inside an iframe; the link below is a fallback for the rare one
+// that doesn't.
 function renderCaseFileHtml(url){
   if(!url)return'';
   if(/\.(jpg|jpeg|png|gif|webp)$/i.test(url))return`<img src="${url}" style="width:100%;border-radius:8px;margin-top:10px;display:block"/>`;
-  const viewerUrl='https://docs.google.com/viewer?url='+encodeURIComponent(url)+'&embedded=true';
-  return`<iframe src="${viewerUrl}" style="width:100%;height:420px;border:1px solid var(--border);border-radius:8px;margin-top:10px;background:#fff" loading="lazy"></iframe>`;
+  return`<iframe src="${url}" style="width:100%;height:420px;border:1px solid var(--border);border-radius:8px;margin-top:10px;background:#fff" loading="lazy"></iframe>
+    <div style="text-align:center;margin-top:6px"><a href="${url}" target="_blank" style="font-size:12px;color:var(--accent)">Not loading? Open file directly ↗</a></div>`;
 }
 
 async function updBo(r){
