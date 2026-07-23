@@ -191,7 +191,10 @@ tr:hover td{background:var(--sur2);}
 <div id="app" class="layout" style="display:none">
   <div class="mob-bar">
     <div class="mb-logo">🎯 Game of Trust</div>
-    <button class="hamburger" onclick="toggleMenu()">☰</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn bo bsm" onclick="logout()" title="Logout">🚪</button>
+      <button class="hamburger" onclick="toggleMenu()">☰</button>
+    </div>
   </div>
   <div class="side-overlay" id="side-overlay" onclick="closeMenu()"></div>
   <div class="side" id="sidebar">
@@ -211,6 +214,8 @@ tr:hover td{background:var(--sur2);}
       <a onclick="go('session')" id="n-session">② 🎮 Session</a>
       <a onclick="go('parts')" id="n-parts">③ 👤 Participants</a>
       <a onclick="go('teams')" id="n-teams">④ 👥 Teams</a>
+      <a onclick="go('cases')" id="n-cases">⑤ 📋 Case Studies</a>
+      <a onclick="go('scoring')" id="n-scoring">⑥ 📐 Scoring System</a>
     </div>
     <div class="snav" id="snav-create" style="display:none">
       <a onclick="go('dash')" id="n-dash">📊 Dashboard</a>
@@ -431,8 +436,39 @@ tr:hover td{background:var(--sur2);}
 
         <div id="rounds-wrap" style="display:none">
           <div class="ph" style="margin-top:8px"><h2>Rounds — <span id="rounds-sess-name" style="color:var(--acc)"></span></h2></div>
-          <div id="r-list"></div>
+          <div class="sc">
+            <div class="sct">Multiplier &amp; Timer — all rounds at a glance</div>
+            <div style="overflow-x:auto">
+              <table><thead><tr><th>Round</th><th>Multiplier</th><th>Timer (sec)</th><th>Save</th></tr></thead>
+              <tbody id="r-list"></tbody></table>
+            </div>
+            <div style="font-size:12px;color:var(--mut);margin-top:10px">📋 Case studies are managed on the <span style="color:var(--acc);cursor:pointer;text-decoration:underline" onclick="goTop('pre');go('cases')">Case Studies</span> page (⑤ in the sidebar) — same case shows to players in both Main Room and Breakout for that round.</div>
+          </div>
         </div>
+      </div>
+    </div>
+
+    <!-- CASE STUDIES -->
+    <div class="pg" id="pg-cases">
+      <div class="ph"><h2>Case Studies</h2></div>
+      <div id="cs-noev" class="noev">← Create a Session first (Session tab), then come back here</div>
+      <div id="cs-body" style="display:none"></div>
+    </div>
+
+    <!-- SCORING SYSTEM -->
+    <div class="pg" id="pg-scoring">
+      <div class="ph"><h2>Scoring System</h2></div>
+      <div class="sc">
+        <div class="sct">Payout Reference Table</div>
+        <p style="font-size:12px;color:var(--mut);margin-bottom:10px">This is a reference/preview only — the actual scoring always uses the real number of teams you've created. Use the dropdown just to preview a different team-count table on screen.</p>
+        <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px">Number of Teams</label>
+        <select id="scoring-n" style="max-width:140px" onchange="updateScoringTable()">
+          <option value="4">4 teams</option>
+          <option value="6">6 teams</option>
+          <option value="8">8 teams</option>
+        </select>
+        <div style="font-size:12px;color:var(--mut);margin:10px 0" id="scoring-hint"></div>
+        <div id="scoring-table" style="overflow-x:auto"></div>
       </div>
     </div>
 
@@ -688,6 +724,8 @@ function go(n){
   if(n==='scores')loadScores();
   if(n==='resps')loadResps();
   if(n==='events')loadEvents();
+  if(n==='cases')renderCasesPage();
+  if(n==='scoring')initScoringPage();
   updateWizardCues();
   renderPinBanner();
 }
@@ -944,57 +982,72 @@ async function loadRoundCases(){
   }
 }
 
-// ROUNDS
+// ROUNDS — compact matrix (multiplier + timer only); case studies live on their own page.
 function renderRounds(){
   const l=document.getElementById('r-list');l.innerHTML='';
   ROUNDS.forEach(r=>{
     const cur=SESS&&SESS.current_round===r.round_number;
-    const cases=ROUND_CASES[r.id]||[];
-    l.innerHTML+=`<div class="rrow ${cur?'cur':''}">
-      <div class="rnum">${r.round_number}</div>
-      <div class="rbody">
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-          <span class="sb s-${r.status==='pending'?'setup':r.status}">${r.status}</span>
-          ${r.multiplier>1?`<span style="background:var(--acc);color:#000;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700">×${r.multiplier}</span>`:''}
-          ${cur?'<span style="color:var(--acc);font-size:12px;font-weight:600">CURRENT</span>':''}
-        </div>
-
-        <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:6px">📋 Case Studies (${cases.length})</label>
-        <div id="rc-list-${r.id}">${renderRoundCasesListHtml(r.id)}</div>
-
-        <div style="margin-top:8px;padding:10px;background:var(--sur);border-radius:8px;border:1px solid var(--bdr)">
-          <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:6px">+ Add a Case</label>
-          <textarea id="rc-text-${r.id}" rows="2" placeholder="Case study text..."></textarea>
-          <div style="margin-top:6px;">
-            <input type="file" id="rc-file-${r.id}" accept=".pdf,.jpg,.jpeg,.png" style="font-size:12px;color:var(--txt);background:var(--sur2);border:1px solid var(--bdr);border-radius:6px;padding:6px;margin:0;width:100%;"/>
-          </div>
-          <div style="margin-top:8px;">
-            <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:6px;">
-              <input type="checkbox" id="rc-all-${r.id}" checked onchange="toggleAllTeamsCase('${r.id}')"/> Applies to All Teams
-            </label>
-            <div id="rc-teams-${r.id}" style="display:none;flex-wrap:wrap;gap:8px;">
-              ${TEAMS.map(t=>`<label style="font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" class="rc-team-cb-${r.id}" value="${t.id}"/> <span style="color:${escHtml(t.color)}">${escHtml(t.name)}</span></label>`).join('')}
-            </div>
-          </div>
-          <div id="rc-msg-${r.id}" style="font-size:12px;margin-top:6px;min-height:14px"></div>
-          <button class="btn ba bsm" style="margin-top:6px" onclick="addRoundCase('${r.id}')">+ Add Case</button>
-        </div>
-
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
-          <div><label style="font-size:12px;color:var(--mut);display:block;margin-bottom:3px">Multiplier</label>
-            <select id="ml-${r.id}" style="width:80px;margin-bottom:0">
-              <option value="1" ${r.multiplier==1?'selected':''}>×1</option>
-              <option value="2" ${r.multiplier==2?'selected':''}>×2</option>
-              <option value="3" ${r.multiplier==3?'selected':''}>×3</option>
-              <option value="5" ${r.multiplier==5?'selected':''}>×5</option>
-              <option value="10" ${r.multiplier==10?'selected':''}>×10</option>
-            </select></div>
-          <div><label style="font-size:12px;color:var(--mut);display:block;margin-bottom:3px">Timer (sec)</label>
-            <input type="number" id="tm-${r.id}" value="${r.timer_seconds||300}" style="width:90px;margin-bottom:0"/></div>
-        </div>
-        <button class="btn bo bsm" style="margin-top:8px" onclick="saveRound('${r.id}',${r.round_number})">💾 Save Multiplier/Timer</button>
-      </div></div>`;
+    l.innerHTML+=`<tr${cur?' style="background:rgba(245,158,11,.07)"':''}>
+      <td><strong style="color:var(--acc)">${r.round_number}</strong>${cur?' <span style="font-size:10px;color:var(--acc);font-weight:700">CURRENT</span>':''}</td>
+      <td><select id="ml-${r.id}" style="width:90px;margin-bottom:0">
+        <option value="1" ${r.multiplier==1?'selected':''}>×1</option>
+        <option value="2" ${r.multiplier==2?'selected':''}>×2</option>
+        <option value="3" ${r.multiplier==3?'selected':''}>×3</option>
+        <option value="5" ${r.multiplier==5?'selected':''}>×5</option>
+        <option value="10" ${r.multiplier==10?'selected':''}>×10</option>
+      </select></td>
+      <td><input type="number" id="tm-${r.id}" value="${r.timer_seconds||300}" style="width:90px;margin-bottom:0"/></td>
+      <td><button class="btn bo bsm" onclick="saveRound('${r.id}',${r.round_number})">💾 Save</button></td>
+    </tr>`;
   });
+}
+
+// CASE STUDIES PAGE — every round's case management, all visible on one screen.
+async function renderCasesPage(){
+  if(!SESS){document.getElementById('cs-noev').style.display='block';document.getElementById('cs-body').style.display='none';return;}
+  document.getElementById('cs-noev').style.display='none';
+  document.getElementById('cs-body').style.display='block';
+  ROUNDS=await GET('ta_rounds','session_id=eq.'+SESS.id+'&order=round_number')||[];
+  await loadRoundCases();
+  const body=document.getElementById('cs-body');
+  body.innerHTML=ROUNDS.map(r=>{
+    const cases=ROUND_CASES[r.id]||[];
+    const cur=SESS&&SESS.current_round===r.round_number;
+    return `<div class="sc${cur?'" style="border-color:var(--acc)':'"'}>
+      <div class="sct">Round ${r.round_number}${cur?' <span style="color:var(--acc)">— CURRENT</span>':''}</div>
+      <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:6px">📋 Case Studies (${cases.length}) — shown to players in both Main Room and Breakout for this round</label>
+      <div id="rc-list-${r.id}">${renderRoundCasesListHtml(r.id)}</div>
+      <div style="margin-top:8px;padding:10px;background:var(--sur);border-radius:8px;border:1px solid var(--bdr)">
+        <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:6px">+ Add a Case</label>
+        <textarea id="rc-text-${r.id}" rows="2" placeholder="Case study text..."></textarea>
+        <div style="margin-top:6px;">
+          <input type="file" id="rc-file-${r.id}" accept=".pdf,.jpg,.jpeg,.png" style="font-size:12px;color:var(--txt);background:var(--sur2);border:1px solid var(--bdr);border-radius:6px;padding:6px;margin:0;width:100%;"/>
+        </div>
+        <div style="margin-top:8px;">
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:6px;">
+            <input type="checkbox" id="rc-all-${r.id}" checked onchange="toggleAllTeamsCase('${r.id}')"/> Applies to All Teams
+          </label>
+          <div id="rc-teams-${r.id}" style="display:none;flex-wrap:wrap;gap:8px;">
+            ${TEAMS.map(t=>`<label style="font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" class="rc-team-cb-${r.id}" value="${t.id}"/> <span style="color:${escHtml(t.color)}">${escHtml(t.name)}</span></label>`).join('')}
+          </div>
+        </div>
+        <div id="rc-msg-${r.id}" style="font-size:12px;margin-top:6px;min-height:14px"></div>
+        <button class="btn ba bsm" style="margin-top:6px" onclick="addRoundCase('${r.id}')">+ Add Case</button>
+      </div>
+    </div>`;
+  }).join('')||'<div class="noev">No rounds found for this session.</div>';
+}
+
+// SCORING SYSTEM PAGE — reference-only preview of the payout table for 4/6/8 teams.
+function initScoringPage(){
+  const sel=document.getElementById('scoring-n');
+  if(sel&&TEAMS.length&&[4,6,8].includes(TEAMS.length))sel.value=String(TEAMS.length);
+  updateScoringTable();
+}
+function updateScoringTable(){
+  const n=parseInt(document.getElementById('scoring-n').value)||4;
+  document.getElementById('scoring-hint').textContent=TEAMS.length?('Currently '+TEAMS.length+' team(s) created for this organisation.'):'No teams created yet — this is just a preview.';
+  document.getElementById('scoring-table').innerHTML=renderPayoutRulesTable(n);
 }
 
 function renderRoundCasesListHtml(roundId){

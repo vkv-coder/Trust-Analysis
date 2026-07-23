@@ -244,11 +244,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="timer-lbl">⏱ Time Remaining</div>
       <div class="timer-val" id="gr-timer-val">05:00</div>
     </div>
-    <div class="case-card">
-      <div class="case-lbl">📋 Case Study</div>
-      <div class="case-txt" id="gr-case">Case study will appear here.</div>
-      <div id="gr-case-file" style="display:none;margin-top:8px"></div>
-    </div>
     <div id="gr-vote">
       <div class="vote-lbl">This is your own personal opinion — not visible to teammates</div>
       <div class="vote-btns">
@@ -262,6 +257,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="sub-title" id="gr-sub-title">Opinion Submitted</div>
       <div class="sub-detail">You answered: <span id="gr-sub-ans" class="atag"></span></div>
       <div class="sub-detail" style="margin-top:6px">Waiting for the facilitator to open Breakout...</div>
+    </div>
+    <div class="case-card">
+      <div class="case-lbl">📋 Case Study</div>
+      <div class="case-txt" id="gr-case">Case study will appear here.</div>
+      <div id="gr-case-file" style="display:none;margin-top:8px"></div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div class="sec-label" style="margin-bottom:6px;font-size:11px">📐 Scoring Rules</div>
+      <div style="overflow-x:auto" id="gr-payout-rules"></div>
     </div>
   </div>
 </div>
@@ -285,15 +289,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="timer-lbl">⏱ Time Remaining</div>
       <div class="timer-val" id="timer-val">05:00</div>
     </div>
-    <div class="case-card">
-      <div class="case-lbl">📋 Case Study</div>
-      <div class="case-txt" id="bo-case">Case study will appear here.</div>
-      <div id="bo-case-file" style="display:none;margin-top:8px"></div>
-    </div>
-    <div style="margin-bottom:16px">
-      <div class="sec-label" style="margin-bottom:6px;font-size:11px">📐 Scoring Rules</div>
-      <div style="overflow-x:auto" id="bo-payout-rules"></div>
-    </div>
     <!-- Any team member can submit the team's answer -->
     <div id="captain-vote" style="display:none">
       <div class="vote-lbl">Submit your team's final answer — any teammate can do this</div>
@@ -309,6 +304,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="sub-title">Team Answer Submitted</div>
       <div class="sub-detail">Team voted: <span id="bo-sub-ans" class="atag"></span></div>
       <div class="sub-detail" style="margin-top:6px">Waiting for all teams to submit...</div>
+    </div>
+    <div class="case-card">
+      <div class="case-lbl">📋 Case Study</div>
+      <div class="case-txt" id="bo-case">Case study will appear here.</div>
+      <div id="bo-case-file" style="display:none;margin-top:8px"></div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div class="sec-label" style="margin-bottom:6px;font-size:11px">📐 Scoring Rules</div>
+      <div style="overflow-x:auto" id="bo-payout-rules"></div>
     </div>
     <!-- Scoreboard from previous rounds -->
     <div id="bo-score-section" style="display:none">
@@ -478,10 +482,49 @@ function resetNameList(){
 async function confirmName(){
   if(!P.participant)return;
   await fetch(`${SURL}/rest/v1/ta_participants?id=eq.${P.participant.id}`,{method:'PATCH',headers:H(),body:JSON.stringify({is_present:true})});
+  saveIdentity();
   setupBars();
   show('wait');
   document.getElementById('wait-ev-name').textContent=orgSessionLabel();
   startPoll();
+}
+
+// IDENTITY PERSISTENCE — mobile browsers routinely reload/discard a backgrounded
+// tab. Without this, that reload wiped P.participant entirely and (if the player
+// had joined via the QR ?pin= link) dropped them straight back on the name-picker
+// mid-game, where any name that hadn't yet marked presence was still pickable —
+// letting one device end up "logged in" as a different teammate. Saving the PIN +
+// participant ID lets a reload restore the same identity silently instead.
+function saveIdentity(){
+  try{localStorage.setItem('ta_participant_session',JSON.stringify({pin:P.pin,participantId:P.participant.id}));}catch(e){}
+}
+function clearIdentity(){
+  try{localStorage.removeItem('ta_participant_session');}catch(e){}
+}
+async function restoreIdentity(saved){
+  try{
+    const res=await RPC('get_session_by_pin',{p_pin:saved.pin});
+    if(!res||!res.length)return false;
+    const s=res[0];
+    if(s.status==='complete')return false;
+    const prows=await GET('ta_participants','id=eq.'+saved.participantId+'&select=*,ta_teams(name,color)');
+    if(!prows||!prows.length)return false;
+    const p=prows[0];
+    P.pin=saved.pin;
+    P.session=s;
+    P.orgName=s.event_name||'';
+    P.participant=p;
+    P.team=p.ta_teams||null;
+    P.isCapt=p.is_captain===true;
+    setupBars();
+    if(s.status!=='setup'&&!p.is_present){
+      await fetch(`${SURL}/rest/v1/ta_participants?id=eq.${p.id}`,{method:'PATCH',headers:H(),body:JSON.stringify({is_present:true})});
+    }
+    show('wait');
+    document.getElementById('wait-ev-name').textContent=orgSessionLabel();
+    startPoll();
+    return true;
+  }catch(e){console.error('restoreIdentity failed:',e);return false;}
 }
 
 function setupBars(){
@@ -525,7 +568,7 @@ async function route(){
   const st=P.session.status;const rnd=P.round;
   if(st==='setup'||st==='complete'){
     show('wait');
-    if(st==='complete')document.getElementById('wait-badge').textContent='DONE';
+    if(st==='complete'){document.getElementById('wait-badge').textContent='DONE';clearIdentity();}
     return;
   }
   if(st==='registration'){
@@ -552,6 +595,8 @@ async function route(){
     const gm=document.getElementById('gr-mult');
     if(rnd.multiplier>1){gm.style.display='block';gm.textContent='×'+rnd.multiplier;}else gm.style.display='none';
     await updGrCase(rnd);
+    const grTeamCount=(await GET('ta_teams','event_id=eq.'+P.session.event_id+'&select=id')||[]).length;
+    document.getElementById('gr-payout-rules').innerHTML=renderPayoutRulesTable(grTeamCount);
     // Check for an existing answer BEFORE (re)starting the timer -- otherwise
     // every poll cycle restarts the countdown even after submission, so it
     // never visibly stops on screen.
@@ -1013,10 +1058,20 @@ async function submitVote(){
   else{const err=await res.json();console.error('Submit error:',err);toast('Error: '+(err.message||'Try again'),'error');}
 }
 
-// QR deep link — scanning a session's QR code lands here as ?pin=1234, which
-// skips the manual keypad and goes straight into PIN verification.
-(function initFromQuery(){
+// STARTUP — restore a saved identity first (see restoreIdentity above), so a
+// reload mid-game silently reconnects the same player instead of showing the
+// name-picker again. Only fall through to the QR deep link (?pin=1234, skips
+// the manual keypad) or the manual keypad itself if there's nothing to restore.
+(async function initSession(){
+  let saved=null;
+  try{saved=JSON.parse(localStorage.getItem('ta_participant_session')||'null');}catch(e){}
   const qp=(new URLSearchParams(location.search).get('pin')||'').replace(/\D/g,'').slice(0,4);
+  if(saved&&qp.length===4&&qp!==saved.pin){clearIdentity();saved=null;}
+  if(saved){
+    const ok=await restoreIdentity(saved);
+    if(ok)return;
+    clearIdentity();
+  }
   if(qp.length===4){P.pin=qp;updPin();verPin();}
 })();
 </script>
