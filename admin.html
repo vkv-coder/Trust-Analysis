@@ -442,7 +442,7 @@ tr:hover td{background:var(--sur2);}
               <table><thead><tr><th>Round</th><th>Multiplier</th><th>Timer (sec)</th><th>Save</th></tr></thead>
               <tbody id="r-list"></tbody></table>
             </div>
-            <div style="font-size:12px;color:var(--mut);margin-top:10px">📋 Case studies are managed on the <span style="color:var(--acc);cursor:pointer;text-decoration:underline" onclick="goTop('pre');go('cases')">Case Studies</span> page (⑤ in the sidebar) — same case shows to players in both Main Room and Breakout for that round.</div>
+            <div style="font-size:12px;color:var(--mut);margin-top:10px">📋 Case studies are managed on the <span style="color:var(--acc);cursor:pointer;text-decoration:underline" onclick="goTop('pre');go('cases')">Case Studies</span> page (⑤ in the sidebar) — one shared set of cases used by every round of this session, in both Main Room and Breakout.</div>
           </div>
         </div>
       </div>
@@ -1002,40 +1002,40 @@ function renderRounds(){
   });
 }
 
-// CASE STUDIES PAGE — every round's case management, all visible on one screen.
+// CASE STUDIES PAGE — one shared set of cases for the whole session, used by
+// EVERY round's Main Room and Breakout alike (not per-round). Anchored on the
+// session's first round (ta_round_cases.round_id) purely as a storage peg —
+// resolveCaseForTeam() in index.html always looks these up regardless of
+// which round is actually being played.
 async function renderCasesPage(){
   if(!SESS){document.getElementById('cs-noev').style.display='block';document.getElementById('cs-body').style.display='none';return;}
   document.getElementById('cs-noev').style.display='none';
   document.getElementById('cs-body').style.display='block';
   ROUNDS=await GET('ta_rounds','session_id=eq.'+SESS.id+'&order=round_number')||[];
-  await loadRoundCases();
   const body=document.getElementById('cs-body');
-  body.innerHTML=ROUNDS.map(r=>{
-    const cases=ROUND_CASES[r.id]||[];
-    const cur=SESS&&SESS.current_round===r.round_number;
-    return `<div class="sc${cur?'" style="border-color:var(--acc)':'"'}>
-      <div class="sct">Round ${r.round_number}${cur?' <span style="color:var(--acc)">— CURRENT</span>':''}</div>
-      <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:6px">📋 Case Studies (${cases.length}) — shown to players in both Main Room and Breakout for this round</label>
-      <div id="rc-list-${r.id}">${renderRoundCasesListHtml(r.id)}</div>
-      <div style="margin-top:8px;padding:10px;background:var(--sur);border-radius:8px;border:1px solid var(--bdr)">
-        <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:6px">+ Add a Case</label>
-        <textarea id="rc-text-${r.id}" rows="2" placeholder="Case study text..."></textarea>
-        <div style="margin-top:6px;">
-          <input type="file" id="rc-file-${r.id}" accept=".pdf,.jpg,.jpeg,.png" style="font-size:12px;color:var(--txt);background:var(--sur2);border:1px solid var(--bdr);border-radius:6px;padding:6px;margin:0;width:100%;"/>
+  if(!ROUNDS.length){body.innerHTML='<div class="noev">No rounds found for this session.</div>';return;}
+  await loadRoundCases();
+  const r=ROUNDS[0];
+  const cases=ROUND_CASES[r.id]||[];
+  body.innerHTML=`<div class="sc">
+    <div class="sct">Case Studies (${cases.length}) — shared by every round of this session</div>
+    <p style="font-size:12px;color:var(--mut);margin-bottom:10px">One set of cases, shown to players in both Main Room and Breakout, for every round — not per-round.</p>
+    <div id="rc-list-${r.id}">${renderRoundCasesListHtml(r.id)}</div>
+    <div style="margin-top:8px;padding:10px;background:var(--sur);border-radius:8px;border:1px solid var(--bdr)">
+      <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:6px">+ Add a Case (full text — shown directly on the player's screen, no file/PDF)</label>
+      <textarea id="rc-text-${r.id}" rows="4" placeholder="Full case study text..."></textarea>
+      <div style="margin-top:8px;">
+        <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:6px;">
+          <input type="checkbox" id="rc-all-${r.id}" checked onchange="toggleAllTeamsCase('${r.id}')"/> Applies to All Teams
+        </label>
+        <div id="rc-teams-${r.id}" style="display:none;flex-wrap:wrap;gap:8px;">
+          ${TEAMS.map(t=>`<label style="font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" class="rc-team-cb-${r.id}" value="${t.id}"/> <span style="color:${escHtml(t.color)}">${escHtml(t.name)}</span></label>`).join('')}
         </div>
-        <div style="margin-top:8px;">
-          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:6px;">
-            <input type="checkbox" id="rc-all-${r.id}" checked onchange="toggleAllTeamsCase('${r.id}')"/> Applies to All Teams
-          </label>
-          <div id="rc-teams-${r.id}" style="display:none;flex-wrap:wrap;gap:8px;">
-            ${TEAMS.map(t=>`<label style="font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" class="rc-team-cb-${r.id}" value="${t.id}"/> <span style="color:${escHtml(t.color)}">${escHtml(t.name)}</span></label>`).join('')}
-          </div>
-        </div>
-        <div id="rc-msg-${r.id}" style="font-size:12px;margin-top:6px;min-height:14px"></div>
-        <button class="btn ba bsm" style="margin-top:6px" onclick="addRoundCase('${r.id}')">+ Add Case</button>
       </div>
-    </div>`;
-  }).join('')||'<div class="noev">No rounds found for this session.</div>';
+      <div id="rc-msg-${r.id}" style="font-size:12px;margin-top:6px;min-height:14px"></div>
+      <button class="btn ba bsm" style="margin-top:6px" onclick="addRoundCase('${r.id}')">+ Add Case</button>
+    </div>
+  </div>`;
 }
 
 // SCORING SYSTEM PAGE — reference-only preview of the payout table for 4/6/8 teams.
@@ -1059,12 +1059,11 @@ function renderRoundCasesListHtml(roundId){
       :(TEAMS.filter(t=>c.team_ids.includes(t.id)).map(t=>`<span style="background:${escHtml(t.color)};color:#000;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;">${escHtml(t.name)}</span>`).join(' ')||'<span style="color:var(--mut);font-size:11px;">No teams assigned</span>');
     return `<div style="background:var(--sur2);border-radius:8px;padding:10px;margin-bottom:6px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-        <div style="flex:1;font-size:13px;">${c.case_text?escHtml(c.case_text):'<span style="color:var(--mut)">(no text)</span>'}</div>
+        <div style="flex:1;font-size:13px;white-space:pre-wrap;">${c.case_text?escHtml(c.case_text):'<span style="color:var(--mut)">(no text)</span>'}</div>
         <button class="btn bd bsm" onclick="deleteRoundCase('${c.id}','${roundId}')">Del</button>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center;">
         ${teamBadges}
-        ${c.case_file_url?'<a href="'+c.case_file_url+'" target="_blank" style="color:var(--acc);font-size:12px;">📄 View file</a>':''}
       </div>
     </div>`;
   }).join('');
@@ -1077,25 +1076,13 @@ function toggleAllTeamsCase(roundId){
 
 async function addRoundCase(roundId){
   const text=document.getElementById('rc-text-'+roundId).value.trim();
-  const fileInput=document.getElementById('rc-file-'+roundId);
-  const file=fileInput.files[0];
   const appliesAll=document.getElementById('rc-all-'+roundId).checked;
   const teamIds=appliesAll?[]:[...document.querySelectorAll('.rc-team-cb-'+roundId+':checked')].map(cb=>cb.value);
   const msgEl=document.getElementById('rc-msg-'+roundId);
-  if(!text&&!file){msgEl.style.color='var(--hi)';msgEl.textContent='Enter case text or choose a file';return;}
+  if(!text){msgEl.style.color='var(--hi)';msgEl.textContent='Enter case text';return;}
   if(!appliesAll&&!teamIds.length){msgEl.style.color='var(--hi)';msgEl.textContent='Select at least one team, or check "Applies to All Teams"';return;}
   msgEl.style.color='var(--acc)';msgEl.textContent='Saving...';
-  let fileUrl=null;
-  if(file){
-    await ensureFreshToken();
-    const fileName='case_'+roundId+'_'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-    const r=await fetch('https://wrzpgultvahxbrgooibn.supabase.co/storage/v1/object/trust-analysis/'+fileName,{
-      method:'POST',headers:{'apikey':K,'Authorization':'Bearer '+bearer(),'Content-Type':file.type,'x-upsert':'true'},body:file
-    });
-    if(!r.ok){const err=await r.json();msgEl.style.color='var(--hi)';msgEl.textContent='Upload failed: '+(err.message||r.status);return;}
-    fileUrl='https://wrzpgultvahxbrgooibn.supabase.co/storage/v1/object/public/trust-analysis/'+fileName;
-  }
-  const res=await POST('ta_round_cases',{round_id:roundId,case_text:text,case_file_url:fileUrl,applies_to_all:appliesAll});
+  const res=await POST('ta_round_cases',{round_id:roundId,case_text:text,case_file_url:null,applies_to_all:appliesAll});
   const created=Array.isArray(res.d)?res.d[0]:res.d;
   if(!created||!created.id){msgEl.style.color='var(--hi)';msgEl.textContent='Error saving case';return;}
   if(!appliesAll){
@@ -1106,7 +1093,6 @@ async function addRoundCase(roundId){
   ROUND_CASES[roundId].push(created);
   document.getElementById('rc-list-'+roundId).innerHTML=renderRoundCasesListHtml(roundId);
   document.getElementById('rc-text-'+roundId).value='';
-  fileInput.value='';
   msgEl.style.color='var(--lo)';msgEl.textContent='✅ Case added';
   toast('Case added','ok');
 }

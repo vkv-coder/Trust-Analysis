@@ -261,7 +261,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="case-card">
       <div class="case-lbl">📋 Case Study</div>
       <div class="case-txt" id="gr-case">Case study will appear here.</div>
-      <div id="gr-case-file" style="display:none;margin-top:8px"></div>
     </div>
     <div style="margin-bottom:16px">
       <div class="sec-label" style="margin-bottom:6px;font-size:11px">📐 Scoring Rules</div>
@@ -308,7 +307,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="case-card">
       <div class="case-lbl">📋 Case Study</div>
       <div class="case-txt" id="bo-case">Case study will appear here.</div>
-      <div id="bo-case-file" style="display:none;margin-top:8px"></div>
     </div>
     <div style="margin-bottom:16px">
       <div class="sec-label" style="margin-bottom:6px;font-size:11px">📐 Scoring Rules</div>
@@ -729,11 +727,26 @@ async function castCaptainVote(votedForId){
   await checkCaptainVoting();
 }
 
-// CAPTAIN LIVE ANSWER POLL (for non-captain members)
-// Resolve which case study applies to a given team for a round:
-// a case specifically assigned to this team wins; otherwise fall back to
-// the round's "Applies to All Teams" case, if any.
-async function resolveCaseForTeam(roundId,teamId){
+// CASE STUDIES — one shared set for the whole session (not per-round), so every
+// round's Main Room and Breakout show the same case(s). Cases are stored against
+// the session's first round as a peg (see admin.html's Case Studies page); cache
+// that round id per session so we don't refetch it on every poll cycle.
+let CASE_ROUND_ID_CACHE={};
+async function getCaseRoundId(){
+  const sid=P.session.id;
+  if(CASE_ROUND_ID_CACHE[sid])return CASE_ROUND_ID_CACHE[sid];
+  const rows=await GET('ta_rounds','session_id=eq.'+sid+'&order=round_number&limit=1&select=id')||[];
+  const id=(rows&&rows[0])?rows[0].id:null;
+  CASE_ROUND_ID_CACHE[sid]=id;
+  return id;
+}
+
+// Resolve which case study applies to a given team: a case specifically
+// assigned to this team wins; otherwise fall back to the "Applies to All
+// Teams" case, if any.
+async function resolveCaseForTeam(teamId){
+  const roundId=await getCaseRoundId();
+  if(!roundId)return null;
   const cases=await GET('ta_round_cases','round_id=eq.'+roundId+'&select=*')||[];
   if(!cases.length)return null;
   if(teamId){
@@ -751,15 +764,9 @@ async function updBo(r){
   document.getElementById('bo-badge').textContent='R'+r.round_number;
   const m=document.getElementById('bo-mult');
   if(r.multiplier>1){m.style.display='block';m.textContent='×'+r.multiplier;}else m.style.display='none';
-  // Case study — resolve the one assigned to this participant's team
-  const theCase=await resolveCaseForTeam(r.id,P.team?P.team.id:null);
-  const ct=theCase?(theCase.case_text||''):'';
-  const cu=theCase?(theCase.case_file_url||''):'';
-  document.getElementById('bo-case').textContent=ct||(cu?'':'Case study will appear here.');
-  const cf=document.getElementById('bo-case-file');
-  if(cu){cf.style.display='block';const isImg=/\.(jpg|jpeg|png)$/i.test(cu);
-    cf.innerHTML=isImg?`<img src="${cu}" style="width:100%;border-radius:8px;margin-top:8px"/>`:`<a href="${cu}" target="_blank" style="display:flex;align-items:center;gap:8px;background:rgba(245,158,11,0.1);border:1px solid var(--accent);border-radius:8px;padding:12px;color:var(--accent);text-decoration:none;font-weight:600;margin-top:8px">📄 Open Case Study PDF</a>`;
-  }else cf.style.display='none';
+  // Case study — the one shared set for the whole session, resolved for this participant's team
+  const theCase=await resolveCaseForTeam(P.team?P.team.id:null);
+  document.getElementById('bo-case').textContent=theCase?(theCase.case_text||'Case study will appear here.'):'Case study will appear here.';
   // Captain badge
   if(P.isCapt)document.getElementById('b-cap').style.display='block';
   else document.getElementById('b-cap').style.display='none';
@@ -784,20 +791,14 @@ function showBoDone(ans){
 
 // GENERAL ROUND (individual opinions)
 async function updGrCase(r){
-  const theCase=await resolveCaseForTeam(r.id,P.team?P.team.id:null);
-  const ct=theCase?(theCase.case_text||''):'';
-  const cu=theCase?(theCase.case_file_url||''):'';
-  document.getElementById('gr-case').textContent=ct||(cu?'':'Case study will appear here.');
-  const cf=document.getElementById('gr-case-file');
-  if(cu){cf.style.display='block';const isImg=/\.(jpg|jpeg|png)$/i.test(cu);
-    cf.innerHTML=isImg?`<img src="${cu}" style="width:100%;border-radius:8px;margin-top:8px"/>`:`<a href="${cu}" target="_blank" style="display:flex;align-items:center;gap:8px;background:rgba(245,158,11,0.1);border:1px solid var(--accent);border-radius:8px;padding:12px;color:var(--accent);text-decoration:none;font-weight:600;margin-top:8px">📄 Open Case Study PDF</a>`;
-  }else cf.style.display='none';
+  const theCase=await resolveCaseForTeam(P.team?P.team.id:null);
+  document.getElementById('gr-case').textContent=theCase?(theCase.case_text||'Case study will appear here.'):'Case study will appear here.';
 }
 
-// Show the round's case study again on the reveal screen, as a reminder of
-// context while reviewing the scoreboard.
+// Show the case study again on the reveal screen, as a reminder of context
+// while reviewing the scoreboard.
 async function updMainCase(r){
-  const theCase=await resolveCaseForTeam(r.id,P.team?P.team.id:null);
+  const theCase=await resolveCaseForTeam(P.team?P.team.id:null);
   const ct=theCase?(theCase.case_text||''):'';
   const card=document.getElementById('main-case-card');
   if(!ct){card.style.display='none';return;}
