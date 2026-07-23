@@ -371,7 +371,10 @@ tr:hover td{background:var(--sur2);}
           <div id="p-excel-msg" style="font-size:13px;margin-top:6px;min-height:16px"></div>
         </div>
         <div class="sc">
-          <div class="sct">All Participants (<span id="p-count">0</span>)</div>
+          <div class="ph" style="margin-bottom:12px">
+            <div class="sct" style="margin-bottom:0">All Participants (<span id="p-count">0</span>)</div>
+            <button class="btn bd bsm" onclick="delAllParts()">🗑 Delete All</button>
+          </div>
           <div class="chips" id="p-list"></div>
         </div>
       </div>
@@ -474,14 +477,21 @@ tr:hover td{background:var(--sur2);}
 
     <!-- SCORES -->
     <div class="pg" id="pg-scores">
-      <div class="ph"><h2>Scoreboard</h2><button class="btn bo bsm" onclick="loadScores()">↺ Refresh</button></div>
+      <div class="ph"><h2>Scoreboard</h2><div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn bo bsm" onclick="loadScores()">↺ Refresh</button>
+        <button class="btn bo bsm" onclick="downloadScoresCSV()">⬇ Download CSV</button>
+      </div></div>
       <div id="sc-noev" class="noev">← Select an Organisation & Session first</div>
       <div id="sc-body"></div>
     </div>
 
     <!-- RESPONSES -->
     <div class="pg" id="pg-resps">
-      <div class="ph"><h2>Responses</h2><button class="btn bo bsm" onclick="loadResps()">↺ Refresh</button></div>
+      <div class="ph"><h2>Responses</h2><div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn bo bsm" onclick="loadResps()">↺ Refresh</button>
+        <button class="btn bo bsm" onclick="downloadIndividualCSV()">⬇ Individual CSV</button>
+        <button class="btn bo bsm" onclick="downloadTeamAnswersCSV()">⬇ Team Answers CSV</button>
+      </div></div>
       <div id="rs-noev" class="noev">← Select an Organisation & Session first</div>
       <div id="rs-body" style="display:none">
         <div class="sc"><div class="sct">Individual Opinions (Phase 1)</div>
@@ -598,7 +608,16 @@ async function login(){
   }
 }
 
-function logout(){
+// Logging out ends the live session too — otherwise the PIN and any player
+// who'd already joined would keep working with nobody watching the admin
+// panel. Ending the session (status='complete') makes every player's poll
+// loop show "session ended" and wipes their saved identity (see index.html's
+// route()), and a fresh PIN entry gets rejected the same way.
+async function logout(){
+  if(SESS&&SESS.status!=='complete'){
+    if(!confirm('Logging out will END the current session — the PIN stops working and every player is disconnected. Continue?'))return;
+    try{await PATCH('ta_sessions','id=eq.'+SESS.id,{status:'complete'});}catch(e){console.error('Failed to end session on logout:',e);}
+  }
   clearSession();
   if(POLL)clearInterval(POLL);
   EV=null;SESS=null;TEAMS=[];PARTS=[];ROUNDS=[];
@@ -1179,6 +1198,19 @@ async function remPart(id,name){
   await DEL('ta_participants','id=eq.'+id);
   PARTS=await GET('ta_participants','event_id=eq.'+EV.id+'&select=*,ta_teams(name,color)&order=name')||[];
   renderParts();renderTeams();toast(name+' removed','in');
+}
+
+// Bulk-clear the whole roster in one go — for starting the same game over
+// with a new set of players, or reusing an organisation for a new batch,
+// instead of removing each participant one at a time.
+async function delAllParts(){
+  if(!EV)return;
+  if(!PARTS.length){toast('No participants to delete','in');return;}
+  if(!confirm('Delete ALL '+PARTS.length+' participant(s) for this organisation? This clears their team assignments too. Teams and sessions are kept. This cannot be undone.'))return;
+  await DEL('ta_participants','event_id=eq.'+EV.id);
+  PARTS=[];
+  renderParts();renderTeams();
+  toast('All participants deleted','in');
 }
 
 function renderParts(){
@@ -1813,6 +1845,75 @@ async function loadResps(){
   const tt=document.getElementById('rs-tv');tt.innerHTML='';
   tv.forEach(r=>{const t=r.ta_teams;const cap=r.ta_participants;const tm=new Date(r.submitted_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
     tt.innerHTML+=`<tr><td>R${r.ta_rounds?.round_number||'?'}</td><td style="color:${escHtml(t?.color)||'#3B82F6'}">${escHtml(t?.name)||'—'}</td><td><strong style="color:${r.answer==='H'?'var(--hi)':'var(--lo)'}">${r.answer==='H'?'HIGH':'LOW'}</strong></td><td>${escHtml(cap?.name)||'—'}</td><td style="color:var(--mut)">${tm}</td></tr>`;});
+}
+
+// CSV EXPORT — for taking a record away from the browser (scores, individual
+// opinions, team answers), round-wise or per-participant.
+function sanitizeFilename(s){return String(s||'').trim().replace(/[^a-zA-Z0-9_-]+/g,'_')||'export';}
+function downloadCSV(filename,rows){
+  const csv=rows.map(row=>row.map(cell=>{
+    const s=String(cell??'');
+    return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+  }).join(',')).join('\r\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function downloadScoresCSV(){
+  if(!SESS){toast('No session loaded','er');return;}
+  const sc=await GET('ta_scores','session_id=eq.'+SESS.id+'&select=*,ta_teams(name,color),ta_rounds(round_number,multiplier)&order=ta_rounds(round_number)')||[];
+  if(!sc.length){toast('No scores yet','er');return;}
+  const roundIds=[...new Set(sc.map(s=>s.round_id))];
+  const teamAnswers=roundIds.length?(await GET('ta_team_answers','round_id=in.('+roundIds.join(',')+')&select=round_id,team_id,answer')||[]):[];
+  const ansKey=(roundId,teamId)=>roundId+'|'+teamId;
+  const ansByKey={};teamAnswers.forEach(ta=>{ansByKey[ansKey(ta.round_id,ta.team_id)]=ta.answer;});
+  const tm={};sc.forEach(s=>{if(!tm[s.team_id])tm[s.team_id]={team:s.ta_teams,rows:[],cum:0};tm[s.team_id].rows.push(s);tm[s.team_id].cum=s.cumulative_points;});
+  const sorted=Object.values(tm).sort((a,b)=>b.cum-a.cum);
+  const rns=[...new Set(sc.map(s=>s.ta_rounds?.round_number))].sort((a,b)=>a-b);
+  const rows=[['Round',...sorted.map(t=>t.team?.name||'?'),'Net']];
+  rns.forEach(r=>{
+    let net=0;
+    const row=['R'+r];
+    sorted.forEach(t=>{
+      const s=t.rows.find(x=>x.ta_rounds?.round_number===r);
+      const p=s?s.round_points:null;
+      if(typeof p==='number')net+=p;
+      const a=s?ansByKey[ansKey(s.round_id,s.team_id)]:null;
+      row.push(p==null?'':(a?a+' ':'')+p);
+    });
+    row.push(net);
+    rows.push(row);
+  });
+  rows.push(['TOTAL',...sorted.map(t=>t.cum),sorted.reduce((s,t)=>s+t.cum,0)]);
+  downloadCSV(sanitizeFilename(EV?.name)+'_'+sanitizeFilename(SESS.name)+'_scores.csv',rows);
+}
+
+async function downloadIndividualCSV(){
+  if(!SESS){toast('No session loaded','er');return;}
+  const iv=await GET('ta_individual_answers','session_id=eq.'+SESS.id+'&select=*,ta_participants(name,ta_teams(name)),ta_rounds(round_number)&order=ta_rounds(round_number),submitted_at')||[];
+  if(!iv.length){toast('No individual opinions yet','er');return;}
+  const rows=[['Round','Participant','Team','Opinion','Auto-submitted','Time']];
+  iv.forEach(r=>{
+    const p=r.ta_participants;const t=p?.ta_teams;
+    rows.push(['R'+(r.ta_rounds?.round_number??'?'),p?.name||'',t?.name||'',r.answer==='H'?'HIGH':'LOW',r.auto_submitted?'Yes':'No',r.submitted_at?new Date(r.submitted_at).toLocaleString('en-IN'):'']);
+  });
+  downloadCSV(sanitizeFilename(EV?.name)+'_'+sanitizeFilename(SESS.name)+'_individual_opinions.csv',rows);
+}
+
+async function downloadTeamAnswersCSV(){
+  if(!SESS){toast('No session loaded','er');return;}
+  const tv=await GET('ta_team_answers','session_id=eq.'+SESS.id+'&select=*,ta_teams(name),ta_rounds(round_number),ta_participants(name)&order=ta_rounds(round_number),submitted_at')||[];
+  if(!tv.length){toast('No team answers yet','er');return;}
+  const rows=[['Round','Team','Answer','Submitted By','Auto-submitted','Time']];
+  tv.forEach(r=>{
+    const t=r.ta_teams;const cap=r.ta_participants;
+    rows.push(['R'+(r.ta_rounds?.round_number??'?'),t?.name||'',r.answer==='H'?'HIGH':'LOW',cap?.name||'',r.auto_submitted?'Yes':'No',r.submitted_at?new Date(r.submitted_at).toLocaleString('en-IN'):'']);
+  });
+  downloadCSV(sanitizeFilename(EV?.name)+'_'+sanitizeFilename(SESS.name)+'_team_answers.csv',rows);
 }
 </script>
 </body>
