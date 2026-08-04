@@ -784,6 +784,10 @@ function toast(m,t){const el=document.getElementById('toast');el.className='toas
 
 // EVENTS
 async function loadEvents(){
+  try{ await _loadEvents(); }
+  catch(e){ toast('Could not load organisations: '+e.message,'er'); }
+}
+async function _loadEvents(){
   const evs=await GET('ta_events','order=created_at.desc&select=*');
   const sel=document.getElementById('ev-sel');
   const tb=document.getElementById('ev-table');
@@ -882,6 +886,10 @@ async function switchEvent(id){
 
 // SESSIONS
 async function loadSessions(){
+  try{ await _loadSessions(); }
+  catch(e){ toast('Could not load sessions: '+e.message,'er'); }
+}
+async function _loadSessions(){
   if(!EV){document.getElementById('sess-noev').style.display='block';document.getElementById('sess-body').style.display='none';return;}
   document.getElementById('sess-noev').style.display='none';
   document.getElementById('sess-body').style.display='block';
@@ -966,12 +974,14 @@ async function switchSession(id){
 }
 
 async function showRounds(id,name){
-  switchSession(id);
   document.getElementById('rounds-sess-name').textContent=name;
   document.getElementById('rounds-wrap').style.display='block';
-  ROUNDS=await GET('ta_rounds','session_id=eq.'+id+'&order=round_number')||[];
-  await loadRoundCases();
-  renderRounds();
+  try{
+    await switchSession(id);
+    ROUNDS=await GET('ta_rounds','session_id=eq.'+id+'&order=round_number')||[];
+    await loadRoundCases();
+    renderRounds();
+  }catch(e){ toast('Could not load rounds: '+e.message,'er'); }
 }
 
 // ROUND CASES (multi-case per round: "All Teams" or specific team group)
@@ -1027,6 +1037,10 @@ function renderRounds(){
 // resolveCaseForTeam() in index.html always looks these up regardless of
 // which round is actually being played.
 async function renderCasesPage(){
+  try{ await _renderCasesPage(); }
+  catch(e){ toast('Could not load case studies: '+e.message,'er'); }
+}
+async function _renderCasesPage(){
   if(!SESS){document.getElementById('cs-noev').style.display='block';document.getElementById('cs-body').style.display='none';return;}
   document.getElementById('cs-noev').style.display='none';
   document.getElementById('cs-body').style.display='block';
@@ -1814,6 +1828,10 @@ function copyLink(){navigator.clipboard.writeText(SESS?APP+'?pin='+SESS.pin:APP)
 
 // SCORES
 async function loadScores(){
+  try{ await _loadScores(); }
+  catch(e){ toast('Could not load scores: '+e.message,'er'); }
+}
+async function _loadScores(){
   if(!SESS){document.getElementById('sc-noev').style.display='block';document.getElementById('sc-body').style.display='none';return;}
   document.getElementById('sc-noev').style.display='none';
   const sc=await GET('ta_scores','session_id=eq.'+SESS.id+'&select=*,ta_teams(name,color),ta_rounds(round_number,multiplier)&order=ta_rounds(round_number)')||[];
@@ -1858,6 +1876,10 @@ async function loadScores(){
 
 // RESPONSES
 async function loadResps(){
+  try{ await _loadResps(); }
+  catch(e){ toast('Could not load responses: '+e.message,'er'); }
+}
+async function _loadResps(){
   if(!SESS){document.getElementById('rs-noev').style.display='block';document.getElementById('rs-body').style.display='none';return;}
   document.getElementById('rs-noev').style.display='none';document.getElementById('rs-body').style.display='block';
   const iv=await GET('ta_individual_answers','session_id=eq.'+SESS.id+'&select=*,ta_participants(name,ta_teams(name,color)),ta_rounds(round_number)&order=ta_rounds(round_number),submitted_at')||[];
