@@ -708,8 +708,9 @@ async function checkCaptainVoting(){
   const majorityThreshold=Math.floor(totalPresent/2)+1;
   const statusEl=document.getElementById('ann-vote-status');
   if(winner&&winnerVotes>=majorityThreshold&&totalPresent>0){
-    await fetch(`${SURL}/rest/v1/ta_participants?team_id=eq.${P.team.id}&is_captain=eq.true`,{method:'PATCH',headers:H(),body:JSON.stringify({is_captain:false})});
-    await fetch(`${SURL}/rest/v1/ta_participants?id=eq.${winner}`,{method:'PATCH',headers:H(),body:JSON.stringify({is_captain:true})});
+    const clearRes=await fetch(`${SURL}/rest/v1/ta_participants?team_id=eq.${P.team.id}&is_captain=eq.true`,{method:'PATCH',headers:H(),body:JSON.stringify({is_captain:false})});
+    const setRes=await fetch(`${SURL}/rest/v1/ta_participants?id=eq.${winner}`,{method:'PATCH',headers:H(),body:JSON.stringify({is_captain:true})});
+    if(!clearRes.ok||!setRes.ok){toast('Could not save captain election — try again','error');return;}
     sec.style.display='none';
     toast('Captain elected!','success');
     return;
