@@ -450,8 +450,14 @@ function orgSessionLabel(){
 async function loadNames(){
   document.getElementById('ev-name-display').textContent=orgSessionLabel();
   show('name');
-  const parts=await GET('ta_participants','event_id=eq.'+P.session.event_id+'&select=*,ta_teams(name,color)&order=name');
   const list=document.getElementById('name-list');
+  let parts;
+  try{
+    parts=await GET('ta_participants','event_id=eq.'+P.session.event_id+'&select=*,ta_teams(name,color)&order=name');
+  }catch(e){
+    list.innerHTML='<div class="wait-card"><div class="wait-sub">⚠️ Could not load participants. <a href="javascript:loadNames()" style="color:inherit;text-decoration:underline;">Retry</a></div></div>';
+    return;
+  }
   if(!parts||!parts.length){list.innerHTML='<div class="wait-card"><div class="wait-sub">No participants found.</div></div>';return;}
   list.innerHTML='';
   parts.forEach(p=>{
@@ -561,7 +567,7 @@ async function poll(){
         toast('Your team has changed','info');
       }
     }
-    route();
+    await route();
   }catch(e){console.error(e);}
 }
 
