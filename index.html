@@ -491,7 +491,8 @@ function resetNameList(){
 
 async function confirmName(){
   if(!P.participant)return;
-  await fetch(`${SURL}/rest/v1/ta_participants?id=eq.${P.participant.id}`,{method:'PATCH',headers:H(),body:JSON.stringify({is_present:true})});
+  const res=await fetch(`${SURL}/rest/v1/ta_participants?id=eq.${P.participant.id}`,{method:'PATCH',headers:H(),body:JSON.stringify({is_present:true})});
+  if(!res.ok){toast('Could not confirm — try again','error');return;}
   saveIdentity();
   setupBars();
   show('wait');
@@ -732,11 +733,12 @@ async function checkCaptainVoting(){
 }
 
 async function castCaptainVote(votedForId){
-  await fetch(`${SURL}/rest/v1/ta_captain_votes`,{
+  const res=await fetch(`${SURL}/rest/v1/ta_captain_votes`,{
     method:'POST',
     headers:{...H(),'Prefer':'resolution=merge-duplicates,return=representation'},
     body:JSON.stringify({session_id:P.session.id,team_id:P.team.id,voter_participant_id:P.participant.id,voted_for_participant_id:votedForId})
   });
+  if(!res.ok){toast('Could not save your vote — try again','error');return;}
   await checkCaptainVoting();
 }
 
